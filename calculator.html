@@ -1,0 +1,2773 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>محاسبه‌گر برش و بهینه‌سازی</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+      
+      :root {
+        --bg-light: #f9fafb;
+        --text-light: #111827;
+        --card-bg-light: #ffffff;
+        --card-border-light: #e5e7eb;
+        --input-bg-light: #ffffff;
+        --input-border-light: #d1d5db;
+        --text-muted-light: #6b7280;
+
+        --bg-dark: #111827; /* Updated to match screenshot */
+        --text-dark: #d1d5db;
+        --card-bg-dark: #1f2937; /* Updated for better contrast */
+        --card-border-dark: #374151;
+        --input-bg-dark: #1f2937;
+        --input-border-dark: #4b5563;
+        --text-muted-dark: #9ca3af;
+      }
+
+      body {
+        font-family: 'Vazirmatn', sans-serif;
+        background-color: var(--bg-light);
+        color: var(--text-light);
+        transition: background-color 0.3s, color 0.3s;
+      }
+      html.dark body {
+        background-color: var(--bg-dark);
+        color: var(--text-dark);
+      }
+      .card {
+          background-color: var(--card-bg-light);
+          border: 1px solid var(--card-border-light);
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      }
+       html.dark .card {
+          background-color: var(--card-bg-dark);
+          border-color: var(--card-border-dark);
+      }
+      .form-input, .form-select {
+        background-color: var(--input-bg-light);
+        border: 1px solid var(--input-border-light);
+        color: var(--text-light);
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+       html.dark .form-input, html.dark .form-select {
+        background-color: var(--input-bg-dark);
+        border-color: var(--input-border-dark);
+        color: var(--text-dark);
+      }
+      .form-input:focus, .form-select:focus {
+          outline: 2px solid transparent;
+          outline-offset: 2px;
+          border-color: #3b82f6;
+          --tw-ring-color: #3b82f6;
+          box-shadow: 0 0 0 2px var(--tw-ring-color);
+      }
+      .tab-btn.active {
+        color: #3b82f6;
+        border-color: #3b82f6;
+      }
+      html.dark .tab-btn.active {
+         color: #60a5fa;
+         border-color: #60a5fa;
+      }
+      /* Remove number input spinners */
+      input[type=number]::-webkit-inner-spin-button,
+      input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type=number] {
+        -moz-appearance: textfield;
+      }
+    </style>
+</head>
+<body>
+    <div class="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8">
+        <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white">محاسبه‌گر پیشرفته برش و ضایعات</h1>
+
+        <!-- Global Settings -->
+        <div class="card">
+             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div class="lg:col-span-1">
+                    <label for="unit-selector" class="block text-sm font-medium text-gray-700 dark:text-gray-300">واحد اندازه‌گیری طول</label>
+                    <select id="unit-selector" class="form-select w-full mt-1">
+                        <option value="m">متر (m)</option>
+                        <option value="cm" selected>سانتی‌متر (cm)</option>
+                    </select>
+                </div>
+
+                <div class="lg:col-span-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                        <div class="sm:col-span-1">
+                            <label for="saved-calculations" class="block text-sm font-medium text-gray-700 dark:text-gray-300">محاسبات ذخیره شده</label>
+                            <select id="saved-calculations" class="form-select w-full mt-1"></select>
+                        </div>
+                        <button id="load-calculation-btn" class="py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">بارگذاری</button>
+                        <button id="delete-calculation-btn" class="py-2 px-4 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition">حذف</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab Navigation -->
+         <div class="card !p-0">
+            <nav class="flex border-b border-gray-200 dark:border-gray-700">
+                <button data-tab="optimizer" class="tab-btn active px-6 py-3 font-semibold border-b-2">بهینه‌سازی برش شاخه</button>
+                <button data-tab="simulator" class="tab-btn px-6 py-3 font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">شبیه‌سازی طرح ثابت</button>
+                <button data-tab="sheet-calculator" class="tab-btn px-6 py-3 font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">محاسبه‌گر ورق</button>
+                <button data-tab="pipe-calculator" class="tab-btn px-6 py-3 font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">محاسبه‌گر لوله</button>
+            </nav>
+        </div>
+
+
+        <!-- Main Calculator Form (for 1D) -->
+        <div id="calculator-form" class="space-y-6">
+            <!-- Raw Material -->
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">۱. مشخصات ماده اولیه (شاخه)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label for="calculation-name" class="block text-sm font-medium">نام محاسبه (برای ذخیره)</label>
+                        <input type="text" id="calculation-name" class="form-input w-full mt-1" placeholder="مثلا: پایه ستون مدل A">
+                    </div>
+                     <div>
+                        <label for="stock-count" class="block text-sm font-medium">تعداد شاخه</label>
+                        <input type="number" id="stock-count" class="form-input w-full mt-1" value="1" min="1">
+                    </div>
+                    <div>
+                        <label for="stock-length" class="block text-sm font-medium">طول شاخه (<span class="unit-label">سانتی‌متر</span>)</label>
+                        <input type="number" id="stock-length" class="form-input w-full mt-1" value="600" min="0">
+                    </div>
+                    <div>
+                        <label for="stock-width" class="block text-sm font-medium">عرض شاخه (<span class="unit-label">سانتی‌متر</span>)</label>
+                        <input type="number" id="stock-width" class="form-input w-full mt-1" value="10" min="0">
+                    </div>
+                     <div>
+                        <label for="stock-thickness" class="block text-sm font-medium">ضخامت شاخه (<span class="unit-label">سانتی‌متر</span>)</label>
+                        <input type="number" id="stock-thickness" class="form-input w-full mt-1" value="0.3" min="0">
+                    </div>
+                     <div>
+                        <label for="material-density" class="block text-sm font-medium">چگالی (kg/m³)</label>
+                        <input type="number" id="material-density" class="form-input w-full mt-1" placeholder="مثلا: 7850 برای فولاد" min="0">
+                    </div>
+                </div>
+                 <!-- Weight Calculator Helper -->
+                <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <details>
+                        <summary class="cursor-pointer font-semibold text-blue-600 dark:text-blue-400">دستیار محاسبه وزن شاخه</summary>
+                        <div id="weight-helper" class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                            <div>
+                                <label for="helper-material" class="block text-xs font-medium">جنس</label>
+                                <select id="helper-material" class="form-select w-full mt-1 text-sm">
+                                    <option value="7850">فولاد</option>
+                                    <option value="7874">آهن</option>
+                                    <option value="2700">آلومینیوم</option>
+                                    <option value="8960">مس</option>
+                                    <option value="8400">برنج</option>
+                                    <option value="8000">فولاد ضدزنگ (استیل)</option>
+                                    <option value="custom">سفارشی</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="helper-length" class="block text-xs font-medium">طول (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="helper-length" class="form-input w-full mt-1 text-sm" value="600">
+                            </div>
+                             <div>
+                                <label for="helper-width" class="block text-xs font-medium">عرض (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="helper-width" class="form-input w-full mt-1 text-sm" value="10">
+                            </div>
+                            <div>
+                                <label for="helper-thickness" class="block text-xs font-medium">ضخامت (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="helper-thickness" class="form-input w-full mt-1 text-sm" value="0.3">
+                            </div>
+                            <div class="flex flex-col justify-end">
+                                <button id="calculate-weight-btn" class="w-full py-2 px-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition text-sm">محاسبه وزن</button>
+                            </div>
+                            <p id="helper-result" class="md:col-span-5 text-center font-bold text-lg mt-2 h-6"></p>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Cutting Parameters -->
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">۲. پارامترهای برش</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div>
+                        <label for="kerf-width" class="block text-sm font-medium">ضخامت برش (<span class="unit-label">سانتی‌متر</span>)</label>
+                        <input type="number" id="kerf-width" class="form-input w-full mt-1" value="0.3" min="0" step="0.1">
+                    </div>
+                    <div>
+                        <label for="cutting-method" class="block text-sm font-medium">نوع برش</label>
+                        <select id="cutting-method" class="form-select w-full mt-1">
+                            <option value="saw">اره</option>
+                            <option value="laser">لیزر</option>
+                            <option value="press">پرس</option>
+                        </select>
+                    </div>
+                </div>
+                 <div id="press-scrap-options" class="hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 space-y-3">
+                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">ضایعات اضافی برای برش پرسی</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-800/50 rounded-lg">
+                            <input type="checkbox" id="start-scrap-enabled" class="h-5 w-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                            <label for="start-scrap-length" class="flex-grow text-sm font-medium">ضایعات ابتدای شاخه (<span class="unit-label">سانتی‌متر</span>)</label>
+                            <input type="number" id="start-scrap-length" class="form-input w-24 text-sm" value="0" min="0" disabled>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-800/50 rounded-lg">
+                            <input type="checkbox" id="end-scrap-enabled" class="h-5 w-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                            <label for="end-scrap-length" class="flex-grow text-sm font-medium">ضایعات انتهای شاخه (<span class="unit-label">سانتی‌متر</span>)</label>
+                            <input type="number" id="end-scrap-length" class="form-input w-24 text-sm" value="0" min="0" disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pieces to Cut -->
+            <div class="card">
+                <div class="flex justify-between items-center border-b pb-2 border-gray-200 dark:border-gray-700 mb-4">
+                    <h3 class="text-lg font-bold">۳. انواع قطعه برای برش از شاخه</h3>
+                    <button id="add-piece-btn" class="py-2 px-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition text-sm">افزودن نوع قطعه</button>
+                </div>
+                <div id="pieces-container" class="space-y-6">
+                    <!-- Piece templates will be inserted here -->
+                </div>
+            </div>
+             <!-- Action Buttons for 1D calculator -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="calculate-btn" class="w-full py-3 px-6 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-lg">محاسبه و بهینه‌سازی</button>
+                <button id="save-calculation-btn" class="w-full sm:w-auto py-3 px-6 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition">ذخیره این محاسبه</button>
+            </div>
+        </div>
+
+        <!-- Tab Content Panels -->
+        <div id="tab-content-optimizer" class="tab-panel">
+            <!-- This is the default mode, no extra inputs needed for optimizer. -->
+        </div>
+
+        <div id="tab-content-simulator" class="tab-panel hidden space-y-6">
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">۴. تعریف طرح برش ثابت</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">تعداد هر نوع قطعه که می‌خواهید از <strong>یک شاخه</strong> برش داده شود را مشخص کنید.</p>
+                <div id="fixed-layout-container" class="space-y-4">
+                    <!-- Dynamic inputs for fixed layout will go here -->
+                </div>
+            </div>
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">۵. محاسبه بر اساس تعداد قطعه مورد نیاز</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">تعداد <strong>کل</strong> قطعاتی که نیاز دارید را وارد کرده و با استفاده از طرح برش ثابت بالا، میزان مواد اولیه مورد نیاز را محاسبه کنید.</p>
+                <div id="required-pieces-container" class="space-y-4 mb-4">
+                    <!-- Dynamic inputs for required pieces will go here -->
+                </div>
+                <button id="calculate-required-material-btn" class="w-full py-3 px-6 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 transition text-lg">محاسبه مواد اولیه مورد نیاز</button>
+                <div id="required-material-results" class="mt-6 hidden"></div>
+            </div>
+        </div>
+
+        <div id="tab-content-sheet-calculator" class="tab-panel hidden space-y-6">
+             <div class="card">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">۱. مشخصات ورق</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <label for="sheet-calc-name" class="block text-sm font-medium">نام محاسبه (برای ذخیره)</label>
+                        <input type="text" id="sheet-calc-name" class="form-input w-full mt-1" placeholder="مثلا: واشر مسی">
+                    </div>
+                    <div>
+                        <label for="sheet-count" class="block text-sm font-medium">تعداد ورق</label>
+                        <input type="number" id="sheet-count" class="form-input w-full mt-1" value="1" min="1">
+                    </div>
+                    <div>
+                        <label for="sheet-length" class="block text-sm font-medium">طول ورق (<span class="unit-label">سانتی‌متر</span>)</label>
+                        <input type="number" id="sheet-length" class="form-input w-full mt-1" value="150" min="0">
+                    </div>
+                    <div>
+                        <label for="sheet-width" class="block text-sm font-medium">عرض ورق (<span class="unit-label">سانتی‌متر</span>)</label>
+                        <input type="number" id="sheet-width" class="form-input w-full mt-1" value="50" min="0">
+                    </div>
+                    <div>
+                        <label for="sheet-thickness" class="block text-sm font-medium">ضخامت ورق (<span class="unit-label">سانتی‌متر</span>)</label>
+                        <input type="number" id="sheet-thickness" class="form-input w-full mt-1" value="0.1" min="0">
+                    </div>
+                    <div>
+                        <label for="sheet-density" class="block text-sm font-medium">چگالی (kg/m³)</label>
+                        <input type="number" id="sheet-density" class="form-input w-full mt-1" value="8960" min="0">
+                    </div>
+                </div>
+                <!-- Sheet Weight Calculator Helper -->
+                <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <details>
+                        <summary class="cursor-pointer font-semibold text-blue-600 dark:text-blue-400">دستیار محاسبه وزن ورق</summary>
+                        <div id="sheet-weight-helper" class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                            <div>
+                                <label for="sheet-helper-material" class="block text-xs font-medium">جنس</label>
+                                <select id="sheet-helper-material" class="form-select w-full mt-1 text-sm">
+                                    <option value="7850">فولاد</option>
+                                    <option value="7874">آهن</option>
+                                    <option value="2700">آلومینیوم</option>
+                                    <option value="8960" selected>مس</option>
+                                    <option value="8400">برنج</option>
+                                    <option value="8000">فولاد ضدزنگ (استیل)</option>
+                                    <option value="custom">سفارشی</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="sheet-helper-length" class="block text-xs font-medium">طول (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="sheet-helper-length" class="form-input w-full mt-1 text-sm">
+                            </div>
+                             <div>
+                                <label for="sheet-helper-width" class="block text-xs font-medium">عرض (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="sheet-helper-width" class="form-input w-full mt-1 text-sm">
+                            </div>
+                            <div>
+                                <label for="sheet-helper-thickness" class="block text-xs font-medium">ضخامت (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="sheet-helper-thickness" class="form-input w-full mt-1 text-sm">
+                            </div>
+                            <div class="flex flex-col justify-end">
+                                <button id="sheet-calculate-weight-btn" class="w-full py-2 px-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition text-sm">محاسبه وزن</button>
+                            </div>
+                            <p id="sheet-helper-result" class="md:col-span-5 text-center font-bold text-lg mt-2 h-6"></p>
+                        </div>
+                    </details>
+                </div>
+            </div>
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">۲. مشخصات قطعه</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="sheet-piece-shape" class="block text-sm font-medium">شکل قطعه</label>
+                        <select id="sheet-piece-shape" class="form-select w-full mt-1">
+                            <option value="rect">مستطیل</option>
+                            <option value="circle">دایره</option>
+                            <option value="t_shape">شکل T</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="sheet-kerf" class="block text-sm font-medium">فاصله بین قطعات (<span class="unit-label">سانتی‌متر</span>)</label>
+                        <input type="number" id="sheet-kerf" class="form-input w-full mt-1" value="0.1" min="0">
+                    </div>
+                </div>
+                <div id="sheet-piece-rect-dims" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="sheet-rect-length" class="block text-sm font-medium">طول قطعه (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="sheet-rect-length" class="form-input w-full mt-1" value="10" min="0">
+                            </div>
+                            <div>
+                                <label for="sheet-rect-width" class="block text-sm font-medium">عرض قطعه (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="sheet-rect-width" class="form-input w-full mt-1" value="5" min="0">
+                            </div>
+                        </div>
+                         <div class="self-end">
+                            <label class="upload-dxf-btn cursor-pointer py-2 px-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg text-sm font-semibold">
+                                بارگذاری نقشه (DXF)
+                                <input type="file" class="dxf-file-input hidden" accept=".dxf">
+                            </label>
+                        </div>
+                    </div>
+                     <div class="sheet-holes-section mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <div class="flex justify-between items-center">
+                            <h5 class="font-semibold text-sm">سوراخ‌کاری‌ها</h5>
+                            <button class="add-hole-btn text-blue-600 hover:text-blue-800 text-sm font-semibold">+ افزودن سوراخ</button>
+                        </div>
+                        <div class="holes-container mt-2 space-y-2"></div>
+                    </div>
+                </div>
+                <div id="sheet-piece-circle-dims" class="hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                     <div class="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4 items-start">
+                        <div>
+                            <label for="sheet-circle-outer" class="block text-sm font-medium">قطر خارجی (<span class="unit-label">سانتی‌متر</span>)</label>
+                            <input type="number" id="sheet-circle-outer" class="form-input w-full mt-1" value="5" min="0">
+                        </div>
+                        <div class="self-end pt-6">
+                             <label class="upload-dxf-btn cursor-pointer py-2 px-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg text-sm font-semibold">
+                                بارگذاری نقشه (DXF)
+                                <input type="file" class="dxf-file-input hidden" accept=".dxf">
+                            </label>
+                        </div>
+                    </div>
+                     <div class="sheet-holes-section mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <div class="flex justify-between items-center">
+                            <h5 class="font-semibold text-sm">سوراخ‌کاری‌ها</h5>
+                            <button class="add-hole-btn text-blue-600 hover:text-blue-800 text-sm font-semibold">+ افزودن سوراخ</button>
+                        </div>
+                        <div class="holes-container mt-2 space-y-2"></div>
+                    </div>
+                </div>
+                <div id="sheet-piece-t-dims" class="hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
+                     <div class="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4 items-end">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label for="sheet-t-cap-length" class="block text-sm font-medium">طول کلاهک (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="sheet-t-cap-length" class="form-input w-full mt-1" value="8" min="0">
+                            </div>
+                            <div>
+                                <label for="sheet-t-cap-width" class="block text-sm font-medium">عرض کلاهک (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="sheet-t-cap-width" class="form-input w-full mt-1" value="2" min="0">
+                            </div>
+                            <div>
+                                <label for="sheet-t-base-length" class="block text-sm font-medium">طول پایه (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="sheet-t-base-length" class="form-input w-full mt-1" value="10" min="0">
+                            </div>
+                            <div>
+                                <label for="sheet-t-base-width" class="block text-sm font-medium">عرض پایه (<span class="unit-label">سانتی‌متر</span>)</label>
+                                <input type="number" id="sheet-t-base-width" class="form-input w-full mt-1" value="3" min="0">
+                            </div>
+                        </div>
+                        <label class="upload-dxf-btn cursor-pointer py-2 px-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg text-sm font-semibold">
+                            بارگذاری نقشه (DXF)
+                            <input type="file" class="dxf-file-input hidden" accept=".dxf">
+                        </label>
+                    </div>
+                     <div class="sheet-holes-section mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <div class="flex justify-between items-center">
+                            <h5 class="font-semibold text-sm">سوراخ‌کاری‌ها</h5>
+                            <button class="add-hole-btn text-blue-600 hover:text-blue-800 text-sm font-semibold">+ افزودن سوراخ</button>
+                        </div>
+                        <div class="holes-container mt-2 space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="calculate-sheet-btn" class="w-full py-3 px-6 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-lg">محاسبه چیدمان ورق</button>
+                <button id="save-sheet-calculation-btn" class="w-full sm:w-auto py-3 px-6 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition">ذخیره این محاسبه</button>
+            </div>
+             <div id="sheet-results-container" class="hidden"></div>
+        </div>
+
+        <div id="tab-content-pipe-calculator" class="tab-panel hidden space-y-6">
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">۱. مشخصات لوله</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <label for="pipe-calc-name" class="block text-sm font-medium">نام محاسبه (برای ذخیره)</label>
+                        <input type="text" id="pipe-calc-name" class="form-input w-full mt-1" placeholder="مثلا: پایه های دستگاه X">
+                    </div>
+                    <div>
+                        <label for="pipe-count" class="block text-sm font-medium">تعداد لوله</label>
+                        <input type="number" id="pipe-count" class="form-input w-full mt-1" value="1" min="1">
+                    </div>
+                    <div>
+                        <label for="pipe-length" class="block text-sm font-medium">طول لوله (<span class="unit-label">سانتی‌متر</span>)</label>
+                        <input type="number" id="pipe-length" class="form-input w-full mt-1" value="600" min="0">
+                    </div>
+                    <div class="lg:col-span-1">
+                        <label class="block text-sm font-medium">نوع لوله</label>
+                        <div class="flex items-center gap-x-6 mt-2">
+                            <label class="flex items-center gap-2"><input type="radio" name="pipe-type" value="solid" class="h-4 w-4"><span>تو پر (Solid)</span></label>
+                            <label class="flex items-center gap-2"><input type="radio" name="pipe-type" value="hollow" checked class="h-4 w-4"><span>تو خالی (Hollow)</span></label>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="pipe-outer-diameter" class="block text-sm font-medium">قطر خارجی (<span class="unit-label">سانتی‌متر</span>)</label>
+                        <input type="number" id="pipe-outer-diameter" class="form-input w-full mt-1" value="5" min="0">
+                    </div>
+                    <div id="pipe-hollow-dims" class="lg:col-span-2 grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="pipe-wall-thickness" class="block text-sm font-medium">ضخامت دیواره (<span class="unit-label">سانتی‌متر</span>)</label>
+                            <input type="number" id="pipe-wall-thickness" class="form-input w-full mt-1" value="0.2" min="0">
+                        </div>
+                        <div>
+                            <label for="pipe-inner-diameter" class="block text-sm font-medium">قطر داخلی (<span class="unit-label">سانتی‌متر</span>)</label>
+                            <input type="number" id="pipe-inner-diameter" class="form-input w-full mt-1" value="4.6" min="0" readonly>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="pipe-density" class="block text-sm font-medium">چگالی (kg/m³)</label>
+                        <select id="pipe-density" class="form-select w-full mt-1">
+                            <option value="7850">فولاد</option>
+                            <option value="7874">آهن</option>
+                            <option value="2700" selected>آلومینیوم</option>
+                            <option value="8960">مس</option>
+                            <option value="8400">برنج</option>
+                            <option value="8000">استیل</option>
+                            <option value="2000">پشم شیشه (راد)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">۲. پارامترهای برش</h3>
+                <div>
+                    <label for="pipe-kerf-width" class="block text-sm font-medium">ضخامت برش (<span class="unit-label">سانتی‌متر</span>)</label>
+                    <input type="number" id="pipe-kerf-width" class="form-input w-full md:w-1/3 mt-1" value="0.3" min="0" step="0.1">
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-between items-center border-b pb-2 border-gray-200 dark:border-gray-700 mb-4">
+                    <h3 class="text-lg font-bold">۳. انواع قطعه برای برش از لوله</h3>
+                    <button id="add-pipe-piece-btn" class="py-2 px-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition text-sm">افزودن نوع قطعه</button>
+                </div>
+                <div id="pipe-pieces-container" class="space-y-4">
+                    <!-- Pipe piece templates will be inserted here -->
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="calculate-pipe-btn" class="w-full py-3 px-6 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-lg">محاسبه برش لوله</button>
+                <button id="save-pipe-calculation-btn" class="w-full sm:w-auto py-3 px-6 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition">ذخیره این محاسبه</button>
+            </div>
+
+            <div id="pipe-results-container" class="hidden"></div>
+        </div>
+
+
+        <!-- Results Section (for 1D) -->
+        <div id="results-container" class="hidden"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+             // --- API Client ---
+            const api = {
+                async request(endpoint, options = {}) {
+                    const { body, ...customConfig } = options;
+                    const headers = { 'Content-Type': 'application/json' };
+                    const config = {
+                        method: body ? 'POST' : 'GET',
+                        ...customConfig,
+                        headers: { ...headers, ...customConfig.headers },
+                    };
+                    if (body) config.body = JSON.stringify(body);
+
+                    try {
+                        const response = await fetch(endpoint, config);
+                         if (response.status === 204) return null; // No Content for DELETE
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({ error: 'An unknown error occurred' }));
+                            throw new Error(errorData.error || `Request failed with status ${response.status}`);
+                        }
+                        return response.json();
+                    } catch (error) {
+                        alert(`خطای ارتباط با سرور: ${error.message}`);
+                        return Promise.reject(error);
+                    }
+                },
+                get: (endpoint) => api.request(endpoint),
+                post: (endpoint, data) => api.request(endpoint, { body: data }),
+                del: (endpoint) => api.request(endpoint, { method: 'DELETE' }),
+            };
+            
+            let state = { savedCalcs: {} };
+            let lastCalculationResult = null;
+            let lastSheetCalculationResult = null;
+            let lastPipeCalculationResult = null;
+
+
+            // --- Theme Syncing ---
+            const syncTheme = () => {
+                try {
+                    const parentHtml = window.top.document.documentElement;
+                    if (parentHtml.classList.contains('dark')) document.documentElement.classList.add('dark');
+                    else document.documentElement.classList.remove('dark');
+                } catch (e) {
+                    if (!document.documentElement.classList.contains('dark') && !document.documentElement.classList.contains('light')) {
+                         document.documentElement.classList.add('dark');
+                    }
+                }
+            };
+            syncTheme();
+            try { new MutationObserver(syncTheme).observe(window.top.document.documentElement, { attributes: true, attributeFilter: ['class'] }); } 
+            catch (e) { console.warn("Could not observe parent window for theme changes."); }
+
+            // --- DOM Elements ---
+            const unitSelector = document.getElementById('unit-selector');
+            const addPieceBtn = document.getElementById('add-piece-btn');
+            const piecesContainer = document.getElementById('pieces-container');
+            const fixedLayoutContainer = document.getElementById('fixed-layout-container');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const savedCalculationsSelect = document.getElementById('saved-calculations');
+            const saveCalculationBtn = document.getElementById('save-calculation-btn');
+            const loadCalculationBtn = document.getElementById('load-calculation-btn');
+            const deleteCalculationBtn = document.getElementById('delete-calculation-btn');
+            const calculationNameInput = document.getElementById('calculation-name');
+            const calculateWeightBtn = document.getElementById('calculate-weight-btn');
+            const cuttingMethodSelect = document.getElementById('cutting-method');
+            const stockLengthInput = document.getElementById('stock-length');
+            const stockWidthInput = document.getElementById('stock-width');
+            const stockThicknessInput = document.getElementById('stock-thickness');
+            const helperLengthInput = document.getElementById('helper-length');
+            const helperWidthInput = document.getElementById('helper-width');
+            const helperThicknessInput = document.getElementById('helper-thickness');
+            const requiredPiecesContainer = document.getElementById('required-pieces-container');
+            const calculateRequiredMaterialBtn = document.getElementById('calculate-required-material-btn');
+            const requiredMaterialResults = document.getElementById('required-material-results');
+            const pressScrapOptions = document.getElementById('press-scrap-options');
+            const startScrapEnabled = document.getElementById('start-scrap-enabled');
+            const startScrapLength = document.getElementById('start-scrap-length');
+            const endScrapEnabled = document.getElementById('end-scrap-enabled');
+            const endScrapLength = document.getElementById('end-scrap-length');
+            // Sheet Calculator elements
+            const sheetCalcTab = document.getElementById('tab-content-sheet-calculator');
+            const sheetPieceShapeSelect = document.getElementById('sheet-piece-shape');
+            const sheetRectDims = document.getElementById('sheet-piece-rect-dims');
+            const sheetCircleDims = document.getElementById('sheet-piece-circle-dims');
+            const sheetTdims = document.getElementById('sheet-piece-t-dims');
+            const calculateSheetBtn = document.getElementById('calculate-sheet-btn');
+            const sheetResultsContainer = document.getElementById('sheet-results-container');
+            const saveSheetCalcBtn = document.getElementById('save-sheet-calculation-btn');
+            const sheetCalculateWeightBtn = document.getElementById('sheet-calculate-weight-btn');
+            // Pipe Calculator elements
+            const pipeCalcTab = document.getElementById('tab-content-pipe-calculator');
+            const pipeHollowDims = document.getElementById('pipe-hollow-dims');
+            const pipeTypeRadios = document.querySelectorAll('input[name="pipe-type"]');
+            const pipeOuterDiaInput = document.getElementById('pipe-outer-diameter');
+            const pipeInnerDiaInput = document.getElementById('pipe-inner-diameter');
+            const pipeWallThickInput = document.getElementById('pipe-wall-thickness');
+            const addPipePieceBtn = document.getElementById('add-pipe-piece-btn');
+            const pipePiecesContainer = document.getElementById('pipe-pieces-container');
+            const calculatePipeBtn = document.getElementById('calculate-pipe-btn');
+            const savePipeCalcBtn = document.getElementById('save-pipe-calculation-btn');
+            const pipeResultsContainer = document.getElementById('pipe-results-container');
+
+
+            // --- Unit Management ---
+            const updateLabels = () => {
+                const unit = unitSelector.value === 'm' ? 'متر' : 'سانتی‌متر';
+                document.querySelectorAll('.unit-label').forEach(label => label.textContent = unit);
+            };
+            unitSelector.addEventListener('change', updateLabels);
+            
+            const toMeters = (val) => val / (unitSelector.value === 'm' ? 1 : 100);
+            const fromMeters = (val) => val * (unitSelector.value === 'm' ? 1 : 100);
+            const toMM = (val) => fromMeters(val) * 10; // Converts current unit (m or cm) to mm
+            const fromMM = (val) => toMeters(val / 10); // Converts mm to meters for calculations
+
+
+            // --- Tab Management ---
+            const tabs = document.querySelectorAll('.tab-btn');
+            const panels = document.querySelectorAll('.tab-panel');
+            const mainForm = document.getElementById('calculator-form');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    panels.forEach(p => p.classList.add('hidden'));
+                    
+                    tab.classList.add('active');
+                    const activeTab = tab.dataset.tab;
+                    const activePanel = document.getElementById(`tab-content-${activeTab}`);
+                    if (activePanel) activePanel.classList.remove('hidden');
+
+                    const isSheetCalc = activeTab === 'sheet-calculator';
+                    const isPipeCalc = activeTab === 'pipe-calculator';
+                    
+                    mainForm.style.display = (isSheetCalc || isPipeCalc) ? 'none' : 'block';
+                    
+                    resultsContainer.classList.add('hidden');
+                    sheetResultsContainer.classList.add('hidden');
+                    pipeResultsContainer.classList.add('hidden');
+                });
+            });
+
+            // --- Dynamic Element Creation ---
+            const createPieceHTML = (id) => {
+                const unitText = unitSelector.value === 'm' ? 'متر' : 'سانتی‌متر';
+                return `
+                <div class="piece-group border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50" data-id="${id}">
+                    <div class="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4 items-center mb-4">
+                        <div>
+                            <label for="piece-name-${id}" class="block text-sm font-medium">نام قطعه (مثلا: پایه)</label>
+                            <input type="text" id="piece-name-${id}" class="piece-name form-input w-full mt-1" placeholder="نام قطعه #${id}">
+                        </div>
+                         <div class="text-left self-end flex items-center gap-2">
+                            <label class="upload-dxf-btn cursor-pointer py-2 px-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg text-sm font-semibold">
+                                بارگذاری نقشه (DXF)
+                                <input type="file" class="dxf-file-input hidden" accept=".dxf">
+                            </label>
+                            <button class="remove-piece-btn py-2 px-3 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/60 rounded-lg text-sm font-semibold">حذف</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="piece-length-${id}" class="block text-sm font-medium">طول قطعه (<span class="unit-label">${unitText}</span>)</label>
+                            <input type="number" id="piece-length-${id}" class="piece-length form-input w-full mt-1" value="15" min="0">
+                        </div>
+                        <div>
+                            <label for="piece-width-${id}" class="block text-sm font-medium">عرض قطعه (<span class="unit-label">${unitText}</span>)</label>
+                            <input type="number" id="piece-width-${id}" class="piece-width form-input w-full mt-1" value="10" min="0">
+                        </div>
+                    </div>
+                    <div class="press-options hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <label for="end-cut-shape-${id}" class="block text-sm font-medium">شکل برش انتهایی (مخصوص پرس)</label>
+                        <select id="end-cut-shape-${id}" class="end-cut-shape form-select w-full mt-1">
+                            <option value="straight">صاف</option>
+                            <option value="semicircle_one_side">نیم‌دایره (یک طرف)</option>
+                            <option value="semicircle_both">نیم‌دایره (دو طرف)</option>
+                        </select>
+                    </div>
+                    <div class="holes-section mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <div class="flex justify-between items-center">
+                            <h5 class="font-semibold text-sm">سوراخ‌کاری‌ها</h5>
+                            <button class="add-hole-btn text-blue-600 hover:text-blue-800 text-sm font-semibold">+ افزودن سوراخ</button>
+                        </div>
+                        <div class="holes-container mt-2 space-y-2"></div>
+                    </div>
+                </div>
+            `};
+
+            const createHoleHTML = (pieceId, holeId, context = '1d') => {
+                const unit = unitSelector.value === 'm' ? 'متر' : 'سانتی‌متر';
+                const yPosDisabled = context === '1d';
+                return `
+                <div class="hole-group grid grid-cols-1 md:grid-cols-7 gap-2 items-end p-2 bg-gray-100 dark:bg-gray-800 rounded" data-id="${holeId}">
+                    <div>
+                        <label class="text-xs">نوع</label>
+                        <select class="hole-type form-select w-full text-sm">
+                            <option value="round">گرد</option>
+                            <option value="square">مربع</option>
+                            <option value="rect">مستطیل</option>
+                        </select>
+                    </div>
+                    <div class="hole-dim1">
+                        <label class="text-xs">قطر (<span class="unit-label">${unit}</span>)</label>
+                        <input type="number" class="form-input w-full text-sm" value="2" min="0">
+                    </div>
+                    <div class="hole-dim2 hidden">
+                        <label class="text-xs">عرض (<span class="unit-label">${unit}</span>)</label>
+                        <input type="number" class="form-input w-full text-sm" value="2" min="0">
+                    </div>
+                    <div>
+                        <label class="text-xs">موقعیت X (<span class="unit-label">${unit}</span>)</label>
+                        <input type="number" class="hole-x-pos form-input w-full text-sm" value="5" min="0">
+                    </div>
+                    <div>
+                        <label class="text-xs">موقعیت Y (<span class="unit-label">${unit}</span>)</label>
+                        <input type="number" class="hole-y-pos form-input w-full text-sm" value="5" min="0" ${yPosDisabled ? 'disabled title="موقعیت Y در راستای عرض شاخه در نظر گرفته میشود"' : ''}>
+                    </div>
+                    <div>
+                        <label class="text-xs">تعداد</label>
+                        <input type="number" class="hole-count form-input w-full text-sm" value="1" min="1">
+                    </div>
+                    <button class="remove-hole-btn text-red-500 hover:text-red-700 text-xs font-semibold self-center justify-self-center h-10">حذف</button>
+                </div>
+            `};
+            
+            const createSimulationInputHTML = (id, name) => {
+                 return `
+                    <div class="fixed-layout-row grid grid-cols-[1fr,150px] gap-4 items-center" data-piece-id="${id}">
+                        <label for="sim-count-${id}" class="sim-label font-medium">${name}</label>
+                        <input type="number" id="sim-count-${id}" class="sim-count form-input w-full" placeholder="تعداد در هر شاخه" min="0" value="0">
+                    </div>
+                `;
+            };
+
+            const createRequiredPieceInputHTML = (id, name) => {
+                 return `
+                    <div class="required-piece-row grid grid-cols-[1fr,150px] gap-4 items-center" data-piece-id="${id}">
+                        <label for="req-count-${id}" class="req-label font-medium">${name}</label>
+                        <input type="number" id="req-count-${id}" class="req-count form-input w-full" placeholder="تعداد کل مورد نیاز" min="0" value="0">
+                    </div>
+                `;
+            };
+            
+            const createPipePieceHTML = (id) => {
+                const unitText = unitSelector.value === 'm' ? 'متر' : 'سانتی‌متر';
+                return `
+                <div class="pipe-piece-group grid grid-cols-1 md:grid-cols-[1fr,180px,auto,auto] gap-4 items-end p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg" data-id="${id}">
+                    <div>
+                        <label for="pipe-piece-name-${id}" class="block text-sm font-medium">نام قطعه</label>
+                        <input type="text" id="pipe-piece-name-${id}" class="pipe-piece-name form-input w-full mt-1" placeholder="نام قطعه #${id}">
+                    </div>
+                    <div>
+                        <label for="pipe-piece-length-${id}" class="block text-sm font-medium">طول قطعه (<span class="unit-label">${unitText}</span>)</label>
+                        <input type="number" id="pipe-piece-length-${id}" class="pipe-piece-length form-input w-full mt-1" value="15" min="0">
+                    </div>
+                    <label class="upload-dxf-btn cursor-pointer py-2 px-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg text-sm font-semibold">
+                        DXF
+                        <input type="file" class="dxf-file-input hidden" accept=".dxf">
+                    </label>
+                    <button class="remove-pipe-piece-btn py-2 px-3 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/60 rounded-lg text-sm font-semibold">حذف</button>
+                </div>
+            `};
+
+
+            let pieceCounter = 0;
+            const addPiece = (id = null) => {
+                const pieceId = id ? parseInt(id, 10) : ++pieceCounter;
+                pieceCounter = Math.max(pieceCounter, pieceId);
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = createPieceHTML(pieceId);
+                const pieceEl = tempDiv.firstElementChild;
+                piecesContainer.appendChild(pieceEl);
+                
+                const newSimInput = document.createElement('div');
+                newSimInput.innerHTML = createSimulationInputHTML(pieceId, `قطعه #${pieceId}`);
+                fixedLayoutContainer.appendChild(newSimInput.firstElementChild);
+                
+                const newReqInput = document.createElement('div');
+                newReqInput.innerHTML = createRequiredPieceInputHTML(pieceId, `قطعه #${pieceId}`);
+                requiredPiecesContainer.appendChild(newReqInput.firstElementChild);
+
+                cuttingMethodSelect.dispatchEvent(new Event('change'));
+                return pieceEl;
+            };
+            addPieceBtn.addEventListener('click', () => addPiece());
+            
+            let pipePieceCounter = 0;
+            const addPipePiece = (id = null) => {
+                const pieceId = id ? parseInt(id, 10) : ++pipePieceCounter;
+                pipePieceCounter = Math.max(pipePieceCounter, pieceId);
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = createPipePieceHTML(pieceId);
+                const pieceEl = tempDiv.firstElementChild;
+                pipePiecesContainer.appendChild(pieceEl);
+                return pieceEl;
+            };
+            addPipePieceBtn.addEventListener('click', () => addPipePiece());
+
+
+            const addHole = (pieceGroup, context) => {
+                const holeId = Date.now();
+                const pieceId = pieceGroup.dataset.id;
+                const holesContainer = pieceGroup.querySelector('.holes-container');
+                const holeEl = document.createElement('div');
+                holeEl.innerHTML = createHoleHTML(pieceId, holeId, context);
+                holesContainer.appendChild(holeEl.firstElementChild);
+                return holesContainer.lastElementChild;
+            };
+
+            // --- Event Delegation & UI Logic ---
+            document.body.addEventListener('click', e => {
+                 const target = e.target;
+                 const removePieceBtn = target.closest('.remove-piece-btn');
+                 const removePipePieceBtn = target.closest('.remove-pipe-piece-btn');
+                 const addHoleBtn = target.closest('.add-hole-btn');
+                 const removeHoleBtn = target.closest('.remove-hole-btn');
+                 
+                 if (removePieceBtn) {
+                     const pieceGroup = removePieceBtn.closest('.piece-group');
+                    const pieceId = pieceGroup.dataset.id;
+                    document.querySelector(`.fixed-layout-row[data-piece-id="${pieceId}"]`)?.remove();
+                    document.querySelector(`.required-piece-row[data-piece-id="${pieceId}"]`)?.remove();
+                    pieceGroup.remove();
+                 } else if (addHoleBtn) {
+                    const parentSection = addHoleBtn.closest('.piece-group, .sheet-holes-section');
+                    const context = parentSection.classList.contains('sheet-holes-section') ? 'sheet' : '1d';
+                    addHole(parentSection, context);
+                 } else if (removeHoleBtn) {
+                    removeHoleBtn.closest('.hole-group').remove();
+                 } else if (removePipePieceBtn) {
+                    removePipePieceBtn.closest('.pipe-piece-group').remove();
+                 }
+            });
+
+            document.body.addEventListener('change', e => {
+                if (e.target.classList.contains('dxf-file-input')) {
+                    handleDxfFile(e);
+                    return;
+                }
+                if (e.target.classList.contains('hole-type')) {
+                    const holeGroup = e.target.closest('.hole-group');
+                    const dim1 = holeGroup.querySelector('.hole-dim1'), dim2 = holeGroup.querySelector('.hole-dim2');
+                    const dim1Label = dim1.querySelector('label'), unit = unitSelector.value === 'm' ? 'متر' : 'سانتی‌متر';
+                    
+                    dim2.classList.toggle('hidden', e.target.value !== 'rect');
+                    if (e.target.value === 'round') dim1Label.innerHTML = `قطر (<span class="unit-label">${unit}</span>)`;
+                    else if (e.target.value === 'square') dim1Label.innerHTML = `ضلع (<span class="unit-label">${unit}</span>)`;
+                    else if (e.target.value === 'rect') dim1Label.innerHTML = `طول (<span class="unit-label">${unit}</span>)`;
+                }
+            });
+
+             document.body.addEventListener('input', (e) => {
+                if (e.target.classList.contains('piece-name')) {
+                    const pieceGroup = e.target.closest('.piece-group');
+                    const pieceId = pieceGroup.dataset.id;
+                    const newName = e.target.value.trim() || `قطعه #${pieceId}`;
+                    const simLabel = document.querySelector(`.sim-label[for="sim-count-${pieceId}"]`);
+                    if(simLabel) simLabel.textContent = newName;
+                    const reqLabel = document.querySelector(`.req-label[for="req-count-${pieceId}"]`);
+                    if(reqLabel) reqLabel.textContent = newName;
+                }
+            });
+
+
+            cuttingMethodSelect.addEventListener('change', (e) => {
+                const isPress = e.target.value === 'press';
+                pressScrapOptions.classList.toggle('hidden', !isPress);
+                document.querySelectorAll('.piece-group').forEach(pg => {
+                    pg.querySelector('.press-options').classList.toggle('hidden', !isPress);
+                });
+                const kerfLabel = document.querySelector('label[for="kerf-width"]');
+                const unitLabel = kerfLabel.querySelector('.unit-label').textContent;
+                if (isPress) {
+                    kerfLabel.innerHTML = `فاصله بین قطعات (<span class="unit-label">${unitLabel}</span>)`;
+                } else {
+                    kerfLabel.innerHTML = `ضخامت برش (<span class="unit-label">${unitLabel}</span>)`;
+                }
+            });
+
+            startScrapEnabled.addEventListener('change', () => {
+                startScrapLength.disabled = !startScrapEnabled.checked;
+                if (!startScrapEnabled.checked) startScrapLength.value = 0;
+            });
+            endScrapEnabled.addEventListener('change', () => {
+                endScrapLength.disabled = !endScrapEnabled.checked;
+                if (!endScrapEnabled.checked) endScrapLength.value = 0;
+            });
+
+            // --- DXF Parsing ---
+            const handleDxfFile = (event) => {
+                const fileInput = event.target;
+                const file = fileInput.files[0];
+                const pieceContainer = fileInput.closest('.piece-group, #sheet-piece-rect-dims, #sheet-piece-circle-dims, #sheet-piece-t-dims, .pipe-piece-group');
+
+                if (!file || !pieceContainer) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const dxfContent = e.target.result;
+                        parseDxfAndUpdateUI(dxfContent, pieceContainer);
+                        alert('نقشه با موفقیت خوانده شد و فیلدها پر شدند.');
+                    } catch (error) {
+                        console.error("DXF parsing error:", error);
+                        alert(`خطا در خواندن فایل DXF: ${error.message}`);
+                    }
+                    fileInput.value = ''; // Reset to allow re-upload
+                };
+                reader.onerror = () => { alert('خطا در خواندن فایل.'); fileInput.value = ''; };
+                reader.readAsText(file);
+            };
+
+            const parseDxfAndUpdateUI = (dxfContent, pieceContainer) => {
+                const containerId = pieceContainer.id;
+                const isForSheetRect = containerId === 'sheet-piece-rect-dims';
+                const isForSheetCircle = containerId === 'sheet-piece-circle-dims';
+                const isForSheetT = containerId === 'sheet-piece-t-dims';
+                const isForPipe = pieceContainer.classList.contains('pipe-piece-group');
+
+                const lines = dxfContent.split(/\r?\n/);
+                const circles = [];
+                const polylines = [];
+                const allLines = [];
+                let inEntitiesSection = false;
+                let currentEntity = null;
+
+                for (let i = 0; i < lines.length; i += 2) {
+                    const code = parseInt(lines[i].trim(), 10);
+                    const value = lines[i + 1]?.trim();
+                    if (isNaN(code) || !value) continue;
+
+                    if (code === 0 && value === 'SECTION' && lines[i + 3]?.trim() === 'ENTITIES') inEntitiesSection = true;
+                    if (code === 0 && value === 'ENDSEC') inEntitiesSection = false;
+                    if (!inEntitiesSection) continue;
+
+                    if (code === 0) {
+                        if (currentEntity) {
+                            if (currentEntity.type === 'LWPOLYLINE') polylines.push(currentEntity);
+                            else if (currentEntity.type === 'CIRCLE') circles.push(currentEntity);
+                            else if (currentEntity.type === 'LINE') allLines.push(currentEntity);
+                        }
+                        currentEntity = null;
+                        if (['LWPOLYLINE', 'CIRCLE', 'LINE'].includes(value)) {
+                            currentEntity = { type: value, vertices: [] };
+                        }
+                    }
+
+                    if (currentEntity) {
+                        switch (currentEntity.type) {
+                             case 'LINE':
+                                if (code === 10) currentEntity.x1 = parseFloat(value);
+                                if (code === 20) currentEntity.y1 = parseFloat(value);
+                                if (code === 11) currentEntity.x2 = parseFloat(value);
+                                if (code === 21) currentEntity.y2 = parseFloat(value);
+                                break;
+                            case 'LWPOLYLINE':
+                                if (code === 10) currentEntity.lastX = parseFloat(value);
+                                if (code === 20 && currentEntity.lastX !== undefined) {
+                                    currentEntity.vertices.push({ x: currentEntity.lastX, y: parseFloat(value) });
+                                    delete currentEntity.lastX;
+                                }
+                                if (code === 70) currentEntity.isClosed = (parseInt(value, 10) & 1) === 1;
+                                break;
+                            case 'CIRCLE':
+                                if (code === 10) currentEntity.centerX = parseFloat(value);
+                                if (code === 20) currentEntity.centerY = parseFloat(value);
+                                if (code === 40) currentEntity.radius = parseFloat(value);
+                                break;
+                        }
+                    }
+                }
+                if (currentEntity) {
+                    if (currentEntity.type === 'LWPOLYLINE') polylines.push(currentEntity);
+                    else if (currentEntity.type === 'CIRCLE') circles.push(currentEntity);
+                    else if (currentEntity.type === 'LINE') allLines.push(currentEntity);
+                }
+                
+                const convertMMtoCurrent = (val) => fromMeters(val/1000); // DXF is usually mm, convert to meters then to current unit
+                
+                if(isForPipe) {
+                    let maxLength = 0;
+                    allLines.forEach(l => {
+                        const len = Math.sqrt(Math.pow(l.x2-l.x1, 2) + Math.pow(l.y2-l.y1, 2));
+                        if(len > maxLength) maxLength = len;
+                    });
+                    polylines.forEach(p => {
+                        if(p.vertices.length < 2) return;
+                        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                        p.vertices.forEach(v => { minX = Math.min(minX, v.x); minY = Math.min(minY, v.y); maxX = Math.max(maxX, v.x); maxY = Math.max(maxY, v.y); });
+                        const len = Math.max(maxX - minX, maxY - minY);
+                        if(len > maxLength) maxLength = len;
+                    });
+                     circles.forEach(c => {
+                        const len = c.radius * 2;
+                        if(len > maxLength) maxLength = len;
+                    });
+                    if(maxLength === 0) throw new Error("هیچ خط یا شکلی برای استخراج طول یافت نشد.");
+                    pieceContainer.querySelector('.pipe-piece-length').value = convertMMtoCurrent(maxLength).toFixed(3);
+                    return;
+                }
+
+                const closedPolylines = polylines.filter(p => p.isClosed);
+                let mainOutline = null;
+                const allPotentialHoles = [];
+                const epsilon = 1e-5;
+                
+                if (isForSheetT) {
+                    if (closedPolylines.length === 0) throw new Error("هیچ شکل بسته‌ای (LWPOLYLINE) برای T-shape یافت نشد.");
+                    mainOutline = { type: 'T_SHAPE', path: closedPolylines[0], entity: closedPolylines[0] };
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    mainOutline.path.vertices.forEach(v => {
+                        minX = Math.min(minX, v.x); minY = Math.min(minY, v.y); maxX = Math.max(maxX, v.x); maxY = Math.max(maxY, v.y);
+                    });
+                    mainOutline.bounds = { minX, minY, maxX, maxY };
+
+                    // Heuristic to find T-shape dimensions
+                    const width = maxX - minX;
+                    const height = maxY - minY;
+                    
+                    const isUpright = width > height;
+                    let capL, capW, baseL, baseW;
+
+                    if (isUpright) { // Standard T
+                        capL = width;
+                        baseL = height - Math.min(...mainOutline.path.vertices.map(v => Math.abs(v.y - minY) > epsilon ? v.y - minY : Infinity));
+                        capW = height - baseL;
+                        baseW = Math.min(...mainOutline.path.vertices.map((v,i,arr) => Math.abs(arr[(i+1)%arr.length].x - v.x)).filter(w => w > epsilon));
+                    } else { // Rotated T
+                        capL = height;
+                        baseL = width - Math.min(...mainOutline.path.vertices.map(v => Math.abs(v.x - minX) > epsilon ? v.x - minX : Infinity));
+                        capW = width - baseL;
+                        baseW = Math.min(...mainOutline.path.vertices.map((v,i,arr) => Math.abs(arr[(i+1)%arr.length].y - v.y)).filter(h => h > epsilon));
+                    }
+                    
+                    document.getElementById('sheet-t-cap-length').value = convertMMtoCurrent(isUpright ? width : height).toFixed(3);
+                    document.getElementById('sheet-t-cap-width').value = convertMMtoCurrent(isUpright ? capW : baseW).toFixed(3); // This seems wrong
+                    document.getElementById('sheet-t-base-length').value = convertMMtoCurrent(isUpright ? baseL : capW).toFixed(3);
+                    document.getElementById('sheet-t-base-width').value = convertMMtoCurrent(isUpright ? baseW : baseL).toFixed(3);
+
+                    closedPolylines.slice(1).forEach(p => allPotentialHoles.push(p));
+                    circles.forEach(c => allPotentialHoles.push(c));
+
+                } else if(isForSheetCircle) {
+                    if (circles.length === 0) throw new Error("هیچ دایره‌ای برای شناسایی قطعه اصلی یافت نشد.");
+                    let maxRadius = -1;
+                    circles.forEach(c => {
+                        if (c.radius > maxRadius) { maxRadius = c.radius; mainOutline = { type: 'CIRCLE', center: { x: c.centerX, y: c.centerY }, radius: c.radius, entity: c }; }
+                    });
+                    if (!mainOutline) throw new Error("کادر اصلی دایره‌ای یافت نشد.");
+
+                    mainOutline.bounds = { minX: mainOutline.center.x - mainOutline.radius, minY: mainOutline.center.y - mainOutline.radius, maxX: mainOutline.center.x + mainOutline.radius, maxY: mainOutline.center.y + mainOutline.radius };
+                    document.getElementById('sheet-circle-outer').value = convertMMtoCurrent(mainOutline.radius * 2).toFixed(3);
+                    
+                    circles.filter(c => c !== mainOutline.entity).forEach(c => allPotentialHoles.push(c));
+                    closedPolylines.forEach(p => allPotentialHoles.push(p));
+
+                } else { // For 1D and Sheet Rectangle
+                    if (closedPolylines.length === 0) throw new Error("هیچ شکل بسته‌ای (LWPOLYLINE) در فایل DXF یافت نشد.");
+                    let maxArea = -1;
+                    closedPolylines.forEach(p => {
+                        if (p.vertices.length < 2) return;
+                        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                        p.vertices.forEach(v => { minX = Math.min(minX, v.x); minY = Math.min(minY, v.y); maxX = Math.max(maxX, v.x); maxY = Math.max(maxY, v.y); });
+                        const area = (maxX - minX) * (maxY - minY);
+                        if (area > maxArea) { maxArea = area; mainOutline = { type: 'RECT', path: p, bounds: { minX, minY, maxX, maxY }, entity: p }; }
+                    });
+                    if (!mainOutline) throw new Error("کادر اصلی قطعه یافت نشد.");
+
+                    const lengthInput = pieceContainer.querySelector(isForSheetRect ? '#sheet-rect-length' : '.piece-length');
+                    const widthInput = pieceContainer.querySelector(isForSheetRect ? '#sheet-rect-width' : '.piece-width');
+                    lengthInput.value = convertMMtoCurrent(mainOutline.bounds.maxX - mainOutline.bounds.minX).toFixed(3);
+                    widthInput.value = convertMMtoCurrent(mainOutline.bounds.maxY - mainOutline.bounds.minY).toFixed(3);
+
+                    closedPolylines.filter(p => p !== mainOutline.entity).forEach(p => allPotentialHoles.push(p));
+                    circles.forEach(c => allPotentialHoles.push(c));
+                }
+
+                const holesContainer = pieceContainer.querySelector('.holes-container');
+                holesContainer.innerHTML = '';
+                const context = (isForSheetRect || isForSheetCircle || isForSheetT) ? 'sheet' : '1d';
+                const { bounds } = mainOutline;
+
+                allPotentialHoles.forEach(ent => {
+                    let isHole = false, centerX, centerY, dim1, dim2, type;
+                    if (ent.type === 'CIRCLE' && ent.centerX !== undefined) {
+                        if (ent.centerX > bounds.minX && ent.centerX < bounds.maxX && ent.centerY > bounds.minY && ent.centerY < bounds.maxY) {
+                            isHole = true; centerX = ent.centerX; centerY = ent.centerY; dim1 = ent.radius * 2; type = 'round';
+                        }
+                    } else if (ent.type === 'LWPOLYLINE' && ent.vertices?.length > 2) {
+                        let hMinX = Infinity, hMinY = Infinity, hMaxX = -Infinity, hMaxY = -Infinity;
+                        ent.vertices.forEach(v => { hMinX = Math.min(hMinX, v.x); hMinY = Math.min(hMinY, v.y); hMaxX = Math.max(hMaxX, v.x); hMaxY = Math.max(hMaxY, v.y); });
+                        if (hMinX > bounds.minX && hMaxX < bounds.maxX && hMinY > bounds.minY && hMaxY < bounds.maxY) {
+                            isHole = true;
+                            centerX = (hMinX + hMaxX) / 2; centerY = (hMinY + hMaxY) / 2;
+                            dim1 = hMaxX - hMinX; dim2 = hMaxY - hMinY;
+                            type = Math.abs(dim1 - dim2) < epsilon ? 'square' : 'rect';
+                        }
+                    }
+                    if (isHole) {
+                        const newHoleGroup = addHole(pieceContainer, context);
+                        const typeSelect = newHoleGroup.querySelector('.hole-type');
+                        typeSelect.value = type;
+                        newHoleGroup.querySelector('.hole-dim1 input').value = convertMMtoCurrent(dim1).toFixed(3);
+                        if (type === 'rect') newHoleGroup.querySelector('.hole-dim2 input').value = convertMMtoCurrent(dim2).toFixed(3);
+                        newHoleGroup.querySelector('.hole-x-pos').value = convertMMtoCurrent(centerX - bounds.minX).toFixed(3);
+                        newHoleGroup.querySelector('.hole-y-pos').value = convertMMtoCurrent(centerY - bounds.minY).toFixed(3);
+                        typeSelect.dispatchEvent(new Event('change'));
+                    }
+                });
+            };
+            
+            // --- Weight Calculator & Input Sync ---
+            const syncHelperInputs = () => {
+                helperLengthInput.value = stockLengthInput.value;
+                helperWidthInput.value = stockWidthInput.value;
+                helperThicknessInput.value = stockThicknessInput.value;
+            };
+            stockLengthInput.addEventListener('input', syncHelperInputs);
+            stockWidthInput.addEventListener('input', syncHelperInputs);
+            stockThicknessInput.addEventListener('input', syncHelperInputs);
+
+            calculateWeightBtn.addEventListener('click', () => {
+                const multiplier = toMeters(1);
+                let density;
+                const materialSelect = document.getElementById('helper-material');
+                if (materialSelect.value === 'custom') {
+                    density = parseFloat(prompt("چگالی سفارشی را به kg/m³ وارد کنید:", "7850"));
+                    if (isNaN(density) || density <= 0) return;
+                } else {
+                    density = parseFloat(materialSelect.value);
+                }
+                const length = parseFloat(helperLengthInput.value) * multiplier;
+                const width = parseFloat(helperWidthInput.value) * multiplier;
+                const thickness = parseFloat(helperThicknessInput.value) * multiplier;
+                const totalStockCount = parseInt(document.getElementById('stock-count').value, 10) || 1;
+
+                if (density > 0 && length > 0 && width > 0 && thickness > 0) {
+                    const volume = length * width * thickness;
+                    const weightPerStock = volume * density;
+                    const totalWeight = weightPerStock * totalStockCount;
+                    document.getElementById('helper-result').textContent = `وزن ۱ شاخه: ${weightPerStock.toFixed(3)} ک‌گ | وزن کل: ${totalWeight.toFixed(3)} ک‌گ`;
+                    document.getElementById('material-density').value = density;
+                } else {
+                     document.getElementById('helper-result').textContent = 'لطفا تمام ابعاد را به درستی وارد کنید.';
+                }
+            });
+
+            // --- Calculation Logic (1D - existing) ---
+            const collect1DInputs = () => {
+                const stock = {
+                    count: parseInt(document.getElementById('stock-count').value, 10) || 1,
+                    length: toMeters(parseFloat(document.getElementById('stock-length').value) || 0),
+                    width: toMeters(parseFloat(document.getElementById('stock-width').value) || 0),
+                    thickness: toMeters(parseFloat(document.getElementById('stock-thickness').value) || 0),
+                    density: parseFloat(document.getElementById('material-density').value) || 0,
+                    startScrap: document.getElementById('start-scrap-enabled').checked ? toMeters(parseFloat(document.getElementById('start-scrap-length').value) || 0) : 0,
+                    endScrap: document.getElementById('end-scrap-enabled').checked ? toMeters(parseFloat(document.getElementById('end-scrap-length').value) || 0) : 0,
+                };
+                const kerf = toMeters(parseFloat(document.getElementById('kerf-width').value) || 0);
+                const cuttingMethod = cuttingMethodSelect.value;
+                
+                const pieceTypes = [];
+                document.querySelectorAll('.piece-group').forEach(pg => {
+                    const pieceId = pg.dataset.id;
+                    const piece = {
+                        id: parseInt(pieceId),
+                        name: pg.querySelector('.piece-name').value.trim() || `قطعه #${pieceId}`,
+                        length: toMeters(parseFloat(pg.querySelector('.piece-length').value) || 0),
+                        width: toMeters(parseFloat(pg.querySelector('.piece-width').value) || 0),
+                        endCutShape: pg.querySelector('.end-cut-shape').value,
+                        holes: [],
+                        grossVolume: 0,
+                        netVolume: 0,
+                        netWeight: 0,
+                    };
+
+                    piece.grossVolume = piece.length * piece.width * stock.thickness;
+                    let removedVolume = 0;
+
+                    pg.querySelectorAll('.hole-group').forEach(hg => {
+                        const holeType = hg.querySelector('.hole-type').value;
+                        const dim1 = toMeters(parseFloat(hg.querySelector('.hole-dim1 input').value) || 0);
+                        const dim2 = toMeters(parseFloat(hg.querySelector('.hole-dim2 input').value) || 0);
+                        let area = 0;
+                        if (holeType === 'round') area = Math.PI * (dim1 / 2) ** 2;
+                        else if (holeType === 'square') area = dim1 ** 2;
+                        else area = dim1 * dim2;
+                        const count = parseInt(hg.querySelector('.hole-count').value, 10) || 1;
+                        const x_pos = toMeters(parseFloat(hg.querySelector('.hole-x-pos').value) || 0);
+                        const y_pos = toMeters(parseFloat(hg.querySelector('.hole-y-pos').value) || 0);
+
+                        piece.holes.push({ area, count, x_pos, y_pos, type: holeType, dim1, dim2 });
+                        removedVolume += area * stock.thickness * count;
+                    });
+                    
+                    if (cuttingMethod === 'press') {
+                        const radius = piece.width / 2;
+                        const cornerWasteAreaPerEnd = (piece.width * radius) - (0.5 * Math.PI * radius ** 2);
+                        if (piece.endCutShape === 'semicircle_both') removedVolume += (cornerWasteAreaPerEnd * 2) * stock.thickness;
+                        else if (piece.endCutShape === 'semicircle_one_side') removedVolume += cornerWasteAreaPerEnd * stock.thickness;
+                    }
+
+                    piece.netVolume = piece.grossVolume - removedVolume;
+                    piece.netWeight = piece.netVolume * stock.density;
+                    pieceTypes.push(piece);
+                });
+
+                if (pieceTypes.length === 0 || pieceTypes.some(p => p.length <= 0)) { alert("اطلاعات قطعات نامعتبر است. لطفاً حداقل یک نوع قطعه با طول مثبت تعریف کنید."); return null; }
+                if (stock.density <= 0) { alert("برای محاسبه وزن ضایعات و قطعات، چگالی ماده باید عددی مثبت باشد."); return null; }
+
+                return { stock, kerf, cuttingMethod, pieceTypes };
+            };
+            
+            const calculateWaste = (layout, inputs) => {
+                const { stock, kerf, cuttingMethod, pieceTypes } = inputs;
+                let totalLengthUsed = 0;
+                let totalNetPieceWeight = 0;
+                let totalHoleAndPressWasteVolume = 0;
+
+                layout.forEach(p => {
+                    const fullPieceData = pieceTypes.find(pd => pd.id === p.id);
+                    if (fullPieceData) {
+                        totalLengthUsed += fullPieceData.length;
+                        totalNetPieceWeight += fullPieceData.netWeight;
+                        totalHoleAndPressWasteVolume += (fullPieceData.grossVolume - fullPieceData.netVolume);
+                    }
+                });
+
+                const kerfCount = cuttingMethod === 'press' ? layout.length > 0 ? (layout.length - 1) : 0 : layout.length > 0 ? (layout.length - 1) : 0;
+                totalLengthUsed += kerfCount * kerf;
+                
+                const availableLength = stock.length - stock.startScrap - stock.endScrap;
+                const offcutLength = availableLength - totalLengthUsed;
+
+                if (offcutLength < -1e-9) return null; // Invalid layout
+
+                const kerfWasteVolume = (kerfCount * kerf) * stock.width * stock.thickness;
+                const offcutWasteVolume = offcutLength * stock.width * stock.thickness;
+                const startScrapVolume = stock.startScrap * stock.width * stock.thickness;
+                const endScrapVolume = stock.endScrap * stock.width * stock.thickness;
+                
+                const kerfWasteWeight = kerfWasteVolume * stock.density;
+                const holeAndPressWasteWeight = totalHoleAndPressWasteVolume * stock.density;
+                const offcutWasteWeight = offcutWasteVolume * stock.density;
+                const startScrapWeight = startScrapVolume * stock.density;
+                const endScrapWeight = endScrapVolume * stock.density;
+                
+                const totalWasteWeight = kerfWasteWeight + holeAndPressWasteWeight + offcutWasteWeight + startScrapWeight + endScrapWeight;
+                
+                return { 
+                    totalNetPieceWeight, 
+                    totalWasteWeight, 
+                    offcutLength,
+                    kerfWasteWeight,
+                    holeAndPressWasteWeight,
+                    offcutWasteWeight,
+                    startScrapWeight,
+                    endScrapWeight,
+                };
+            };
+
+            const createVisualLayoutCard = (layout, inputs) => {
+                if (!layout || !inputs) return '';
+
+                const { kerf, pieceTypes, stock } = inputs;
+                let visualParts = [];
+
+                if (stock.startScrap > 0) {
+                    visualParts.push(`[ضایعات ابتدا: ${fromMeters(stock.startScrap).toFixed(1)}]`);
+                }
+
+                const pieceStrings = layout.map((piece) => {
+                    const pieceInfo = pieceTypes.find(p => p.id === piece.id);
+                    return `[${pieceInfo.name}: ${fromMeters(pieceInfo.length).toFixed(1)}]`;
+                });
+                if (pieceStrings.length > 0) {
+                    visualParts.push(pieceStrings.join(` &lt;--(${fromMeters(kerf).toFixed(2)})--&gt; `));
+                }
+                
+                const wasteInfo = calculateWaste(layout, inputs);
+                if (wasteInfo) {
+                     if (wasteInfo.offcutLength > 1e-9) {
+                        visualParts.push(`[ضایعات برش نخورده: ${fromMeters(wasteInfo.offcutLength).toFixed(1)}]`);
+                    }
+                    if (stock.endScrap > 0) {
+                         visualParts.push(`[ضایعات انتها: ${fromMeters(stock.endScrap).toFixed(1)}]`);
+                    }
+                }
+
+                const layoutText = visualParts.length > 0 ? visualParts.join(' &lt;--&gt; ') : `هیچ قطعه‌ای در این طرح برش قرار نگرفته است.`;
+
+                const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+                const title = activeTab === 'optimizer' ? 'نقشه برش بهینه برای ۱ شاخه' : 'نقشه طرح برش ثابت برای ۱ شاخه';
+
+                return `
+                <div class="card mt-6">
+                    <h3 class="text-lg font-bold mb-4 text-blue-600 dark:text-blue-400">${title}</h3>
+                    <div class="p-4 bg-gray-50 dark:bg-gray-50 rounded-lg overflow-x-auto whitespace-nowrap font-mono text-sm text-gray-900 dark:text-gray-900">
+                        ${layoutText}
+                    </div>
+                </div>`;
+            };
+
+
+            const runOptimizer = () => {
+                const inputs = collect1DInputs();
+                if (!inputs) return;
+                const { stock, kerf, cuttingMethod, pieceTypes } = inputs;
+                
+                const oversizedPieces = pieceTypes.filter(p => p.length > stock.length);
+                if (oversizedPieces.length > 0) {
+                    const pieceNames = oversizedPieces.map(p => p.name).join(', ');
+                    alert(`خطا: قطعه(های) "${pieceNames}" طویل‌تر از شاخه است و نمی‌تواند برش داده شود.`);
+                    return;
+                }
+                
+                const availableLength = stock.length - stock.startScrap - stock.endScrap;
+                if (availableLength < 0) {
+                    alert("طول ضایعات ابتدا و انتها از طول کل شاخه بیشتر است!");
+                    return;
+                }
+
+                const epsilon = 1e-9;
+                const memo = new Map();
+
+                const findBestLayout = (length) => {
+                    if (length < -epsilon) return { waste: Infinity, layout: [] };
+                    if (length < epsilon) return { waste: Math.max(0, length), layout: [] };
+
+                    const lengthKey = length.toFixed(6);
+                    if (memo.has(lengthKey)) {
+                        return memo.get(lengthKey);
+                    }
+
+                    let bestResultForLength = { waste: length, layout: [] };
+
+                    for (const piece of pieceTypes) {
+                        const effectiveLength = piece.length + kerf;
+                        if (length >= piece.length) { // Check piece length without kerf for first piece
+                             const remainingLength = length - effectiveLength;
+                             const subResult = findBestLayout(remainingLength);
+                             const currentTotalWaste = subResult.waste;
+                             if(currentTotalWaste < bestResultForLength.waste) {
+                                 bestResultForLength = {
+                                     waste: currentTotalWaste,
+                                     layout: [piece, ...subResult.layout]
+                                 };
+                             }
+                        }
+                    }
+                    
+                    memo.set(lengthKey, bestResultForLength);
+                    return bestResultForLength;
+                };
+
+                const result = findBestLayout(availableLength + kerf); // Add one kerf to account for logic
+                const layoutPerStock = result.layout;
+                
+                const wasteInfoPerStock = calculateWaste(layoutPerStock, inputs);
+                if (!wasteInfoPerStock) { 
+                     resultsContainer.innerHTML = `<div class="card text-center text-red-500">هیچ قطعه‌ای در این طرح برش قرار نگرفته است.</div>`;
+                     resultsContainer.classList.remove('hidden');
+                     return; 
+                }
+
+                const { totalNetPieceWeight, totalWasteWeight, kerfWasteWeight, holeAndPressWasteVolume, offcutWasteWeight, offcutLength, startScrapWeight, endScrapWeight } = wasteInfoPerStock;
+                
+                const countsPerStock = {};
+                layoutPerStock.forEach(p => { countsPerStock[p.id] = (countsPerStock[p.id] || 0) + 1; });
+                
+                const totalPieces = {};
+                Object.keys(countsPerStock).forEach(k => { totalPieces[k] = countsPerStock[k] * stock.count; });
+                
+                const totalWasteAllStock = totalWasteWeight * stock.count;
+                const totalNetWeightAllStock = totalNetPieceWeight * stock.count;
+
+                lastCalculationResult = { layout: layoutPerStock, inputs };
+
+                const cuttingMethodDisplay = { saw: 'اره', laser: 'لیزر', press: 'پرس' }[cuttingMethod];
+                const unitDisplay = unitSelector.value === 'm' ? 'متر' : 'سانتی‌متر';
+                const visualLayoutCard = createVisualLayoutCard(layoutPerStock, inputs);
+                
+                resultsContainer.innerHTML = visualLayoutCard + `
+                    <div class="card !p-0 !border-0 !shadow-none !bg-transparent mt-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- تولید از ۱ شاخه -->
+                            <div class="card !bg-gray-100 text-gray-900 rounded-xl">
+                                <h3 class="font-bold text-lg mb-3">تولید از ۱ شاخه:</h3>
+                                <ul class="space-y-2 text-base">
+                                    ${Object.entries(countsPerStock).map(([id, count]) => {
+                                        const piece = pieceTypes.find(p => p.id == id);
+                                        const weightPerPiece = piece.netWeight;
+                                        const totalWeightForPiece = weightPerPiece * count;
+                                        return `<li>• ${piece.name}: ${count} عدد (وزن هر عدد: ${weightPerPiece.toFixed(3)} ک‌گ، وزن کل: ${totalWeightForPiece.toFixed(3)} ک‌گ)</li>`;
+                                    }).join('') || '<li>• هیچ قطعه‌ای تولید نشد.</li>'}
+                                </ul>
+                                <div class="mt-4 pt-4 border-t border-gray-300 font-semibold flex justify-between text-base">
+                                    <span>مجموع وزن قطعات:</span>
+                                    <span class="font-bold text-green-600">${totalNetPieceWeight.toFixed(3)} کیلوگرم</span>
+                                </div>
+                            </div>
+
+                            <!-- ضایعات از ۱ شاخه -->
+                            <div class="card !bg-gray-100 text-gray-900 rounded-xl">
+                                <h3 class="font-bold text-lg mb-3">ضایعات از ۱ شاخه:</h3>
+                                <ul class="space-y-2 text-base">
+                                    <li>• ضایعات برش (${cuttingMethodDisplay}): ${kerfWasteWeight.toFixed(3)} کیلوگرم</li>
+                                    <li>• ضایعات سوراخ‌کاری/پرس: ${(holeAndPressWasteVolume * stock.density).toFixed(3)} کیلوگرم</li>
+                                    ${ (startScrapWeight > 0 || endScrapWeight > 0) ? `<li>• ضایعات ابتدا/انتها: ${(startScrapWeight + endScrapWeight).toFixed(3)} کیلوگرم</li>` : '' }
+                                    <li>• ضایعات انتهای شاخه (${fromMeters(offcutLength).toFixed(2)} ${unitDisplay}): ${offcutWasteWeight.toFixed(3)} کیلوگرم</li>
+                                </ul>
+                                <div class="mt-4 pt-4 border-t border-gray-300 font-semibold flex justify-between text-base">
+                                    <span>مجموع وزن ضایعات:</span>
+                                    <span class="font-bold text-red-600">${totalWasteWeight.toFixed(3)} کیلوگرم</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- نتایج نهایی -->
+                        <div class="card !bg-blue-100 text-gray-900 mt-6 rounded-xl">
+                            <h3 class="font-bold text-lg mb-3">نتایج نهایی برای ${stock.count} شاخه:</h3>
+                            <ul class="space-y-2 text-base">
+                                ${Object.entries(totalPieces).map(([id, count]) => {
+                                    const piece = pieceTypes.find(p => p.id == id);
+                                    const totalWeightForPiece = piece.netWeight * count;
+                                    return `<li>• ${piece.name}: ${count} عدد (وزن کل: ${totalWeightForPiece.toFixed(3)} ک‌گ)</li>`;
+                                }).join('') || '<li>• هیچ قطعه‌ای تولید نشد.</li>'}
+                                 <li class="pt-3 mt-3 border-t border-blue-400/50">
+                                    • <span class="font-semibold">مجموع وزن کل قطعات تولیدی:</span>
+                                    <span class="font-bold text-green-600 ml-2">${totalNetWeightAllStock.toFixed(3)}</span> کیلوگرم
+                                </li>
+                                <li>
+                                    • <span class="font-semibold">مجموع وزن ضایعات کل:</span>
+                                    <span class="font-bold text-red-600 ml-2">${totalWasteAllStock.toFixed(3)}</span> کیلوگرم
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-center">
+                            <button id="export-dxf-btn" class="py-3 px-8 bg-gray-700 text-white font-bold rounded-lg hover:bg-gray-800 transition text-lg flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                <span>خروجی DXF برای سالیدورک</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.classList.remove('hidden');
+            };
+            
+            const runSimulator = () => {
+                const inputs = collect1DInputs();
+                if (!inputs) return;
+
+                const fixedLayoutCounts = {};
+                let hasInputs = false;
+                document.querySelectorAll('.fixed-layout-row').forEach(row => {
+                    const pieceId = row.dataset.pieceId;
+                    const count = parseInt(row.querySelector('.sim-count').value, 10) || 0;
+                    if (count > 0) hasInputs = true;
+                    fixedLayoutCounts[pieceId] = count;
+                });
+                
+                if (!hasInputs) { alert("لطفاً تعداد قطعات را در طرح ثابت مشخص کنید."); return; }
+
+                const layoutPerStock = [];
+                Object.entries(fixedLayoutCounts).forEach(([pieceId, count]) => {
+                    const pieceInfo = inputs.pieceTypes.find(p => p.id == pieceId);
+                    if (pieceInfo) {
+                        for (let i = 0; i < count; i++) layoutPerStock.push(pieceInfo);
+                    }
+                });
+
+                const wasteInfoPerStock = calculateWaste(layoutPerStock, inputs);
+                if (!wasteInfoPerStock) { alert("طرح برش تعریف شده در طول شاخه جا نمی‌شود!"); return; }
+
+                const { totalNetPieceWeight, totalWasteWeight, kerfWasteWeight, holeAndPressWasteVolume, offcutWasteWeight, offcutLength, startScrapWeight, endScrapWeight } = wasteInfoPerStock;
+                
+                const totalPieces = {};
+                Object.entries(fixedLayoutCounts).forEach(([id, count]) => { totalPieces[id] = count * inputs.stock.count; });
+                
+                const totalWasteAllStock = totalWasteWeight * inputs.stock.count;
+                const totalNetWeightAllStock = totalNetPieceWeight * inputs.stock.count;
+                lastCalculationResult = { layout: layoutPerStock, inputs };
+                const unitDisplay = unitSelector.value === 'm' ? 'متر' : 'سانتی‌متر';
+                const cuttingMethodDisplay = { saw: 'اره', laser: 'لیزر', press: 'پرس' }[inputs.cuttingMethod];
+                const visualLayoutCard = createVisualLayoutCard(layoutPerStock, inputs);
+                
+                 resultsContainer.innerHTML = visualLayoutCard + `
+                    <div class="card !p-0 !border-0 !shadow-none !bg-transparent mt-8">
+                         <h2 class="text-2xl font-bold text-center mb-6">نتایج شبیه‌سازی طرح ثابت</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- تولید از ۱ شاخه -->
+                            <div class="card !bg-gray-100 text-gray-900 rounded-xl">
+                                <h3 class="font-bold text-lg mb-3">تولید از ۱ شاخه:</h3>
+                                <ul class="space-y-2 text-base">
+                                    ${Object.entries(fixedLayoutCounts).filter(([,count])=>count > 0).map(([id, count]) => {
+                                        const piece = inputs.pieceTypes.find(p => p.id == id);
+                                        const weightPerPiece = piece.netWeight;
+                                        const totalWeightForPiece = weightPerPiece * count;
+                                        return `<li>• ${piece.name}: ${count} عدد (وزن هر عدد: ${weightPerPiece.toFixed(3)} ک‌گ، وزن کل: ${totalWeightForPiece.toFixed(3)} ک‌گ)</li>`;
+                                    }).join('')}
+                                </ul>
+                                <div class="mt-4 pt-4 border-t border-gray-300 font-semibold flex justify-between text-base">
+                                    <span>مجموع وزن قطعات:</span>
+                                    <span class="font-bold text-green-600">${totalNetPieceWeight.toFixed(3)} کیلوگرم</span>
+                                </div>
+                            </div>
+
+                            <!-- ضایعات از ۱ شاخه -->
+                            <div class="card !bg-gray-100 text-gray-900 rounded-xl">
+                                <h3 class="font-bold text-lg mb-3">ضایعات از ۱ شاخه:</h3>
+                                <ul class="space-y-2 text-base">
+                                    <li>• ضایعات برش (${cuttingMethodDisplay}): ${kerfWasteWeight.toFixed(3)} کیلوگرم</li>
+                                    <li>• ضایعات سوراخ‌کاری/پرس: ${(holeAndPressWasteVolume * inputs.stock.density).toFixed(3)} کیلوگرم</li>
+                                    ${ (startScrapWeight > 0 || endScrapWeight > 0) ? `<li>• ضایعات ابتدا/انتها: ${(startScrapWeight + endScrapWeight).toFixed(3)} کیلوگرم</li>` : '' }
+                                    <li>• ضایعات انتهای شاخه (${fromMeters(offcutLength).toFixed(2)} ${unitDisplay}): ${offcutWasteWeight.toFixed(3)} کیلوگرم</li>
+                                </ul>
+                                <div class="mt-4 pt-4 border-t border-gray-300 font-semibold flex justify-between text-base">
+                                    <span>مجموع وزن ضایعات:</span>
+                                    <span class="font-bold text-red-600">${totalWasteWeight.toFixed(3)} کیلوگرم</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- نتایج نهایی -->
+                        <div class="card !bg-blue-100 text-gray-900 mt-6 rounded-xl">
+                            <h3 class="font-bold text-lg mb-3">نتایج نهایی برای ${inputs.stock.count} شاخه:</h3>
+                            <ul class="space-y-2 text-base">
+                                ${Object.entries(totalPieces).filter(([,count])=>count > 0).map(([id, count]) => {
+                                    const piece = inputs.pieceTypes.find(p => p.id == id);
+                                    const totalWeightForPiece = piece.netWeight * count;
+                                    return `<li>• ${piece.name}: ${count} عدد (وزن کل: ${totalWeightForPiece.toFixed(3)} ک‌گ)</li>`;
+                                }).join('')}
+                                <li class="pt-3 mt-3 border-t border-blue-400/50">
+                                    • <span class="font-semibold">مجموع وزن کل قطعات تولیدی:</span>
+                                    <span class="font-bold text-green-600 ml-2">${totalNetWeightAllStock.toFixed(3)}</span> کیلوگرم
+                                </li>
+                                <li>
+                                    • <span class="font-semibold">مجموع وزن ضایعات کل:</span>
+                                    <span class="font-bold text-red-600 ml-2">${totalWasteAllStock.toFixed(3)}</span> کیلوگرم
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-center">
+                            <button id="export-dxf-btn" class="py-3 px-8 bg-gray-700 text-white font-bold rounded-lg hover:bg-gray-800 transition text-lg flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                <span>خروجی DXF برای سالیدورک</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.classList.remove('hidden');
+            };
+            
+             const runRequiredMaterialCalculator = () => {
+                const inputs = collect1DInputs();
+                if (!inputs) return;
+
+                const fixedLayoutCounts = {};
+                let hasPattern = false;
+                document.querySelectorAll('.fixed-layout-row').forEach(row => {
+                    const pieceId = row.dataset.pieceId;
+                    const count = parseInt(row.querySelector('.sim-count').value, 10) || 0;
+                    if (count > 0) hasPattern = true;
+                    fixedLayoutCounts[pieceId] = count;
+                });
+                if (!hasPattern) { alert("برای محاسبه معکوس، ابتدا باید یک 'طرح برش ثابت' معتبر تعریف کنید."); return; }
+                
+                const wasteInfoPerStock = calculateWaste(Object.entries(fixedLayoutCounts).flatMap(([id, count]) => Array(count).fill(inputs.pieceTypes.find(p => p.id == id))), inputs);
+                if (!wasteInfoPerStock) { alert("طرح برش تعریف شده در طول شاخه جا نمی‌شود!"); return; }
+                
+                const requiredCounts = {};
+                let hasRequired = false;
+                document.querySelectorAll('.required-piece-row').forEach(row => {
+                    const pieceId = row.dataset.pieceId;
+                    const count = parseInt(row.querySelector('.req-count').value, 10) || 0;
+                    if (count > 0) hasRequired = true;
+                    requiredCounts[pieceId] = count;
+                });
+                if (!hasRequired) { alert("لطفا تعداد کل قطعات مورد نیاز خود را وارد کنید."); return; }
+
+                let neededStocks = 0;
+                Object.entries(requiredCounts).forEach(([pieceId, required]) => {
+                    const perStock = fixedLayoutCounts[pieceId];
+                    if (required > 0 && perStock > 0) {
+                        const stocksForThisPiece = Math.ceil(required / perStock);
+                        if (stocksForThisPiece > neededStocks) {
+                            neededStocks = stocksForThisPiece;
+                        }
+                    }
+                });
+                
+                if (neededStocks === 0) {
+                     requiredMaterialResults.innerHTML = `<p class="text-center text-amber-600 dark:text-amber-400 mt-4">بر اساس طرح برش شما، هیچ یک از قطعات مورد نیاز تولید نمی‌شوند.</p>`;
+                     requiredMaterialResults.classList.remove('hidden');
+                     return;
+                }
+
+                const actualProduced = {};
+                let totalNetWeight = 0;
+                inputs.pieceTypes.forEach(p => {
+                    const producedCount = (fixedLayoutCounts[p.id] || 0) * neededStocks;
+                    actualProduced[p.id] = producedCount;
+                    totalNetWeight += producedCount * p.netWeight;
+                });
+
+                const totalWaste = wasteInfoPerStock.totalWasteWeight * neededStocks;
+                const totalRawMaterialWeight = (totalNetWeight + totalWaste);
+                
+                requiredMaterialResults.innerHTML = `
+                    <div class="p-4 bg-teal-50 dark:bg-teal-900/30 rounded-lg space-y-4">
+                        <h4 class="font-bold text-lg text-center">نتایج محاسبه مواد اولیه</h4>
+                        <p class="flex justify-between items-center text-xl font-bold">
+                            <span>تعداد شاخه‌های مورد نیاز:</span>
+                            <span class="text-teal-600 dark:text-teal-300 font-mono">${neededStocks.toLocaleString('fa-IR')}</span>
+                        </p>
+                         <div class="text-md border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                            <p class="flex justify-between"><span>وزن کل ماده اولیه مصرفی:</span> <span class="font-mono font-bold">${totalRawMaterialWeight.toFixed(3)} ک‌گ</span></p>
+                            <p class="flex justify-between"><span>وزن کل ضایعات:</span> <span class="font-mono font-bold text-red-500">${totalWaste.toFixed(3)} ک‌گ</span></p>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold mb-2">تعداد واقعی قطعات تولید شده:</h5>
+                            <ul class="space-y-1 text-sm">
+                                ${Object.entries(actualProduced).map(([id, count]) => {
+                                    const required = requiredCounts[id] || 0;
+                                    const isOver = count > required;
+                                    return `
+                                    <li class="flex justify-between p-1 rounded ${isOver ? 'bg-green-100 dark:bg-green-900/40' : ''}">
+                                        <span>${inputs.pieceTypes.find(p => p.id == id).name}:</span>
+                                        <span class="font-mono font-semibold">${count.toLocaleString('fa-IR')} عدد <span class="text-xs text-gray-500 dark:text-gray-400">(مورد نیاز: ${required.toLocaleString('fa-IR')})</span></span>
+                                    </li>`
+                                }).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                requiredMaterialResults.classList.remove('hidden');
+            };
+
+            calculateBtn.addEventListener('click', () => {
+                 const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+                 if (activeTab === 'optimizer') runOptimizer();
+                 else runSimulator();
+            });
+            
+            calculateRequiredMaterialBtn.addEventListener('click', runRequiredMaterialCalculator);
+            
+            // --- DXF Export ---
+            const generateAndDownloadDxf = (layoutData, inputs, type) => {
+                 if (!layoutData || !inputs) {
+                    alert("داده‌های محاسبه یافت نشد. لطفاً ابتدا یک محاسبه انجام دهید.");
+                    return;
+                }
+                
+                const dxfHeader = () => `0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1009\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n`;
+                const dxfFooter = () => `0\nENDSEC\n0\nEOF\n`;
+                
+                const dxfEntity = (type, content) => `0\n${type}\n8\n0\n${content}`;
+                const dxfLwPolyline = (vertices, isClosed = true) => {
+                    if (!vertices || vertices.length === 0) return '';
+                    let verticesStr = vertices.map(v => `10\n${v.x.toFixed(4)}\n20\n${v.y.toFixed(4)}\n`).join('');
+                    return dxfEntity('LWPOLYLINE', `90\n${vertices.length}\n70\n${isClosed ? 1 : 0}\n${verticesStr}`);
+                };
+                const dxfCircle = (center, radius) => dxfEntity('CIRCLE', `10\n${center.x.toFixed(4)}\n20\n${center.y.toFixed(4)}\n40\n${radius.toFixed(4)}\n`);
+                
+                let entities = '';
+                
+                if (type === '1d' || type === 'pipe') {
+                    const isPipe = type === 'pipe';
+                    const stock = isPipe ? inputs.pipe : inputs.stock;
+                    const kerf = inputs.kerf;
+                    const pieceTypes = inputs.pieceTypes;
+
+                    const stockLengthMM = toMM(stock.length);
+                    const stockWidthMM = toMM(isPipe ? stock.outerD : stock.width);
+                    const kerfMM = toMM(kerf);
+
+                    entities += dxfLwPolyline([{x:0, y:0}, {x:stockLengthMM, y:0}, {x:stockLengthMM, y:stockWidthMM}, {x:0, y:stockWidthMM}]);
+                    let currentX = 0;
+                    layoutData.forEach((piece, pieceIndex) => {
+                        const pieceInfo = pieceTypes.find(p => p.id === piece.id);
+                        if (!pieceInfo) return;
+                        const pieceLengthMM = toMM(pieceInfo.length);
+                        const pieceWidthMM = isPipe ? stockWidthMM : toMM(pieceInfo.width);
+                        const pieceStartX = currentX;
+                        const pieceEndX = currentX + pieceLengthMM;
+                        
+                        entities += dxfLwPolyline([{x:pieceStartX, y:0}, {x:pieceEndX, y:0}, {x:pieceEndX, y:pieceWidthMM}, {x:pieceStartX, y:pieceWidthMM}]);
+                        
+                        if (!isPipe) {
+                            pieceInfo.holes.forEach(hole => {
+                                for (let i = 0; i < hole.count; i++) {
+                                    const centerX = pieceStartX + toMM(hole.x_pos);
+                                    const centerY = stockWidthMM / 2 + toMM(hole.y_pos); 
+                                    if (hole.type === 'round') {
+                                        entities += dxfCircle({x:centerX, y:centerY}, toMM(hole.dim1)/2);
+                                    } else {
+                                        const dim1 = toMM(hole.dim1), dim2 = hole.type === 'rect' ? toMM(hole.dim2) : dim1;
+                                        entities += dxfLwPolyline([{x:centerX-dim1/2, y:centerY-dim2/2}, {x:centerX+dim1/2, y:centerY-dim2/2}, {x:centerX+dim1/2, y:centerY+dim2/2}, {x:centerX-dim1/2, y:centerY+dim2/2}]);
+                                    }
+                                }
+                            });
+                        }
+                        currentX = pieceEndX + (pieceIndex < layoutData.length - 1 ? kerfMM : 0);
+                    });
+                } else if (type === 'sheet') {
+                    const { sheet, piece, kerf, layout } = inputs;
+                    const sheetLengthMM = toMM(sheet.length);
+                    const sheetWidthMM = toMM(sheet.width);
+                    const kerfMM = toMM(kerf);
+                    
+                    entities += dxfLwPolyline([{x:0, y:0}, {x:sheetLengthMM, y:0}, {x:sheetLengthMM, y:sheetWidthMM}, {x:0, y:sheetWidthMM}]);
+                    
+                    if (piece.shape === 'rect' || piece.shape === 't_shape') {
+                        const pieceL_MM = layout.rotated ? toMM(piece.bBoxWidth) : toMM(piece.bBoxLength);
+                        const pieceW_MM = layout.rotated ? toMM(piece.bBoxLength) : toMM(piece.bBoxWidth);
+                        
+                        for (let r = 0; r < layout.rows; r++) {
+                            for (let c = 0; c < layout.cols; c++) {
+                                const startX = c * (pieceL_MM + kerfMM);
+                                const startY = r * (pieceW_MM + kerfMM);
+                                
+                                const pieceDrawingData = getPieceDXFEntities(piece, layout.rotated);
+                                entities += pieceDrawingData.map(entity => {
+                                    if(entity.type === 'LWPOLYLINE') return dxfLwPolyline(entity.vertices.map(v => ({x: v.x + startX, y: v.y + startY})), entity.isClosed);
+                                    if(entity.type === 'CIRCLE') return dxfCircle({x: entity.center.x + startX, y: entity.center.y + startY}, entity.radius);
+                                    return '';
+                                }).join('');
+                            }
+                        }
+                    } else { // Circle
+                        const diameterMM = toMM(piece.outerD);
+                        const radiusMM = diameterMM / 2;
+                        
+                        for (let r = 0; r < layout.rows; r++) {
+                            const offsetX = (layout.type === 'staggered' && (layout.offsetFirstRow ? r % 2 === 0 : r % 2 !== 0)) ? radiusMM + (kerfMM / 2) : 0;
+                            const rowHeightMM = (layout.type === 'staggered') ? (diameterMM + kerfMM) * Math.sqrt(3) / 2 : (diameterMM + kerfMM);
+                            const startY = r * rowHeightMM;
+
+                            for (let c = 0; c < layout.colsPerRow[r]; c++) {
+                                const startX = offsetX + c * (diameterMM + kerfMM);
+                                const centerX = startX + radiusMM;
+                                const centerY = startY + radiusMM;
+                                entities += dxfCircle({x:centerX,y:centerY}, radiusMM);
+
+                                (piece.holes || []).forEach(hole => {
+                                    const holeCenterX = startX + toMM(hole.x_pos);
+                                    const holeCenterY = startY + toMM(hole.y_pos);
+                                    if (hole.type === 'round') {
+                                        entities += dxfCircle({x:holeCenterX,y:holeCenterY}, toMM(hole.dim1)/2);
+                                    } // Other hole types for circle can be added here
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                const dxfContent = dxfHeader() + entities + dxfFooter();
+                const blob = new Blob([dxfContent], { type: 'application/dxf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `layout_${Date.now()}.dxf`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+             const getPieceDXFEntities = (piece, isRotated) => {
+                let entities = [];
+                const toMM_local = (val) => toMM(fromMeters(val));
+
+                if (piece.shape === 'rect') {
+                    const l = toMM_local(piece.length);
+                    const w = toMM_local(piece.width);
+                    const vertices = [{x:0, y:0}, {x:l, y:0}, {x:l, y:w}, {x:0, y:w}];
+                    entities.push({ type: 'LWPOLYLINE', vertices, isClosed: true });
+                } else if (piece.shape === 't_shape') {
+                    const bL = toMM_local(piece.baseL); const bW = toMM_local(piece.baseW);
+                    const cL = toMM_local(piece.capL); const cW = toMM_local(piece.capW);
+                    const bBoxW = Math.max(bW, cL);
+                    
+                    const vertices = [
+                        { x: (bBoxW - cL) / 2, y: 0 },
+                        { x: (bBoxW + cL) / 2, y: 0 },
+                        { x: (bBoxW + cL) / 2, y: cW },
+                        { x: (bBoxW + bW) / 2, y: cW },
+                        { x: (bBoxW + bW) / 2, y: cW + bL },
+                        { x: (bBoxW - bW) / 2, y: cW + bL },
+                        { x: (bBoxW - bW) / 2, y: cW },
+                        { x: (bBoxW - cL) / 2, y: cW },
+                    ];
+                    entities.push({ type: 'LWPOLYLINE', vertices, isClosed: true });
+                }
+                
+                // Add holes
+                (piece.holes || []).forEach(hole => {
+                    const centerX = toMM_local(hole.x_pos); const centerY = toMM_local(hole.y_pos);
+                    const dim1 = toMM_local(hole.dim1); const dim2 = toMM_local(hole.dim2);
+                    if (hole.type === 'round') {
+                        entities.push({ type: 'CIRCLE', center: { x: centerX, y: centerY }, radius: dim1 / 2 });
+                    } else {
+                        const w = dim1, h = hole.type === 'rect' ? dim2 : dim1;
+                        entities.push({type: 'LWPOLYLINE', vertices: [{x:centerX-w/2, y:centerY-h/2}, {x:centerX+w/2, y:centerY-h/2}, {x:centerX+w/2, y:centerY+h/2}, {x:centerX-w/2, y:centerY+h/2}], isClosed: true});
+                    }
+                });
+                
+                // Handle rotation
+                if(isRotated) {
+                    const bBoxH = piece.shape === 'rect' ? toMM_local(piece.width) : toMM_local(piece.baseL + piece.capW);
+                    entities.forEach(entity => {
+                        if (entity.type === 'LWPOLYLINE') {
+                            entity.vertices = entity.vertices.map(v => ({ x: v.y, y: bBoxH - v.x }));
+                        } else if (entity.type === 'CIRCLE') {
+                            entity.center = { x: entity.center.y, y: bBoxH - entity.center.x };
+                        }
+                    });
+                }
+
+                return entities;
+            };
+
+            resultsContainer.addEventListener('click', e => {
+                if (e.target.closest('#export-dxf-btn')) {
+                    if (lastCalculationResult) {
+                        generateAndDownloadDxf(lastCalculationResult.layout, lastCalculationResult.inputs, '1d');
+                    } else { alert('ابتدا یک محاسبه انجام دهید.'); }
+                }
+            });
+             sheetResultsContainer.addEventListener('click', e => {
+                if (e.target.closest('#export-sheet-dxf-btn')) {
+                    if (lastSheetCalculationResult) {
+                        generateAndDownloadDxf(lastSheetCalculationResult.layout, lastSheetCalculationResult.inputs, 'sheet');
+                    } else { alert('ابتدا یک محاسبه انجام دهید.'); }
+                }
+            });
+             pipeResultsContainer.addEventListener('click', e => {
+                if (e.target.closest('#export-pipe-dxf-btn')) {
+                    if (lastPipeCalculationResult) {
+                        generateAndDownloadDxf(lastPipeCalculationResult.layout, lastPipeCalculationResult.inputs, 'pipe');
+                    } else { alert('ابتدا یک محاسبه انجام دهید.'); }
+                }
+            });
+
+
+            // --- Save/Load Logic ---
+             const collectSheetCalculatorInputs = () => {
+                return {
+                    type: 'sheet',
+                    name: document.getElementById('sheet-calc-name').value.trim(),
+                    unit: unitSelector.value,
+                    sheet: {
+                        count: document.getElementById('sheet-count').value,
+                        length: document.getElementById('sheet-length').value,
+                        width: document.getElementById('sheet-width').value,
+                        thickness: document.getElementById('sheet-thickness').value,
+                        density: document.getElementById('sheet-density').value
+                    },
+                    kerf: document.getElementById('sheet-kerf').value,
+                    pieceShape: document.getElementById('sheet-piece-shape').value,
+                    rect: {
+                        length: document.getElementById('sheet-rect-length').value,
+                        width: document.getElementById('sheet-rect-width').value,
+                        holes: Array.from(sheetRectDims.querySelectorAll('.hole-group')).map(hg => ({
+                            type: hg.querySelector('.hole-type').value,
+                            dim1: hg.querySelector('.hole-dim1 input').value,
+                            dim2: hg.querySelector('.hole-dim2 input').value,
+                            count: hg.querySelector('.hole-count').value,
+                            x_pos: hg.querySelector('.hole-x-pos').value,
+                            y_pos: hg.querySelector('.hole-y-pos').value,
+                        }))
+                    },
+                    circle: {
+                        outer: document.getElementById('sheet-circle-outer').value,
+                        holes: Array.from(sheetCircleDims.querySelectorAll('.hole-group')).map(hg => ({
+                             type: hg.querySelector('.hole-type').value,
+                            dim1: hg.querySelector('.hole-dim1 input').value,
+                            dim2: hg.querySelector('.hole-dim2 input').value,
+                            count: hg.querySelector('.hole-count').value,
+                            x_pos: hg.querySelector('.hole-x-pos').value,
+                            y_pos: hg.querySelector('.hole-y-pos').value,
+                        }))
+                    },
+                    t_shape: {
+                        baseL: document.getElementById('sheet-t-base-length').value,
+                        baseW: document.getElementById('sheet-t-base-width').value,
+                        capL: document.getElementById('sheet-t-cap-length').value,
+                        capW: document.getElementById('sheet-t-cap-width').value,
+                        holes: Array.from(sheetTdims.querySelectorAll('.hole-group')).map(hg => ({
+                             type: hg.querySelector('.hole-type').value,
+                            dim1: hg.querySelector('.hole-dim1 input').value,
+                            dim2: hg.querySelector('.hole-dim2 input').value,
+                            count: hg.querySelector('.hole-count').value,
+                            x_pos: hg.querySelector('.hole-x-pos').value,
+                            y_pos: hg.querySelector('.hole-y-pos').value,
+                        }))
+                    }
+                };
+            };
+            
+            const collect1DCalculatorInputs = () => {
+                 return {
+                    type: '1d',
+                    name: calculationNameInput.value.trim(),
+                    unit: unitSelector.value,
+                    stock: {
+                        count: document.getElementById('stock-count').value,
+                        length: document.getElementById('stock-length').value,
+                        width: document.getElementById('stock-width').value,
+                        thickness: document.getElementById('stock-thickness').value,
+                        density: document.getElementById('material-density').value
+                    },
+                    kerf: document.getElementById('kerf-width').value,
+                    cuttingMethod: cuttingMethodSelect.value,
+                    pressScrap: {
+                        startEnabled: document.getElementById('start-scrap-enabled').checked,
+                        startLength: document.getElementById('start-scrap-length').value,
+                        endEnabled: document.getElementById('end-scrap-enabled').checked,
+                        endLength: document.getElementById('end-scrap-length').value,
+                    },
+                    pieces: Array.from(document.querySelectorAll('.piece-group')).map(pg => ({
+                        id: pg.dataset.id,
+                        name: pg.querySelector('.piece-name').value,
+                        length: pg.querySelector('.piece-length').value,
+                        width: pg.querySelector('.piece-width').value,
+                        endCutShape: pg.querySelector('.end-cut-shape').value,
+                        holes: Array.from(pg.querySelectorAll('.hole-group')).map(hg => ({
+                            type: hg.querySelector('.hole-type').value,
+                            dim1: hg.querySelector('.hole-dim1 input').value,
+                            dim2: hg.querySelector('.hole-dim2 input').value,
+                            count: hg.querySelector('.hole-count').value,
+                            x_pos: hg.querySelector('.hole-x-pos').value,
+                            y_pos: hg.querySelector('.hole-y-pos').value,
+                        }))
+                    })),
+                    activeTab: document.querySelector('.tab-btn.active').dataset.tab,
+                    simulatorInputs: {
+                        fixedLayout: Array.from(document.querySelectorAll('.fixed-layout-row')).reduce((acc, row) => {
+                            acc[row.dataset.pieceId] = row.querySelector('.sim-count').value;
+                            return acc;
+                        }, {}),
+                        requiredPieces: Array.from(document.querySelectorAll('.required-piece-row')).reduce((acc, row) => {
+                            acc[row.dataset.pieceId] = row.querySelector('.req-count').value;
+                            return acc;
+                        }, {})
+                    }
+                };
+            };
+            
+            const loadSavedCalculations = async () => {
+                try {
+                    state.savedCalcs = await api.get('/api/calculator/saves');
+                    savedCalculationsSelect.innerHTML = '<option value="">انتخاب کنید...</option>';
+                    Object.keys(state.savedCalcs).sort((a,b) => a.localeCompare(b, 'fa')).forEach(name => {
+                        savedCalculationsSelect.innerHTML += `<option value="${name}">${name}</option>`;
+                    });
+                } catch (error) { console.error('Failed to load calculations:', error); }
+            };
+
+            const handleSave = async () => {
+                const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+                let data;
+                let name;
+
+                if (activeTab === 'sheet-calculator') {
+                    data = collectSheetCalculatorInputs();
+                    name = data.name;
+                } else if (activeTab === 'pipe-calculator') {
+                    data = collectPipeInputs();
+                    name = data.name;
+                } else {
+                    data = collect1DCalculatorInputs();
+                    name = data.name;
+                }
+
+                if (!name) { alert("لطفاً یک نام برای این محاسبه وارد کنید."); return; }
+                
+                try {
+                    await api.post('/api/calculator/saves', { name, data });
+                    alert(`محاسبه "${name}" با موفقیت ذخیره شد.`);
+                    await loadSavedCalculations();
+                    savedCalculationsSelect.value = name;
+                } catch(err) { alert(`خطا در ذخیره سازی: ${err.message}`); }
+            };
+
+            saveCalculationBtn.addEventListener('click', handleSave);
+            saveSheetCalcBtn.addEventListener('click', handleSave);
+            savePipeCalcBtn.addEventListener('click', handleSave);
+
+
+            loadCalculationBtn.addEventListener('click', () => {
+                const name = savedCalculationsSelect.value;
+                if (!name || !state.savedCalcs[name]) return;
+                const data = state.savedCalcs[name];
+
+                if (data.type === 'sheet') {
+                    document.querySelector('.tab-btn[data-tab="sheet-calculator"]').click();
+                    unitSelector.value = data.unit || 'cm';
+                    unitSelector.dispatchEvent(new Event('change'));
+                    document.getElementById('sheet-calc-name').value = name;
+                    document.getElementById('sheet-count').value = data.sheet.count;
+                    document.getElementById('sheet-length').value = data.sheet.length;
+                    document.getElementById('sheet-width').value = data.sheet.width;
+                    document.getElementById('sheet-thickness').value = data.sheet.thickness;
+                    document.getElementById('sheet-density').value = data.sheet.density;
+                    document.getElementById('sheet-kerf').value = data.kerf;
+                    document.getElementById('sheet-piece-shape').value = data.pieceShape;
+                    sheetPieceShapeSelect.dispatchEvent(new Event('change'));
+                    
+                    if(data.rect) {
+                        document.getElementById('sheet-rect-length').value = data.rect.length;
+                        document.getElementById('sheet-rect-width').value = data.rect.width;
+                        const rectHolesContainer = sheetRectDims.querySelector('.holes-container');
+                        rectHolesContainer.innerHTML = '';
+                        if (data.rect.holes) data.rect.holes.forEach(hData => loadHoleData(sheetRectDims, hData));
+                    }
+                    if(data.circle) {
+                        document.getElementById('sheet-circle-outer').value = data.circle.outer;
+                        const circleHolesContainer = sheetCircleDims.querySelector('.holes-container');
+                        circleHolesContainer.innerHTML = '';
+                         if (data.circle.holes) data.circle.holes.forEach(hData => loadHoleData(sheetCircleDims, hData));
+                    }
+                    if(data.t_shape) {
+                        document.getElementById('sheet-t-base-length').value = data.t_shape.baseL;
+                        document.getElementById('sheet-t-base-width').value = data.t_shape.baseW;
+                        document.getElementById('sheet-t-cap-length').value = data.t_shape.capL;
+                        document.getElementById('sheet-t-cap-width').value = data.t_shape.capW;
+                        const tHolesContainer = sheetTdims.querySelector('.holes-container');
+                        tHolesContainer.innerHTML = '';
+                        if(data.t_shape.holes) data.t_shape.holes.forEach(hData => loadHoleData(sheetTdims, hData));
+                    }
+                    
+                    alert(`محاسبه "${name}" بارگذاری شد.`);
+                    setTimeout(() => calculateSheetBtn.click(), 100);
+
+                } else if (data.type === 'pipe') {
+                    loadPipeData(data);
+                    alert(`محاسبه "${name}" بارگذاری شد.`);
+                    setTimeout(() => calculatePipeBtn.click(), 100);
+                } else { // Handle 1D calculator data
+                    document.querySelector('.tab-btn[data-tab="optimizer"]').click();
+                    calculationNameInput.value = name;
+                    unitSelector.value = data.unit;
+                    document.getElementById('stock-count').value = data.stock.count;
+                    document.getElementById('stock-length').value = data.stock.length;
+                    document.getElementById('stock-width').value = data.stock.width;
+                    document.getElementById('stock-thickness').value = data.stock.thickness;
+                    document.getElementById('material-density').value = data.stock.density;
+                    
+                    document.getElementById('kerf-width').value = data.kerf;
+                    cuttingMethodSelect.value = data.cuttingMethod;
+                    
+                    if (data.pressScrap) {
+                        startScrapEnabled.checked = data.pressScrap.startEnabled;
+                        startScrapLength.value = data.pressScrap.startLength;
+                        startScrapLength.disabled = !startScrapEnabled.checked;
+                        endScrapEnabled.checked = data.pressScrap.endEnabled;
+                        endScrapLength.value = data.pressScrap.endLength;
+                        endScrapLength.disabled = !endScrapEnabled.checked;
+                    }
+                    
+                    piecesContainer.innerHTML = ''; fixedLayoutContainer.innerHTML = ''; requiredPiecesContainer.innerHTML = ''; pieceCounter = 0;
+                    
+                    (data.pieces || []).forEach(pData => {
+                        const pg = addPiece(pData.id); if (!pg) return;
+                        pg.querySelector('.piece-name').value = pData.name;
+                        pg.querySelector('.piece-length').value = pData.length;
+                        pg.querySelector('.piece-width').value = pData.width;
+                        pg.querySelector('.end-cut-shape').value = pData.endCutShape;
+                        pg.querySelector('.piece-name').dispatchEvent(new Event('input'));
+                        if(pData.holes) {
+                            pData.holes.forEach(hData => loadHoleData(pg, hData, '1d'));
+                        }
+                    });
+
+                    if (data.activeTab) document.querySelector(`.tab-btn[data-tab="${data.activeTab}"]`)?.click();
+                    if (data.simulatorInputs) {
+                        Object.entries(data.simulatorInputs.fixedLayout || {}).forEach(([id, c]) => { const i = document.querySelector(`#sim-count-${id}`); if (i) i.value = c; });
+                        Object.entries(data.simulatorInputs.requiredPieces || {}).forEach(([id, c]) => { const i = document.querySelector(`#req-count-${id}`); if (i) i.value = c; });
+                    }
+                    cuttingMethodSelect.dispatchEvent(new Event('change'));
+                    unitSelector.dispatchEvent(new Event('change'));
+                    resultsContainer.classList.add('hidden');
+                    alert(`محاسبه "${name}" بارگذاری شد. برای مشاهده نتایج روی دکمه محاسبه کلیک کنید.`);
+                    setTimeout(() => calculateBtn.click(), 100);
+                }
+            });
+            
+            const loadHoleData = (container, hData, context = 'sheet') => {
+                 const newHoleGroup = addHole(container, context);
+                 newHoleGroup.querySelector('.hole-type').value = hData.type;
+                 newHoleGroup.querySelector('.hole-type').dispatchEvent(new Event('change'));
+                 newHoleGroup.querySelector('.hole-dim1 input').value = hData.dim1;
+                 newHoleGroup.querySelector('.hole-dim2 input').value = hData.dim2;
+                 newHoleGroup.querySelector('.hole-count').value = hData.count;
+                 newHoleGroup.querySelector('.hole-x-pos').value = hData.x_pos;
+                 newHoleGroup.querySelector('.hole-y-pos').value = hData.y_pos;
+            };
+            
+            deleteCalculationBtn.addEventListener('click', async () => {
+                const name = savedCalculationsSelect.value;
+                if (!name) { alert("لطفا یک محاسبه را برای حذف انتخاب کنید."); return; }
+                if (confirm(`آیا از حذف محاسبه "${name}" اطمینان دارید؟`)) {
+                    try {
+                        await api.del(`/api/calculator/saves/${encodeURIComponent(name)}`);
+                        alert(`محاسبه "${name}" حذف شد.`);
+                        await loadSavedCalculations();
+                    } catch(err) { alert(`خطا در حذف: ${err.message}`); }
+                }
+            });
+
+            // --- Sheet Calculator Logic ---
+            const syncSheetHelperInputs = () => {
+                document.getElementById('sheet-helper-length').value = document.getElementById('sheet-length').value;
+                document.getElementById('sheet-helper-width').value = document.getElementById('sheet-width').value;
+                document.getElementById('sheet-helper-thickness').value = document.getElementById('sheet-thickness').value;
+            };
+            document.getElementById('sheet-length').addEventListener('input', syncSheetHelperInputs);
+            document.getElementById('sheet-width').addEventListener('input', syncSheetHelperInputs);
+            document.getElementById('sheet-thickness').addEventListener('input', syncSheetHelperInputs);
+
+            sheetCalculateWeightBtn.addEventListener('click', () => {
+                 const multiplier = toMeters(1);
+                let density;
+                const materialSelect = document.getElementById('sheet-helper-material');
+                if (materialSelect.value === 'custom') {
+                    density = parseFloat(prompt("چگالی سفارشی را به kg/m³ وارد کنید:", "8960"));
+                    if (isNaN(density) || density <= 0) return;
+                } else {
+                    density = parseFloat(materialSelect.value);
+                }
+                const length = parseFloat(document.getElementById('sheet-helper-length').value) * multiplier;
+                const width = parseFloat(document.getElementById('sheet-helper-width').value) * multiplier;
+                const thickness = parseFloat(document.getElementById('sheet-helper-thickness').value) * multiplier;
+                const totalStockCount = parseInt(document.getElementById('sheet-count').value, 10) || 1;
+
+                if (density > 0 && length > 0 && width > 0 && thickness > 0) {
+                    const volume = length * width * thickness;
+                    const weightPerSheet = volume * density;
+                    const totalWeight = weightPerSheet * totalStockCount;
+                    document.getElementById('sheet-helper-result').textContent = `وزن ۱ ورق: ${weightPerSheet.toFixed(3)} ک‌گ | وزن کل: ${totalWeight.toFixed(3)} ک‌گ`;
+                    document.getElementById('sheet-density').value = density;
+                } else {
+                     document.getElementById('sheet-helper-result').textContent = 'لطفا تمام ابعاد را به درستی وارد کنید.';
+                }
+            });
+
+            sheetPieceShapeSelect.addEventListener('change', (e) => {
+                const shape = e.target.value;
+                sheetRectDims.classList.toggle('hidden', shape !== 'rect');
+                sheetCircleDims.classList.toggle('hidden', shape !== 'circle');
+                sheetTdims.classList.toggle('hidden', shape !== 't_shape');
+            });
+            
+             // --- New Sheet Calculation Algorithms ---
+            const calculateGridLayout = (sheetL, sheetW, pieceL, pieceW, kerf) => {
+                if (pieceL <= 0 || pieceW <= 0 || sheetL < pieceL || sheetW < pieceW) {
+                    return { total: 0, cols: 0, rows: 0 };
+                }
+                const effL = pieceL + kerf;
+                const effW = pieceW + kerf;
+                const cols = Math.floor((sheetL + kerf) / effL);
+                const rows = Math.floor((sheetW + kerf) / effW);
+                return { total: cols * rows, cols, rows };
+            };
+
+            const calculateStaggeredLayout = (sheetL, sheetW, diameter, kerf) => {
+                if (diameter <= 0) return { total: 0 };
+                const effD = diameter + kerf;
+                const radius = diameter / 2;
+                const rowHeight = effD * Math.sqrt(3) / 2;
+                if (rowHeight <= 0) return { total: 0 };
+
+                // Pattern 1: First row is not offset
+                const rows1 = Math.floor((sheetW - diameter) / rowHeight) + 1;
+                const colsFull1 = Math.floor((sheetL - diameter) / effD) + 1;
+                const colsOffset1 = sheetL > radius ? (Math.floor((sheetL - diameter - radius) / effD) + 1) : 0;
+                const total1 = Math.ceil(rows1 / 2) * colsFull1 + Math.floor(rows1 / 2) * colsOffset1;
+
+                // Pattern 2: First row IS offset
+                const rows2 = sheetW > (rowHeight + diameter) ? (Math.floor((sheetW - diameter - rowHeight) / rowHeight) + 2) : (sheetW >= diameter ? 1 : 0);
+                const total2 = Math.floor(rows2 / 2) * colsFull1 + Math.ceil(rows2 / 2) * colsOffset1;
+                
+                if (total1 > total2) {
+                    return { total: total1, rows: rows1, cols: colsFull1, colsPerRow: Array(rows1).fill(0).map((_, i) => i % 2 === 0 ? colsFull1 : colsOffset1), type: 'staggered', offsetFirstRow: false };
+                } else {
+                    return { total: total2, rows: rows2, cols: colsFull1, colsPerRow: Array(rows2).fill(0).map((_, i) => i % 2 === 0 ? colsOffset1 : colsFull1), type: 'staggered', offsetFirstRow: true };
+                }
+            };
+            
+            calculateSheetBtn.addEventListener('click', () => {
+                const sheet = {
+                    count: parseInt(document.getElementById('sheet-count').value, 10) || 1,
+                    length: toMeters(parseFloat(document.getElementById('sheet-length').value) || 0),
+                    width: toMeters(parseFloat(document.getElementById('sheet-width').value) || 0),
+                    thickness: toMeters(parseFloat(document.getElementById('sheet-thickness').value) || 0),
+                    density: parseFloat(document.getElementById('sheet-density').value) || 0
+                };
+                const kerf = toMeters(parseFloat(document.getElementById('sheet-kerf').value) || 0);
+                const pieceShape = sheetPieceShapeSelect.value;
+                if (sheet.density <= 0) { alert("برای محاسبه وزن، چگالی باید عددی مثبت باشد."); return; }
+                
+                let piece = { shape: pieceShape, holes: [] };
+                let bestLayout = { total: 0 };
+
+                let totalHoleArea = 0;
+                const collectHoles = (container) => {
+                    const holes = [];
+                    container.querySelectorAll('.hole-group').forEach(hg => {
+                        const holeData = { type: hg.querySelector('.hole-type').value, dim1: toMeters(parseFloat(hg.querySelector('.hole-dim1 input').value) || 0), dim2: toMeters(parseFloat(hg.querySelector('.hole-dim2 input').value) || 0), count: parseInt(hg.querySelector('.hole-count').value, 10) || 1, x_pos: toMeters(parseFloat(hg.querySelector('.hole-x-pos').value) || 0), y_pos: toMeters(parseFloat(hg.querySelector('.hole-y-pos').value) || 0) };
+                        let area = 0;
+                        if (holeData.type === 'round') area = Math.PI * (holeData.dim1 / 2) ** 2;
+                        else if (holeData.type === 'square') area = holeData.dim1 ** 2;
+                        else area = holeData.dim1 * holeData.dim2;
+                        totalHoleArea += area * holeData.count;
+                        holes.push(holeData);
+                    });
+                    return holes;
+                };
+
+                if (pieceShape === 'rect') {
+                    piece.length = toMeters(parseFloat(document.getElementById('sheet-rect-length').value) || 0);
+                    piece.width = toMeters(parseFloat(document.getElementById('sheet-rect-width').value) || 0);
+                    if (piece.length <= 0 || piece.width <= 0) { alert("ابعاد قطعه باید مثبت باشد."); return; }
+                    
+                    piece.holes = collectHoles(sheetRectDims);
+                    piece.netArea = (piece.length * piece.width) - totalHoleArea;
+                    piece.bBoxLength = piece.length;
+                    piece.bBoxWidth = piece.width;
+                    
+                    const layout1 = calculateGridLayout(sheet.length, sheet.width, piece.length, piece.width, kerf);
+                    const layout2 = calculateGridLayout(sheet.length, sheet.width, piece.width, piece.length, kerf);
+
+                    if (layout1.total >= layout2.total) {
+                        bestLayout = { ...layout1, rotated: false, type: 'grid', name: 'شبکه‌ای' };
+                    } else {
+                        bestLayout = { ...layout2, rotated: true, type: 'grid', name: 'شبکه‌ای (قطعه چرخیده)' };
+                    }
+                } else if (pieceShape === 't_shape') {
+                    const capL = toMeters(parseFloat(document.getElementById('sheet-t-cap-length').value) || 0);
+                    const capW = toMeters(parseFloat(document.getElementById('sheet-t-cap-width').value) || 0);
+                    const baseL = toMeters(parseFloat(document.getElementById('sheet-t-base-length').value) || 0); // Stem length
+                    const baseW = toMeters(parseFloat(document.getElementById('sheet-t-base-width').value) || 0); // Stem width
+                    
+                    if (baseL <= 0 || baseW <= 0 || capL <= 0 || capW <= 0) { alert("تمام ابعاد قطعه T باید مثبت باشند."); return; }
+                    if (baseW > capL) { alert("عرض پایه نمی‌تواند از طول کلاهک بیشتر باشد."); return; }
+
+                    piece = {...piece, baseL, baseW, capL, capW};
+                    piece.holes = collectHoles(sheetTdims);
+                    piece.netArea = (baseL * baseW) + (capL * capW) - totalHoleArea;
+                    
+                    // Bounding box for a single T-piece
+                    const pL = capL;
+                    const pW = capW + baseL;
+                    piece.bBoxLength = pL;
+                    piece.bBoxWidth = pW;
+                    
+                    // Strategy 1 & 2: Grid layout of single T-pieces (normal and rotated)
+                    const grid_p1 = calculateGridLayout(sheet.length, sheet.width, pL, pW, kerf);
+                    const grid_p2 = calculateGridLayout(sheet.length, sheet.width, pW, pL, kerf);
+
+                    // Strategy 3: Nested layout. A unit of 2 interlocked pieces creates a new rectangle.
+                    // This creates a solid rectangular unit of L = capL + baseW and W = capW + baseL, containing 2 pieces.
+                    const nestUnitL = capL + baseW;
+                    const nestUnitW = capW + baseL;
+                    const nested_p1 = calculateGridLayout(sheet.length, sheet.width, nestUnitL, nestUnitW, kerf);
+                    const nested_p2 = calculateGridLayout(sheet.length, sheet.width, nestUnitW, nestUnitL, kerf);
+
+                    // Consolidate strategies, including sheet rotation
+                    const strategies = [
+                        // Grid on normal sheet
+                        {...grid_p1, total: grid_p1.total, name: 'شبکه‌ای', type: 'grid', rotated: false, sheetRotated: false },
+                        {...grid_p2, total: grid_p2.total, name: 'شبکه‌ای (قطعه چرخیده)', type: 'grid', rotated: true, sheetRotated: false },
+                        // Nested on normal sheet
+                        {...nested_p1, total: nested_p1.total * 2, name: 'تودرتو افقی', type: 'nested_horizontal', rotated: false, sheetRotated: false },
+                        {...nested_p2, total: nested_p2.total * 2, name: 'تودرتو افقی (واحد چرخیده)', type: 'nested_horizontal', rotated: true, sheetRotated: false },
+                        // Grid on rotated sheet
+                        {...calculateGridLayout(sheet.width, sheet.length, pL, pW, kerf), name: 'شبکه‌ای (ورق چرخیده)', type: 'grid', rotated: false, sheetRotated: true },
+                        {...calculateGridLayout(sheet.width, sheet.length, pW, pL, kerf), name: 'شبکه‌ای (قطعه و ورق چرخیده)', type: 'grid', rotated: true, sheetRotated: true },
+                        // Nested on rotated sheet
+                        {...calculateGridLayout(sheet.width, sheet.length, nestUnitL, nestUnitW, kerf), total: calculateGridLayout(sheet.width, sheet.length, nestUnitL, nestUnitW, kerf).total * 2, name: 'تودرتو افقی (ورق چرخیده)', type: 'nested_horizontal', rotated: false, sheetRotated: true },
+                        {...calculateGridLayout(sheet.width, sheet.length, nestUnitW, nestUnitL, kerf), total: calculateGridLayout(sheet.width, sheet.length, nestUnitW, nestUnitL, kerf).total * 2, name: 'تودرتو افقی (واحد و ورق چرخیده)', type: 'nested_horizontal', rotated: true, sheetRotated: true }
+                    ];
+
+                    bestLayout = strategies.reduce((best, current) => (current.total > best.total) ? current : best, { total: 0 });
+
+                } else { // Circle
+                    piece.outerD = toMeters(parseFloat(document.getElementById('sheet-circle-outer').value) || 0);
+                    if (piece.outerD <= 0) { alert("قطر خارجی دایره باید مثبت باشد."); return; }
+
+                    piece.holes = collectHoles(sheetCircleDims);
+                    piece.netArea = (Math.PI * (piece.outerD / 2) ** 2) - totalHoleArea;
+                    piece.bBoxLength = piece.outerD;
+                    piece.bBoxWidth = piece.outerD;
+                    
+                    const layouts = [
+                        { ...calculateGridLayout(sheet.length, sheet.width, piece.outerD, piece.outerD, kerf), type: 'grid', rotated: false, name: 'شبکه‌ای' },
+                        { ...calculateGridLayout(sheet.width, sheet.length, piece.outerD, piece.outerD, kerf), type: 'grid', rotated: true, name: 'شبکه‌ای (ورق چرخیده)' },
+                        { ...calculateStaggeredLayout(sheet.length, sheet.width, piece.outerD, kerf), rotated: false, name: 'شش‌ضلعی (لانه زنبوری)' },
+                        { ...calculateStaggeredLayout(sheet.width, sheet.length, piece.outerD, kerf), rotated: true, name: 'شش‌ضلعی (ورق چرخیده)' }
+                    ];
+                    bestLayout = layouts.reduce((best, current) => (current.total > best.total) ? current : best, { total: 0 });
+                }
+                
+                if (bestLayout.total === 0) {
+                     sheetResultsContainer.innerHTML = `<div class="card text-center text-red-500">هیچ قطعه‌ای در این ورق جا نمی‌شود.</div>`;
+                     sheetResultsContainer.classList.remove('hidden'); return;
+                }
+
+                const totalSheetArea = sheet.length * sheet.width;
+                const totalPieceNetAreaPerSheet = piece.netArea * bestLayout.total;
+                const scrapAreaPerSheet = totalSheetArea - totalPieceNetAreaPerSheet;
+                const totalScrapWeight = scrapAreaPerSheet * sheet.thickness * sheet.density * sheet.count;
+                const totalPieceWeight = totalPieceNetAreaPerSheet * sheet.thickness * sheet.density * sheet.count;
+                
+                lastSheetCalculationResult = { layout: bestLayout, inputs: { sheet, piece, kerf } };
+                
+                sheetResultsContainer.innerHTML = `
+                    <div class="card">
+                        <h3 class="text-xl font-bold mb-4">نتایج چیدمان ورق</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                             <div class="space-y-4">
+                                <div class="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                    <p class="flex justify-between font-semibold"><span>تعداد قطعه در هر ورق:</span> <span class="font-mono text-lg">${bestLayout.total.toLocaleString('fa-IR')}</span></p>
+                                    <p class="flex justify-between"><span>تعداد کل قطعات (${sheet.count} ورق):</span> <span class="font-mono font-bold text-xl">${(bestLayout.total * sheet.count).toLocaleString('fa-IR')}</span></p>
+                                    <p class="flex justify-between text-sm text-gray-600 dark:text-gray-400"><span>چیدمان بهینه:</span> <span class="font-semibold">${bestLayout.name}</span></p>
+                                </div>
+                                 <div class="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                    <p class="flex justify-between"><span>وزن کل قطعات:</span> <span class="font-mono font-bold text-green-600 dark:text-green-400">${totalPieceWeight.toFixed(3)} ک‌گ</span></p>
+                                    <p class="flex justify-between"><span>وزن کل ضایعات:</span> <span class="font-mono font-bold text-red-500 dark:text-red-400">${totalScrapWeight.toFixed(3)} ک‌گ</span></p>
+                                </div>
+                                 <div class="pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-center">
+                                    <button id="export-sheet-dxf-btn" class="py-2 px-6 bg-gray-700 text-white font-bold rounded-lg hover:bg-gray-800 transition text-md">خروجی DXF برای سالیدورک</button>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-2">چیدمان بصری (۱ ورق)</h4>
+                                <canvas id="sheet-canvas" class="bg-gray-200 dark:bg-gray-700 rounded w-full"></canvas>
+                                ${bestLayout.rotated && !bestLayout.type.includes('nested') ? '<p class="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">نمایش با چرخش ۹۰ درجه قطعه/ورق برای بهترین چیدمان</p>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                drawSheetLayout(document.getElementById('sheet-canvas'), lastSheetCalculationResult);
+                sheetResultsContainer.classList.remove('hidden');
+            });
+            
+            const drawT = (ctx, x, y, capL, capW, baseL, baseW) => {
+                const stemStartX = x + (capL - baseW) / 2;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + capL, y);
+                ctx.lineTo(x + capL, y + capW);
+                ctx.lineTo(stemStartX + baseW, y + capW);
+                ctx.lineTo(stemStartX + baseW, y + capW + baseL);
+                ctx.lineTo(stemStartX, y + capW + baseL);
+                ctx.lineTo(stemStartX, y + capW);
+                ctx.lineTo(x, y + capW);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            };
+
+            const drawSheetLayout = (canvas, resultData) => {
+                if (!canvas || !resultData) return;
+                const { layout, inputs } = resultData;
+                const { sheet, piece, kerf } = inputs;
+                
+                const sheetL_m = layout.sheetRotated ? sheet.width : sheet.length;
+                const sheetW_m = layout.sheetRotated ? sheet.length : sheet.width;
+                
+                const visualWidth = Math.min(600, window.innerWidth - 80);
+                const scale = visualWidth / fromMeters(sheetL_m);
+                canvas.width = visualWidth;
+                canvas.height = fromMeters(sheetW_m) * scale;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = '#1e3a8a';
+                ctx.lineWidth = 1;
+
+                const kerfVisual = fromMeters(kerf) * scale;
+
+                if (piece.shape === 'rect') {
+                    const pieceL_visual = scale * fromMeters(layout.rotated ? piece.width : piece.length);
+                    const pieceW_visual = scale * fromMeters(layout.rotated ? piece.length : piece.width);
+                    
+                    for (let r = 0; r < layout.rows; r++) {
+                        for (let c = 0; c < layout.cols; c++) {
+                            const x = c * (pieceL_visual + kerfVisual);
+                            const y = r * (pieceW_visual + kerfVisual);
+                            ctx.fillStyle = '#3b82f6';
+                            ctx.fillRect(x, y, pieceL_visual, pieceW_visual);
+                            ctx.strokeRect(x, y, pieceL_visual, pieceW_visual);
+                        }
+                    }
+                } else if (piece.shape === 't_shape') {
+                    const capL_v = scale * fromMeters(piece.capL);
+                    const capW_v = scale * fromMeters(piece.capW);
+                    const baseL_v = scale * fromMeters(piece.baseL);
+                    const baseW_v = scale * fromMeters(piece.baseW);
+                    
+                    const pL_v = capL_v;
+                    const pW_v = capW_v + baseL_v;
+
+                    for (let r = 0; r < layout.rows; r++) {
+                        for (let c = 0; c < layout.cols; c++) {
+                            let unitL_v, unitW_v;
+                            if (layout.type === 'nested_horizontal') {
+                                unitL_v = scale * fromMeters(layout.rotated ? (piece.capW + piece.baseL) : (piece.capL + piece.baseW));
+                                unitW_v = scale * fromMeters(layout.rotated ? (piece.capL + piece.baseW) : (piece.capW + piece.baseL));
+                            } else { // grid
+                                unitL_v = scale * fromMeters(layout.rotated ? piece.bBoxWidth : piece.bBoxLength);
+                                unitW_v = scale * fromMeters(layout.rotated ? piece.bBoxLength : piece.bBoxWidth);
+                            }
+
+                            const cellX = c * (unitL_v + kerfVisual);
+                            const cellY = r * (unitW_v + kerfVisual);
+
+                            const drawPiece = (x, y, rotation, color) => {
+                                ctx.save();
+                                ctx.fillStyle = color;
+                                const pieceBBoxL = (rotation === 0 || rotation === 180) ? pL_v : pW_v;
+                                const pieceBBoxW = (rotation === 0 || rotation === 180) ? pW_v : pL_v;
+                                ctx.translate(x + pieceBBoxL / 2, y + pieceBBoxW / 2);
+                                ctx.rotate(rotation * Math.PI / 180);
+                                drawT(ctx, -pL_v / 2, -pW_v / 2, capL_v, capW_v, baseL_v, baseW_v);
+                                ctx.restore();
+                            };
+
+                            if (layout.type === 'nested_horizontal') {
+                                if (layout.rotated) { // Unit is rotated (tall)
+                                    drawPiece(cellX, cellY, -90, '#3b82f6');
+                                    drawPiece(cellX + capW_v, cellY, 90, '#60a5fa');
+                                } else { // Unit is normal (wide)
+                                    drawPiece(cellX, cellY, 0, '#3b82f6');
+                                    drawPiece(cellX + pL_v - baseW_v, cellY + capW_v, 180, '#60a5fa');
+                                }
+                            } else { // Grid layout
+                                drawPiece(cellX, cellY, layout.rotated ? -90 : 0, '#3b82f6');
+                            }
+                        }
+                    }
+                } else if(piece.shape === 'circle') {
+                    const diameterVisual = scale * fromMeters(piece.outerD);
+                    const radiusVisual = diameterVisual / 2;
+
+                    for (let r = 0; r < layout.rows; r++) {
+                        const offsetX = (layout.type === 'staggered' && (layout.offsetFirstRow ? r % 2 !== 0 : r % 2 === 0)) ? radiusVisual + (kerfVisual / 2) : 0;
+                        const rowHeightVisual = (layout.type === 'staggered') ? (diameterVisual + kerfVisual) * Math.sqrt(3) / 2 : (diameterVisual + kerfVisual);
+                        const startY = r * rowHeightVisual;
+                        
+                        const colsThisRow = layout.colsPerRow ? layout.colsPerRow[r] : layout.cols;
+                        for (let c = 0; c < colsThisRow; c++) {
+                            const startX = offsetX + c * (diameterVisual + kerfVisual);
+                            ctx.beginPath();
+                            ctx.arc(startX + radiusVisual, startY + radiusVisual, radiusVisual, 0, 2 * Math.PI);
+                            ctx.fillStyle = '#3b82f6';
+                            ctx.fill();
+                            ctx.stroke();
+                        }
+                    }
+                }
+            };
+            
+            // --- Pipe Calculator Logic ---
+            const updatePipeHollowDims = (source) => {
+                const od = parseFloat(pipeOuterDiaInput.value) || 0;
+                let id = parseFloat(pipeInnerDiaInput.value) || 0;
+                let thickness = parseFloat(pipeWallThickInput.value) || 0;
+                
+                if (source === 'od' || source === 'thickness') {
+                    pipeInnerDiaInput.value = Math.max(0, od - 2 * thickness).toFixed(3);
+                } else if (source === 'id') {
+                    pipeWallThickInput.value = Math.max(0, (od - id) / 2).toFixed(3);
+                }
+            };
+
+            pipeTypeRadios.forEach(radio => {
+                radio.addEventListener('change', e => {
+                    const isHollow = e.target.value === 'hollow';
+                    pipeHollowDims.style.display = isHollow ? 'grid' : 'none';
+                    pipeInnerDiaInput.disabled = !isHollow;
+                    pipeWallThickInput.disabled = !isHollow;
+                    if(isHollow) {
+                       pipeInnerDiaInput.readOnly = true;
+                    }
+                });
+            });
+
+            pipeOuterDiaInput.addEventListener('input', () => updatePipeHollowDims('od'));
+            pipeWallThickInput.addEventListener('input', () => updatePipeHollowDims('thickness'));
+            // pipeInnerDiaInput.addEventListener('input', () => updatePipeHollowDims('id')); // Keep ID as calculated field
+            
+            const collectPipeInputs = () => {
+                const pipeType = document.querySelector('input[name="pipe-type"]:checked').value;
+                const outerD = toMeters(parseFloat(document.getElementById('pipe-outer-diameter').value) || 0);
+                let innerD;
+                if (pipeType === 'hollow') {
+                    innerD = toMeters(parseFloat(document.getElementById('pipe-inner-diameter').value) || 0);
+                    if (innerD >= outerD) {
+                        alert('قطر داخلی نمی‌تواند بزرگتر یا مساوی قطر خارجی باشد.');
+                        return null;
+                    }
+                } else {
+                    innerD = 0;
+                }
+
+                const pipe = {
+                    type: pipeType,
+                    count: parseInt(document.getElementById('pipe-count').value, 10) || 1,
+                    length: toMeters(parseFloat(document.getElementById('pipe-length').value) || 0),
+                    outerD: outerD,
+                    innerD: innerD,
+                    density: parseFloat(document.getElementById('pipe-density').value) || 0,
+                    wallThickness: toMeters(parseFloat(document.getElementById('pipe-wall-thickness').value) || 0)
+                };
+                const kerf = toMeters(parseFloat(document.getElementById('pipe-kerf-width').value) || 0);
+                
+                const getPieceVolume = (l) => {
+                    if (pipe.type === 'solid') {
+                        return Math.PI * Math.pow(pipe.outerD / 2, 2) * l;
+                    } else {
+                        return Math.PI * (Math.pow(pipe.outerD / 2, 2) - Math.pow(pipe.innerD / 2, 2)) * l;
+                    }
+                };
+
+                const pieceTypes = [];
+                document.querySelectorAll('.pipe-piece-group').forEach(pg => {
+                    const pieceId = pg.dataset.id;
+                    const length = toMeters(parseFloat(pg.querySelector('.pipe-piece-length').value) || 0);
+                    const volume = getPieceVolume(length);
+                    const weight = volume * pipe.density;
+                    
+                    pieceTypes.push({
+                        id: parseInt(pieceId),
+                        name: pg.querySelector('.pipe-piece-name').value.trim() || `قطعه #${pieceId}`,
+                        length: length,
+                        weight: weight,
+                    });
+                });
+
+                if (pieceTypes.length === 0 || pieceTypes.some(p => p.length <= 0)) { alert("اطلاعات قطعات نامعتبر است."); return null; }
+                if (pipe.density <= 0) { alert("برای محاسبه وزن، چگالی باید عددی مثبت باشد."); return null; }
+
+                return { pipe, kerf, pieceTypes, name: document.getElementById('pipe-calc-name').value.trim(), unit: unitSelector.value, type: 'pipe' };
+            };
+            
+            const calculatePipeWasteAndWeights = (layout, inputs) => {
+                const { pipe, kerf, pieceTypes } = inputs;
+                let totalLengthUsed = 0;
+                let totalNetPieceWeight = 0;
+
+                layout.forEach(p => {
+                    const fullPieceData = pieceTypes.find(pd => pd.id === p.id);
+                    if (fullPieceData) {
+                        totalLengthUsed += fullPieceData.length;
+                        totalNetPieceWeight += fullPieceData.weight;
+                    }
+                });
+
+                const kerfCount = layout.length; // Each piece cut needs one kerf
+                totalLengthUsed += kerfCount * kerf;
+                
+                const offcutLength = pipe.length - totalLengthUsed;
+                if (offcutLength < -1e-9) return null; // Invalid
+
+                const getVolume = (l) => {
+                    if (pipe.type === 'solid') {
+                        return Math.PI * Math.pow(pipe.outerD / 2, 2) * l;
+                    } else {
+                        return Math.PI * (Math.pow(pipe.outerD / 2, 2) - Math.pow(pipe.innerD / 2, 2)) * l;
+                    }
+                };
+                
+                const kerfWasteVolume = getVolume(kerfCount * kerf);
+                const offcutWasteVolume = getVolume(offcutLength);
+                
+                const kerfWasteWeight = kerfWasteVolume * pipe.density;
+                const offcutWasteWeight = offcutWasteVolume * pipe.density;
+                
+                const totalWasteWeight = kerfWasteWeight + offcutWasteWeight;
+                
+                return { 
+                    totalNetPieceWeight, 
+                    totalWasteWeight, 
+                    offcutLength,
+                    kerfWasteWeight,
+                    offcutWasteWeight
+                };
+            };
+            
+            calculatePipeBtn.addEventListener('click', () => {
+                 const inputs = collectPipeInputs();
+                 if (!inputs) return;
+                 const { pipe, kerf, pieceTypes } = inputs;
+
+                 const oversizedPieces = pieceTypes.filter(p => p.length > pipe.length);
+                 if (oversizedPieces.length > 0) {
+                     alert(`خطا: قطعه(های) "${oversizedPieces.map(p => p.name).join(', ')}" طویل‌تر از لوله است.`);
+                     return;
+                 }
+                 
+                // Simple greedy algorithm for 1D pipe cutting
+                let remainingLength = pipe.length;
+                const layoutPerPipe = [];
+                const sortedPieces = [...pieceTypes].sort((a,b) => b.length - a.length); // largest first
+
+                let layoutPossible = true;
+                while (layoutPossible) {
+                    let bestFit = null;
+                    for(const piece of sortedPieces) {
+                        if (remainingLength >= piece.length + kerf) {
+                            bestFit = piece;
+                            break; // First fit is good enough for this greedy approach
+                        }
+                    }
+                    if (bestFit) {
+                        layoutPerPipe.push(bestFit);
+                        remainingLength -= (bestFit.length + kerf);
+                    } else {
+                        layoutPossible = false;
+                    }
+                }
+                
+                const wasteInfoPerPipe = calculatePipeWasteAndWeights(layoutPerPipe, inputs);
+                if (!wasteInfoPerPipe) {
+                     pipeResultsContainer.innerHTML = `<div class="card text-center text-red-500">خطای محاسباتی.</div>`;
+                     pipeResultsContainer.classList.remove('hidden'); return;
+                }
+                
+                const countsPerPipe = {};
+                layoutPerPipe.forEach(p => { countsPerPipe[p.id] = (countsPerPipe[p.id] || 0) + 1; });
+                const totalPieces = {};
+                Object.keys(countsPerPipe).forEach(k => { totalPieces[k] = countsPerPipe[k] * pipe.count; });
+                
+                const totalWasteAllPipes = wasteInfoPerPipe.totalWasteWeight * pipe.count;
+                const totalNetWeightAllPipes = wasteInfoPerPipe.totalNetPieceWeight * pipe.count;
+                
+                lastPipeCalculationResult = { layout: layoutPerPipe, inputs };
+
+                const unitDisplay = unitSelector.value === 'm' ? 'متر' : 'سانتی‌متر';
+                
+                const layoutText = layoutPerPipe.map(p => `[${p.name}: ${fromMeters(p.length).toFixed(1)}]`).join(` --(${fromMeters(kerf).toFixed(2)})-- `);
+                const offcutText = wasteInfoPerPipe.offcutLength > 1e-9 ? ` -- [ضایعات: ${fromMeters(wasteInfoPerPipe.offcutLength).toFixed(1)}]` : '';
+
+                pipeResultsContainer.innerHTML = `
+                <div class="card mt-6">
+                    <h3 class="text-lg font-bold mb-4 text-blue-600 dark:text-blue-400">نقشه برش بهینه برای ۱ لوله</h3>
+                    <div class="p-4 bg-gray-50 dark:bg-gray-50 rounded-lg overflow-x-auto whitespace-nowrap font-mono text-sm text-gray-900 dark:text-gray-900">
+                        ${layoutText}${offcutText}
+                    </div>
+                </div>
+                <div class="card !p-0 !border-0 !shadow-none !bg-transparent mt-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="card !bg-gray-100 text-gray-900 rounded-xl">
+                            <h3 class="font-bold text-lg mb-3">تولید از ۱ لوله:</h3>
+                            <ul class="space-y-2 text-base">
+                                ${Object.entries(countsPerPipe).map(([id, count]) => {
+                                    const piece = pieceTypes.find(p => p.id == id);
+                                    return `<li>• ${piece.name}: ${count} عدد (وزن کل: ${(piece.weight * count).toFixed(3)} ک‌گ)</li>`;
+                                }).join('') || '<li>• هیچ قطعه‌ای تولید نشد.</li>'}
+                            </ul>
+                            <div class="mt-4 pt-4 border-t border-gray-300 font-semibold flex justify-between text-base">
+                                <span>مجموع وزن قطعات:</span>
+                                <span class="font-bold text-green-600">${wasteInfoPerPipe.totalNetPieceWeight.toFixed(3)} کیلوگرم</span>
+                            </div>
+                        </div>
+                        <div class="card !bg-gray-100 text-gray-900 rounded-xl">
+                            <h3 class="font-bold text-lg mb-3">ضایعات از ۱ لوله:</h3>
+                            <ul class="space-y-2 text-base">
+                                <li>• ضایعات برش: ${wasteInfoPerPipe.kerfWasteWeight.toFixed(3)} کیلوگرم</li>
+                                <li>• ضایعات انتهای لوله: ${wasteInfoPerPipe.offcutWasteWeight.toFixed(3)} کیلوگرم</li>
+                            </ul>
+                            <div class="mt-4 pt-4 border-t border-gray-300 font-semibold flex justify-between text-base">
+                                <span>مجموع وزن ضایعات:</span>
+                                <span class="font-bold text-red-600">${wasteInfoPerPipe.totalWasteWeight.toFixed(3)} کیلوگرم</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card !bg-blue-100 text-gray-900 mt-6 rounded-xl">
+                        <h3 class="font-bold text-lg mb-3">نتایج نهایی برای ${pipe.count} لوله:</h3>
+                        <ul class="space-y-2 text-base">
+                            ${Object.entries(totalPieces).map(([id, count]) => {
+                                const piece = pieceTypes.find(p => p.id == id);
+                                return `<li>• ${piece.name}: ${count} عدد (وزن کل: ${(piece.weight * count).toFixed(3)} ک‌گ)</li>`;
+                            }).join('') || '<li>• هیچ قطعه‌ای تولید نشد.</li>'}
+                            <li class="pt-3 mt-3 border-t border-blue-400/50">
+                                • <span class="font-semibold">مجموع وزن کل قطعات:</span>
+                                <span class="font-bold text-green-600 ml-2">${totalNetWeightAllPipes.toFixed(3)}</span> کیلوگرم
+                            </li>
+                            <li>
+                                • <span class="font-semibold">مجموع وزن ضایعات کل:</span>
+                                <span class="font-bold text-red-600 ml-2">${totalWasteAllPipes.toFixed(3)}</span> کیلوگرم
+                            </li>
+                        </ul>
+                         <div class="mt-4 pt-4 border-t border-blue-400/50 flex justify-center">
+                            <button id="export-pipe-dxf-btn" class="py-2 px-6 bg-gray-700 text-white font-bold rounded-lg hover:bg-gray-800 transition text-md">خروجی DXF برای سالیدورک</button>
+                        </div>
+                    </div>
+                </div>`;
+                pipeResultsContainer.classList.remove('hidden');
+            });
+            
+            const loadPipeData = (data) => {
+                document.querySelector('.tab-btn[data-tab="pipe-calculator"]').click();
+                unitSelector.value = data.unit || 'cm';
+                unitSelector.dispatchEvent(new Event('change'));
+                
+                document.getElementById('pipe-calc-name').value = data.name || '';
+                document.getElementById('pipe-count').value = data.pipe.count;
+                document.getElementById('pipe-length').value = fromMeters(data.pipe.length);
+                
+                const pipeTypeRadio = document.querySelector(`input[name="pipe-type"][value="${data.pipe.type}"]`);
+                if(pipeTypeRadio) pipeTypeRadio.click();
+
+                document.getElementById('pipe-outer-diameter').value = fromMeters(data.pipe.outerD);
+                document.getElementById('pipe-wall-thickness').value = fromMeters(data.pipe.wallThickness);
+                document.getElementById('pipe-inner-diameter').value = fromMeters(data.pipe.innerD);
+                document.getElementById('pipe-density').value = data.pipe.density;
+                
+                document.getElementById('pipe-kerf-width').value = fromMeters(data.kerf);
+                
+                pipePiecesContainer.innerHTML = ''; pipePieceCounter = 0;
+                (data.pieces || []).forEach(pData => {
+                    const pg = addPipePiece(pData.id);
+                    pg.querySelector('.pipe-piece-name').value = pData.name;
+                    pg.querySelector('.pipe-piece-length').value = fromMeters(pData.length);
+                });
+            };
+
+            // --- Initial Setup ---
+            addPiece();
+            addPipePiece();
+            syncHelperInputs();
+            syncSheetHelperInputs();
+            loadSavedCalculations();
+            
+            // Trigger initial state for pipe radios
+            document.querySelector('input[name="pipe-type"][value="hollow"]').dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    </script>
+</body>
+</html>

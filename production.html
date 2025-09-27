@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>عملیات تولید</title>
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="description" content="مدیریت عملیات تولید شامل مواد اولیه، تولیدات در جریان و کارگاه ها.">
+    <link rel="manifest" href="/manifest.json">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+      
+      :root {
+        --bg-light: #f9fafb; /* gray-50 */
+        --text-light: #111827; /* gray-900 */
+        --card-bg-light: #ffffff;
+        --card-border-light: #e5e7eb; /* gray-200 */
+        --input-bg-light: #ffffff;
+        --input-border-light: #d1d5db; /* gray-300 */
+        --header-bg-light: rgba(255, 255, 255, 0.8);
+        --table-header-bg-light: #f9fafb;
+        --table-row-hover-light: #f3f4f6;
+        --text-muted-light: #6b7280;
+
+        --bg-dark: #030712; /* gray-950 */
+        --text-dark: #d1d5db; /* gray-300 */
+        --card-bg-dark: #111827; /* gray-900 */
+        --card-border-dark: #374151; /* gray-700 */
+        --input-bg-dark: #1f2937; /* gray-800 */
+        --input-border-dark: #4b5563; /* gray-600 */
+        --header-bg-dark: rgba(17, 24, 39, 0.8);
+        --table-header-bg-dark: #1f2937;
+        --table-row-hover-dark: #1f2937;
+        --text-muted-dark: #9ca3af;
+      }
+
+      body {
+        font-family: 'Vazirmatn', sans-serif;
+        background-color: var(--bg-light);
+        color: var(--text-light);
+        transition: background-color 0.3s, color 0.3s;
+      }
+      html.dark body {
+        background-color: var(--bg-dark);
+        color: var(--text-dark);
+      }
+      /* Prevent scroll on number inputs */
+      input[type=number]::-webkit-inner-spin-button,
+      input[type=number]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+      }
+      input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+      }
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: flex-start; /* Changed for long modals */
+            z-index: 50;
+            transition: opacity 300ms;
+            overflow-y: auto; /* Allow page to scroll */
+        }
+        #raw-material-action-modal, #completion-modal, #wip-report-modal {
+            z-index: 60; /* Ensure action modals are on top of other modals */
+        }
+        .modal-content {
+            background-color: var(--card-bg-light);
+            border: 1px solid var(--card-border-light);
+            color: var(--text-light);
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 42rem; /* lg */
+            margin: 2rem 1rem; /* Added top/bottom margin */
+            padding: 1.5rem;
+            transform: scale(0.95);
+            opacity: 0;
+            animation: fade-in-scale 0.2s forwards;
+            /* max-height: 90vh; */ /* Removed */
+            display: flex;
+            flex-direction: column;
+        }
+        html.dark .modal-content {
+           background-color: var(--card-bg-dark);
+           border-color: var(--card-border-dark);
+           color: var(--text-dark);
+        }
+        @keyframes fade-in-scale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .print-header {
+            display: none;
+        }
+
+        .destination-hidden .wip-destination-col {
+            display: none;
+        }
+        .scrap-notes-hidden .wip-scrap-notes-col {
+            display: none;
+        }
+        
+        .form-input, .form-select {
+          background-color: var(--input-bg-light);
+          border: 1px solid var(--input-border-light);
+          color: var(--text-light);
+          border-radius: 0.5rem;
+          padding: 0.5rem 0.75rem;
+        }
+        html.dark .form-input, html.dark .form-select {
+          background-color: var(--input-bg-dark);
+          border-color: var(--input-border-dark);
+          color: var(--text-dark);
+        }
+
+        @media print {
+            body.is-printing #app-container > *:not(.is-printing) {
+                display: none !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            html, body {
+                background-color: white !important;
+                color: black !important;
+            }
+             html.dark, html.dark body {
+                 background-color: white !important;
+                color: black !important;
+             }
+             
+            table, th, td {
+                border: 1px solid #ccc !important;
+            }
+
+            .modal-content-print {
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+            }
+
+            .modal.is-printing {
+                display: block !important;
+                position: absolute !important;
+                top: 0;
+                left: 0;
+                width: 100% !important;
+                height: auto !important;
+                background: white !important;
+                z-index: 9999 !important;
+                overflow-y: visible !important;
+            }
+
+            .modal.is-printing .modal-content {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                max-height: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                background-color: white !important;
+                color: black !important;
+                transform: none !important;
+                opacity: 1 !important;
+                animation: none !important;
+            }
+            html.dark .modal.is-printing .modal-content * {
+                 color: black !important;
+            }
+
+
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 1.5rem;
+                border-bottom: 1px solid #ccc;
+                padding-bottom: 1rem;
+                color: black !important;
+            }
+            .print-header img {
+                max-width: 150px;
+                margin: 0 auto 1rem;
+            }
+            .print-header .print-title {
+                color: black !important;
+                font-size: 1.25rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+            .print-header p {
+                color: #333 !important;
+                font-size: 0.875rem;
+            }
+
+            @page {
+                size: A4;
+                margin: 1.5cm;
+            }
+        }
+    </style>
+    
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.9.0",
+    "react/": "https://esm.sh/react@18.3.1/",
+    "jspdf": "https://esm.sh/jspdf@^3.0.1",
+    "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.2"
+  }
+}
+</script>
+</head>
+
+<body class="bg-[var(--bg-light)] text-[var(--text-light)]">
+    <div id="app-container" class="min-h-screen font-sans text-slate-800 dark:text-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="mb-6 no-print">
+                 <div class="flex items-center gap-4 flex-wrap justify-center mb-6">
+                    <button id="open-raw-materials-btn" class="flex items-center gap-2 px-3 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg shadow-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"></path></svg>
+                        <span>مواد اولیه</span>
+                    </button>
+                     <button id="open-production-report-btn" class="flex items-center gap-2 px-3 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg shadow-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125 1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                        <span>گزارش جامع تولید</span>
+                    </button>
+                    <button id="open-workshops-btn" class="flex items-center gap-2 px-3 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg shadow-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18h16.5M4.5 3v18m15-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6h1.5m-1.5 3h1.5m-1.5 3h1.5M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" /></svg>
+                        <span>کارگاه‌ها</span>
+                    </button>
+                </div>
+                <!-- Search and Filter Panel -->
+                <div class="mt-6 p-4 bg-slate-100 dark:bg-slate-800/50 rounded-lg">
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+                        <div class="lg:col-span-2">
+                            <label for="wip-search-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">جستجو (نام کارگاه / ماده اولیه)</label>
+                            <input type="search" id="wip-search-input" placeholder="مثلا: کارگاه پرس یا شمش آلومینیوم" class="w-full p-2 form-input" />
+                        </div>
+                        <div>
+                            <label for="wip-consumed-qty-filter" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">حداقل مقدار ارسالی</label>
+                            <input type="number" id="wip-consumed-qty-filter" placeholder="مثلا: 100" class="w-full p-2 form-input" min="0" />
+                        </div>
+                        <div>
+                            <label for="wip-produced-qty-filter" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">حداقل تعداد تولید</label>
+                            <input type="number" id="wip-produced-qty-filter" placeholder="مثلا: 500" class="w-full p-2 form-input" min="0" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <main id="wip-container">
+                <!-- Work-in-progress content will be rendered here -->
+            </main>
+        </div>
+
+        <!-- Modals -->
+        <div id="workshops-modal" class="modal">
+             <div class="modal-content max-w-lg">
+                 <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">مدیریت کارگاه‌ها</h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="workshops-modal-body"></div>
+            </div>
+        </div>
+
+        <!-- Raw Material & Production Modals -->
+        <div id="raw-materials-modal" class="modal">
+            <div class="modal-content max-w-2xl">
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">مدیریت مواد اولیه</h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="raw-materials-modal-body"></div>
+            </div>
+        </div>
+        
+        <div id="raw-material-action-modal" class="modal">
+            <div class="modal-content max-w-md">
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 id="raw-material-action-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="raw-material-action-modal-body"></div>
+            </div>
+        </div>
+
+        <div id="record-production-modal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 id="record-production-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="record-production-modal-body"></div>
+            </div>
+        </div>
+        
+        <div id="raw-history-modal" class="modal">
+            <div class="modal-content max-w-3xl">
+                <div class="print-header">
+                    
+                    <h2 class="print-title"></h2>
+                    <p>تاریخ چاپ: <span class="print-date"></span></p>
+                </div>
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 no-print flex-shrink-0">
+                    <h2 id="raw-history-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="raw-history-modal-body" class="modal-content-print"></div>
+                <div id="raw-history-modal-footer" class="flex justify-end items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4 no-print flex-shrink-0"></div>
+            </div>
+        </div>
+
+        <div id="wip-report-modal" class="modal">
+            <div class="modal-content max-w-7xl">
+                 <div class="print-header">
+                    
+                    <h2 class="print-title"></h2>
+                    <p>تاریخ چاپ: <span class="print-date"></span></p>
+                 </div>
+                 <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 no-print flex-shrink-0">
+                    <h2 id="wip-report-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="wip-report-modal-body" class="modal-content-print"></div>
+                <div id="wip-report-modal-footer" class="flex justify-end items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4 no-print flex-shrink-0"></div>
+            </div>
+        </div>
+
+        <div id="production-report-modal" class="modal">
+            <div class="modal-content max-w-7xl">
+                 <div class="print-header">
+                    
+                    <h2 id="production-report-modal-print-title" class="print-title"></h2>
+                    <p>تاریخ چاپ: <span class="print-date"></span></p>
+                 </div>
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0 no-print">
+                    <h2 id="production-report-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100">گزارش جامع تولید</h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="production-report-modal-body" class="modal-content-print"></div>
+                <div id="production-report-modal-footer" class="flex justify-end items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4 no-print flex-shrink-0"></div>
+            </div>
+        </div>
+
+        <div id="completion-modal" class="modal">
+            <div class="modal-content max-w-lg">
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 id="completion-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100">تکمیل فرایند تولید</h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="completion-modal-body"></div>
+            </div>
+        </div>
+
+        <div id="edit-production-modal" class="modal" style="z-index: 70;">
+            <div class="modal-content max-w-lg">
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 id="edit-production-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100">ویرایش رکورد تولید</h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="edit-production-modal-body"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        const urlParams = new URLSearchParams(window.location.search);
+        const canEdit = urlParams.get('canEdit') === 'true';
+        const panelMode = urlParams.get('panelMode');
+        const user = urlParams.get('user');
+
+        // This is a standalone app running in an iframe.
+        // It needs its own theme synchronization with the parent if possible.
+        document.addEventListener('DOMContentLoaded', () => {
+            // Function to apply theme based on parent's class
+            const syncTheme = () => {
+                try {
+                    const parentHtml = window.top.document.documentElement;
+                    if (parentHtml.classList.contains('dark')) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {
+                    console.warn("Cross-origin frame error, falling back to default dark theme.");
+                    if (!document.documentElement.classList.contains('dark') && !document.documentElement.classList.contains('light')) {
+                         document.documentElement.classList.add('dark');
+                    }
+                }
+            };
+
+            // UX: Prevent mouse wheel from changing number inputs
+            document.addEventListener('wheel', (event) => {
+                if (document.activeElement.type === 'number' && document.activeElement === event.target) {
+                    event.preventDefault();
+                    document.activeElement.blur();
+                }
+            }, { passive: false });
+
+            // Initial sync
+            syncTheme();
+
+            // Observe parent for changes to ensure the theme is always in sync
+            try {
+                 const observer = new MutationObserver(syncTheme);
+                 observer.observe(window.top.document.documentElement, { attributes: true, attributeFilter: ['class'] });
+            } catch (e) {
+                console.warn("Could not observe parent window for theme changes.");
+            }
+        });
+
+        // --- API CLIENT ---
+        const api = {
+            async request(endpoint, options = {}) {
+                const { body, ...customConfig } = options;
+                const headers = { 'Content-Type': 'application/json' };
+
+                if (panelMode === 'personal' && user) {
+                    headers['X-User-DB'] = user;
+                }
+
+                const config = {
+                    method: body ? 'POST' : 'GET',
+                    ...customConfig,
+                    headers: { ...headers, ...customConfig.headers },
+                };
+                if (body) config.body = JSON.stringify(body);
+
+                try {
+                    const response = await fetch(endpoint, config);
+                    if (!response.ok) {
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) {
+                            const errorData = await response.json();
+                             throw new Error(errorData.error || `Request failed with status ${response.status}`);
+                        } else {
+                            const errorText = await response.text();
+                            throw new Error(errorText || `Request failed with status ${response.status}`);
+                        }
+                    }
+                    if (response.status === 204) return null; // No Content
+                     const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        return response.json();
+                    }
+                    return response.text(); // Handle non-JSON responses like "OK"
+                } catch (error) {
+                    alert(`خطای شبکه: ${error.message}`);
+                    return Promise.reject(error);
+                }
+            },
+            bootstrap: () => api.request('/api/production/bootstrap'),
+            addWorkshop: (data) => api.request('/api/workshops', { body: data }),
+            updateWorkshop: (id, data) => api.request(`/api/workshops/${id}`, { method: 'PUT', body: data }),
+            deleteWorkshop: (id) => api.request(`/api/workshops/${id}`, { method: 'DELETE' }),
+            addRawMaterial: (data) => api.request('/api/raw-materials', { body: data }),
+            updateRawMaterial: (id, data) => api.request(`/api/raw-materials/${id}`, { method: 'PUT', body: data }),
+            deleteRawMaterial: (id) => api.request(`/api/raw-materials/${id}`, { method: 'DELETE' }),
+            addRawMaterialTx: (data) => api.request('/api/raw-material-transactions', { body: data }),
+            updateRawMaterialTx: (id, data) => api.request(`/api/raw-material-transactions/${id}`, { method: 'PUT', body: data }),
+            deleteRawMaterialTx: (id) => api.request(`/api/raw-material-transactions/${id}`, { method: 'DELETE' }),
+            addWipJob: (data) => api.request('/api/wip-jobs', { body: data }),
+            addMaterialToJob: (jobId, data) => api.request(`/api/wip-jobs/${jobId}/add-material`, { method: 'PUT', body: data }),
+            addProductionToJob: (jobId, data) => api.request(`/api/wip-jobs/${jobId}/produce`, { body: data }),
+            adjustProduction: (jobId, data) => api.request(`/api/wip-jobs/${jobId}/productions/adjust`, { method: 'PUT', body: data }),
+            completeWipJob: (jobId, data) => api.request(`/api/wip-jobs/${jobId}/complete`, { method: 'PUT', body: data }),
+            deleteWipJob: (jobId) => api.request(`/api/wip-jobs/${jobId}`, { method: 'DELETE' }),
+        };
+
+        // --- CONSTANTS & GLOBAL STATE ---
+        const RawMaterialTransactionType = {
+            PURCHASE: 'خرید',
+            CONSUME: 'مصرف',
+        };
+        const WipStatus = {
+            PENDING: 'PENDING',
+            COMPLETED: 'COMPLETED',
+        };
+
+        let state = {
+            parts: [],
+            workshops: [],
+            wages: {},
+            rawMaterials: [],
+            rawMaterialTransactions: [],
+            workInProgressJobs: [],
+            // UI State for modals
+            editingWorkshopId: null,
+            selectedRawMaterial: null,
+            selectedWipJob: null,
+            rawMaterialActionType: null,
+            editingRawMaterialTx: null,
+            editingRawMaterialId: null,
+        };
+
+        const DOM = {
+            wipContainer: document.getElementById('wip-container'),
+            // Header buttons
+            openRawMaterialsBtn: document.getElementById('open-raw-materials-btn'),
+            openProductionReportBtn: document.getElementById('open-production-report-btn'),
+            openWorkshopsBtn: document.getElementById('open-workshops-btn'),
+            // Filter Inputs
+            wipSearchInput: document.getElementById('wip-search-input'),
+            wipConsumedQtyFilter: document.getElementById('wip-consumed-qty-filter'),
+            wipProducedQtyFilter: document.getElementById('wip-produced-qty-filter'),
+            // Modals
+            workshopsModal: {
+                el: document.getElementById('workshops-modal'),
+                body: document.getElementById('workshops-modal-body')
+            },
+            rawMaterialsModal: {
+                el: document.getElementById('raw-materials-modal'),
+                body: document.getElementById('raw-materials-modal-body')
+            },
+            rawMaterialActionModal: {
+                el: document.getElementById('raw-material-action-modal'),
+                title: document.getElementById('raw-material-action-modal-title'),
+                body: document.getElementById('raw-material-action-modal-body')
+            },
+            recordProductionModal: {
+                el: document.getElementById('record-production-modal'),
+                title: document.getElementById('record-production-modal-title'),
+                body: document.getElementById('record-production-modal-body')
+            },
+            editProductionModal: {
+                el: document.getElementById('edit-production-modal'),
+                title: document.getElementById('edit-production-modal-title'),
+                body: document.getElementById('edit-production-modal-body')
+            },
+            rawHistoryModal: {
+                el: document.getElementById('raw-history-modal'),
+                title: document.getElementById('raw-history-modal-title'),
+                body: document.getElementById('raw-history-modal-body'),
+                footer: document.getElementById('raw-history-modal-footer'),
+            },
+            wipReportModal: {
+                 el: document.getElementById('wip-report-modal'),
+                title: document.getElementById('wip-report-modal-title'),
+                body: document.getElementById('wip-report-modal-body'),
+                footer: document.getElementById('wip-report-modal-footer'),
+            },
+            productionReportModal: {
+                el: document.getElementById('production-report-modal'),
+                printTitle: document.getElementById('production-report-modal-print-title'),
+                title: document.getElementById('production-report-modal-title'),
+                body: document.getElementById('production-report-modal-body'),
+                footer: document.getElementById('production-report-modal-footer'),
+            },
+             completionModal: {
+                el: document.getElementById('completion-modal'),
+                title: document.getElementById('completion-modal-title'),
+                body: document.getElementById('completion-modal-body')
+            },
+        };
+
+        // --- UTILITY FUNCTIONS ---
+        const normalizeSearchString = (str) => {
+          if (str === null || str === undefined) return '';
+          let s = String(str).trim();
+
+          // Persian/Arabic character normalization
+          s = s.replace(/[ي]/g, 'ی').replace(/[ك]/g, 'ک').replace(/[آأإ]/g, 'ا');
+
+          // Convert Persian/Arabic numerals to Latin numerals
+          const numeralsMap = { '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9', '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9' };
+          s = s.replace(/[۰-۹٠-٩]/g, char => numeralsMap[char]);
+
+          // Collapse multiple whitespace characters into a single space
+          s = s.replace(/\s+/g, ' ');
+
+          // Convert to lowercase for case-insensitive comparison
+          return s.toLowerCase();
+        };
+
+        const toShamsiDisplay = (dateStr) => {
+            if (!dateStr) return '';
+            try {
+                return new Date(dateStr).toLocaleDateString('fa-IR');
+            } catch (e) {
+                return 'تاریخ نامعتبر';
+            }
+        };
+
+        const getPart = (partId) => state.parts.find(p => p.id === partId);
+        const getWipJob = (jobId) => state.workInProgressJobs.find(j => j.id === jobId);
+        const getWorkshop = (workshopId) => state.workshops.find(w => w.id === workshopId);
+        const getSortedWorkshops = () => [...state.workshops].sort((a, b) => a.name.localeCompare(b.name, 'fa'));
+        const getRawMaterial = (rmId) => state.rawMaterials.find(rm => rm.id === rmId);
+        
+        const getRawMaterialStock = (rmId) => {
+            return state.rawMaterialTransactions
+                .filter(tx => tx.rawMaterialId === rmId)
+                .reduce((stock, tx) => {
+                    if (tx.type === RawMaterialTransactionType.PURCHASE) return stock + tx.quantity;
+                    if (tx.type === RawMaterialTransactionType.CONSUME) return stock - tx.quantity;
+                    return stock;
+                }, 0);
+        };
+        
+        const getWorkshopRawMaterialStock = (workshopId, rmId) => {
+            const consumedTxs = state.rawMaterialTransactions
+                .filter(tx => tx.workshopId === workshopId && tx.rawMaterialId === rmId && tx.type === RawMaterialTransactionType.CONSUME)
+                .reduce((sum, tx) => sum + tx.quantity, 0);
+
+            const productionsForRmInWorkshop = state.workInProgressJobs
+                .filter(job => job.workshopId === workshopId && job.rawMaterialId === rmId)
+                .flatMap(job => job.productions);
+            
+            const usedInProduction = productionsForRmInWorkshop.reduce((sum, p) => {
+                const part = getPart(p.partId);
+                let consumedWeight = 0;
+                if (part?.weightDefinition) {
+                    consumedWeight = (p.producedQty / part.weightDefinition.baseQuantity) * part.weightDefinition.baseWeight;
+                }
+                return sum + consumedWeight + p.scrapQuantity;
+            }, 0);
+
+            const completedJobs = state.workInProgressJobs.filter(job => job.workshopId === workshopId && job.rawMaterialId === rmId && job.status === WipStatus.COMPLETED && job.completionAction);
+            const returnedOrScrapped = completedJobs.reduce((sum, job) => sum + (job.completionAction.returnQty || 0) + (job.completionAction.scrapQty || 0), 0);
+
+            return consumedTxs - usedInProduction - returnedOrScrapped;
+        }
+
+        const calculateLotRemainders = (workshopId, rmId) => {
+            // 1. Get all consumption 'lots' for this material in this workshop, sorted oldest first.
+            const allConsumptions = state.rawMaterialTransactions
+                .filter(tx => tx.workshopId === workshopId && tx.rawMaterialId === rmId && tx.type === 'مصرف')
+                .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Oldest first
+                .map(tx => ({ ...tx, remaining: tx.quantity })); // Initialize 'remaining' property
+
+            // 2. Get all jobs that use this material in this workshop.
+            const allJobsForPair = state.workInProgressJobs.filter(j => j.workshopId === workshopId && j.rawMaterialId === rmId);
+            
+            // 3. Calculate total material usage (what's not remaining and not returned) across all these jobs.
+            let totalUsage = 0;
+            allJobsForPair.forEach(job => {
+                // Usage from productions
+                (job.productions || []).forEach(p => {
+                    const part = getPart(p.partId);
+                    let consumedWeight = 0;
+                    if (part?.weightDefinition) {
+                        consumedWeight = (p.producedQty / part.weightDefinition.baseQuantity) * part.weightDefinition.baseWeight;
+                    }
+                    totalUsage += consumedWeight;
+                    totalUsage += p.scrapQuantity;
+                });
+                // Usage from completion
+                if (job.status === 'COMPLETED' && job.completionAction) {
+                    totalUsage += (job.completionAction.scrapQty || 0);
+                    // Note: returned quantity is handled implicitly by not being part of usage.
+                }
+            });
+
+            // 4. Apply FIFO deduction
+            for (const lot of allConsumptions) {
+                if (totalUsage <= 1e-9) break; // Float tolerance
+                const consumedFromThisLot = Math.min(totalUsage, lot.remaining);
+                lot.remaining -= consumedFromThisLot;
+                totalUsage -= consumedFromThisLot;
+            }
+            
+            return allConsumptions;
+        };
+        
+        // --- STATE MODIFICATION ---
+        async function addWorkshop(name) {
+            if (state.workshops.some(ws => ws.name === name)) {
+                alert('کارگاهی با این نام از قبل وجود دارد.'); return;
+            }
+            const newWorkshop = { id: `ws_${Date.now()}`, name };
+            try {
+                await api.addWorkshop(newWorkshop);
+                state.workshops.push(newWorkshop);
+                renderWorkshopsModal();
+            } catch(error) { console.error(error); }
+        };
+
+        async function updateWorkshop(id, newName) {
+            newName = newName.trim();
+            if (!newName) {
+                alert('نام کارگاه نمی‌تواند خالی باشد.'); return;
+            }
+            if (state.workshops.some(ws => ws.name === newName && ws.id !== id)) {
+                alert('کارگاهی با این نام از قبل وجود دارد.'); return;
+            }
+            try {
+                await api.updateWorkshop(id, { name: newName });
+                state.workshops = state.workshops.map(ws => ws.id === id ? { ...ws, name: newName } : ws);
+                state.editingWorkshopId = null;
+                renderWorkshopsModal();
+            } catch(error) { console.error(error); }
+        };
+
+        async function deleteWorkshop(id) {
+            const workshop = getWorkshop(id);
+            if (!workshop) return;
+             if (!window.confirm(`آیا از حذف کارگاه "${workshop.name}" مطمئن هستید؟`)) return;
+            
+            if (state.parts.some(p => (p.stockByWorkshop && p.stockByWorkshop[id] || 0) > 0)) {
+                alert(`کارگاه "${workshop.name}" دارای موجودی قطعه است و نمی‌توان آن را حذف کرد.`); return;
+            }
+            if (state.workInProgressJobs.some(j => j.workshopId === id && j.status === WipStatus.PENDING)) {
+                alert(`کارگاه "${workshop.name}" دارای تولیدات در جریان است و نمی‌توان آن را حذف کرد.`); return;
+            }
+            try {
+                await api.deleteWorkshop(id);
+                state.workshops = state.workshops.filter(ws => ws.id !== id);
+                renderWorkshopsModal();
+            } catch(error) { console.error(error); }
+        };
+
+        async function addRawMaterial(name, unit) {
+            if (state.rawMaterials.some(rm => rm.name === name)) {
+                alert('ماده اولیه‌ای با این نام از قبل وجود دارد.'); return;
+            }
+            const newMaterial = { id: `rm_${Date.now()}`, name, unit };
+            try {
+                await api.addRawMaterial(newMaterial);
+                state.rawMaterials.push(newMaterial);
+                renderRawMaterialsModal();
+            } catch(error) { console.error(error); }
+        };
+
+        async function deleteRawMaterial(rmId) {
+            const rm = getRawMaterial(rmId);
+            if (!rm) return;
+            if (!window.confirm(`آیا از حذف ماده اولیه "${rm.name}" و تاریخچه آن مطمئن هستید؟`)) return;
+            
+            const currentStock = getRawMaterialStock(rmId);
+            if (currentStock > 0) {
+                alert(`ماده اولیه "${rm.name}" دارای موجودی (${currentStock} ${rm.unit}) است و نمی‌توان آن را حذف کرد.`); return;
+            }
+            if (state.workInProgressJobs.some(job => job.rawMaterialId === rmId)) {
+                alert(`ماده اولیه "${rm.name}" در فرآیندهای تولید استفاده شده و قابل حذف نیست.`); return;
+            }
+
+            try {
+                await api.deleteRawMaterial(rmId);
+                state.rawMaterials = state.rawMaterials.filter(rm => rm.id !== rmId);
+                state.rawMaterialTransactions = state.rawMaterialTransactions.filter(tx => tx.rawMaterialId !== rmId);
+                renderRawMaterialsModal();
+            } catch(error) { console.error(error); }
+        };
+
+        async function recordPurchase(rmId, quantity, notes, timestamp) {
+            const newTx = {
+                id: `rmtx_${Date.now()}`,
+                type: RawMaterialTransactionType.PURCHASE,
+                rawMaterialId: rmId,
+                quantity,
+                timestamp: timestamp,
+                notes
+            };
+            try {
+                await api.addRawMaterialTx(newTx);
+                state.rawMaterialTransactions.unshift(newTx);
+            } catch(error) { console.error(error); }
+        };
+
+        async function updateRawMaterialTransaction(txId, newData) {
+             try {
+                await api.updateRawMaterialTx(txId, newData);
+                // Re-fetch all data to ensure consistency after a complex update
+                await init();
+            } catch(error) { console.error(error); }
+        };
+        
+        async function deleteRawMaterialTransaction(txId) {
+            const tx = state.rawMaterialTransactions.find(t => t.id === txId);
+            if (!tx) return;
+            const rm = getRawMaterial(tx.rawMaterialId);
+
+            const userConfirmed = window.confirm(`آیا از حذف تراکنش '${tx.type}' به مقدار ${tx.quantity} ${rm?.unit || ''} برای '${rm?.name || ''}' مطمئن هستید؟ این عمل غیرقابل بازگشت است.`);
+            if (!userConfirmed) { closeModal(DOM.rawHistoryModal.el); return; }
+
+            if (tx.type === RawMaterialTransactionType.CONSUME && tx.wipJobId) {
+                const job = getWipJob(tx.wipJobId);
+                if (job && job.productions.length > 0) {
+                    alert('این تراکنش منجر به تولید شده و قابل حذف نیست.'); return;
+                }
+            }
+            if (tx.type === RawMaterialTransactionType.PURCHASE) {
+                const currentStock = getRawMaterialStock(tx.rawMaterialId);
+                if (currentStock - tx.quantity < 0) {
+                    alert('حذف این خرید منجر به موجودی منفی می‌شود و امکان‌پذیر نیست.'); return;
+                }
+            }
+            
+            try {
+                await api.deleteRawMaterialTx(txId);
+                state.rawMaterialTransactions = state.rawMaterialTransactions.filter(t => t.id !== txId);
+                if(tx.wipJobId) state.workInProgressJobs = state.workInProgressJobs.filter(j => j.id !== tx.wipJobId);
+                renderRawHistoryModal();
+            } catch(error) { console.error(error); }
+        };
+
+        async function sendRawMaterialToWorkshop(rmId, workshopId, consumedQty, notes, timestamp) {
+            const existingJob = state.workInProgressJobs.find(j => 
+                j.rawMaterialId === rmId && 
+                j.workshopId === workshopId && 
+                j.status === WipStatus.PENDING
+            );
+
+            if (existingJob) {
+                try {
+                    await api.addMaterialToJob(existingJob.id, { consumedQty, notes, timestamp });
+                    await init(); // Refresh all data to reflect the change
+                } catch(error) {
+                    console.error(error);
+                    await init(); // Refresh on error to ensure consistency
+                }
+            } else {
+                const wipJobId = `wip_${Date.now()}`;
+                const newWipJob = {
+                    id: wipJobId,
+                    rawMaterialId: rmId,
+                    workshopId,
+                    consumedQuantity: consumedQty,
+                    timestamp: timestamp,
+                    status: WipStatus.PENDING,
+                    productions: []
+                };
+                const newRmTx = {
+                    id: `rmtx_${Date.now()}`,
+                    type: RawMaterialTransactionType.CONSUME,
+                    rawMaterialId: rmId,
+                    quantity: consumedQty,
+                    timestamp: newWipJob.timestamp,
+                    wipJobId: wipJobId,
+                    workshopId: workshopId,
+                    notes: notes || `ارسال به کارگاه ${getWorkshop(workshopId)?.name || ''}`
+                };
+                
+                try {
+                    await api.addWipJob({ wipJob: newWipJob, rmTransaction: newRmTx });
+                    state.workInProgressJobs.unshift(newWipJob);
+                    state.rawMaterialTransactions.unshift(newRmTx);
+                    renderWipContent();
+                    if (DOM.rawMaterialsModal.el.style.display === 'flex') {
+                        renderRawMaterialsModal();
+                    }
+                } catch(error) { console.error(error); }
+            }
+        };
+
+        async function recordPartialProduction(wipJobId, partId, producedQty, scrapQuantity, scrapNotes, newWeightDef, destinationWorkshopId, timestamp) {
+            const newProduction = {
+                partId, producedQty, scrapQuantity, scrapNotes, destinationWorkshopId, 
+                timestamp: timestamp || new Date().toISOString()
+            };
+            try {
+                await api.addProductionToJob(wipJobId, { newProduction, newWeightDef });
+                // Re-fetch all data to ensure consistency
+                await init();
+            } catch(error) { console.error(error); }
+        };
+        
+        async function finalizeWipJob(jobId, returnQty, scrapQty, notes, timestamp) {
+            const job = getWipJob(jobId);
+            if (!job) return;
+
+            const completionTimestamp = timestamp || new Date().toISOString();
+            const completionAction = { returnQty, scrapQty };
+            let returnTransaction = null;
+
+            if (returnQty > 0) {
+                returnTransaction = {
+                    id: `rmtx_return_${Date.now()}`,
+                    rawMaterialId: job.rawMaterialId,
+                    quantity: returnQty,
+                    notes: `بازگشت از کارگاه ${getWorkshop(job.workshopId)?.name || ''} (تکمیل کار)`,
+                    timestamp: completionTimestamp
+                };
+            }
+            
+            try {
+                await api.completeWipJob(jobId, { completionAction, completionNotes: notes, returnTransaction, completionTimestamp });
+                 // Re-fetch all data to ensure consistency
+                await init();
+            } catch(error) { console.error(error); }
+        };
+
+        async function deleteWipJob(wipJobId) {
+            const job = getWipJob(wipJobId);
+            if (!job) return;
+            const rm = getRawMaterial(job.rawMaterialId);
+            const workshop = getWorkshop(job.workshopId);
+            if (window.confirm(`آیا از حذف این آیتم تکمیل شده (${rm?.name || ''} در ${workshop?.name || ''}) مطمئن هستید؟ این عمل غیرقابل بازگشت است.`)) {
+                try {
+                    await api.deleteWipJob(wipJobId);
+                    state.workInProgressJobs = state.workInProgressJobs.filter(job => job.id !== wipJobId);
+                    renderWipContent();
+                } catch(error) { console.error(error); }
+            }
+        };
+
+        // --- MODAL MANAGEMENT & RENDERING ---
+        const openModal = (modalEl) => {
+            if (!modalEl) return;
+            modalEl.style.display = 'flex';
+
+            const closeModalHandler = () => closeModal(modalEl);
+            const handleEsc = (e) => e.key === 'Escape' && closeModalHandler();
+            const handleClick = (e) => (e.target === modalEl || e.target.closest('[data-action="close-modal"]')) && closeModalHandler();
+
+            document.addEventListener('keydown', handleEsc);
+            modalEl.addEventListener('click', handleClick);
+
+            modalEl._escListener = handleEsc;
+            modalEl._clickListener = handleClick;
+        };
+
+        const closeModal = (modalEl) => {
+            if (!modalEl) return;
+            modalEl.style.display = 'none';
+            if (modalEl._escListener) document.removeEventListener('keydown', modalEl._escListener);
+            if (modalEl._clickListener) modalEl.removeEventListener('click', modalEl._clickListener);
+            // Custom close handler for some modals
+            if (modalEl.id === 'record-production-modal') {
+                renderWipContent();
+            }
+        };
+
+        const printModal = (modalEl) => {
+            if (!modalEl) return;
+            const printHeader = modalEl.querySelector('.print-header');
+            if (printHeader) {
+                const titleEl = modalEl.querySelector('.modal-content h2[id], .modal-content h2.text-xl');
+                if (printHeader.querySelector('.print-title') && titleEl) printHeader.querySelector('.print-title').textContent = titleEl.textContent;
+                if (printHeader.querySelector('.print-date')) printHeader.querySelector('.print-date').textContent = new Date().toLocaleString('fa-IR');
+            }
+            modalEl.classList.add('is-printing');
+            document.body.classList.add('is-printing');
+            window.print();
+            modalEl.classList.remove('is-printing');
+            document.body.classList.remove('is-printing');
+        };
+
+        const renderWipContent = () => {
+            const searchTerm = DOM.wipSearchInput.value;
+            const consumedQtyFilter = parseFloat(DOM.wipConsumedQtyFilter.value);
+            const producedQtyFilter = parseFloat(DOM.wipProducedQtyFilter.value);
+
+            const normalizedSearch = normalizeSearchString(searchTerm);
+
+            const filteredJobs = state.workInProgressJobs.filter(job => {
+                const rm = getRawMaterial(job.rawMaterialId);
+                const workshop = getWorkshop(job.workshopId);
+
+                if (normalizedSearch) {
+                    const workshopMatch = workshop && normalizeSearchString(workshop.name).includes(normalizedSearch);
+                    const rmMatch = rm && normalizeSearchString(rm.name).includes(normalizedSearch);
+                    if (!workshopMatch && !rmMatch) {
+                        return false;
+                    }
+                }
+
+                if (!isNaN(consumedQtyFilter) && consumedQtyFilter > 0 && job.consumedQuantity < consumedQtyFilter) {
+                    return false;
+                }
+
+                const totalProduced = (job.productions || []).reduce((sum, p) => sum + p.producedQty, 0);
+                if (!isNaN(producedQtyFilter) && producedQtyFilter > 0 && totalProduced < producedQtyFilter) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            const pendingJobs = filteredJobs
+                .filter(job => job.status === WipStatus.PENDING)
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            const completedJobs = filteredJobs
+                .filter(job => job.status === WipStatus.COMPLETED)
+                .sort((a, b) => new Date(b.completionTimestamp || b.timestamp) - new Date(a.completionTimestamp || a.timestamp));
+
+            const renderJobCard = (job) => {
+                const rm = getRawMaterial(job.rawMaterialId);
+                const workshop = getWorkshop(job.workshopId);
+                const remainingMaterial = getWorkshopRawMaterialStock(job.workshopId, job.rawMaterialId);
+                const isCompleted = job.status === WipStatus.COMPLETED;
+                
+                const productions = job.productions || [];
+                const totalProducedQty = productions.reduce((sum, p) => sum + p.producedQty, 0);
+
+                return `
+                <div class="card bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 space-y-3" data-wip-id="${job.id}">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold text-lg text-indigo-600 dark:text-indigo-400">${rm?.name || 'ماده اولیه حذف شده'}</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">در کارگاه: <span class="font-semibold">${workshop?.name || 'کارگاه حذف شده'}</span></p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">مقدار کل ارسالی: <span class="font-bold text-slate-700 dark:text-slate-200">${job.consumedQuantity.toLocaleString('fa-IR')} ${rm?.unit || ''}</span></p>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">شروع: ${new Date(job.timestamp).toLocaleDateString('fa-IR')}</p>
+                        </div>
+                        <span class="px-3 py-1 text-xs font-bold rounded-full ${isCompleted ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'}">${isCompleted ? 'تکمیل شده' : 'در جریان'}</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-center text-sm pt-3 border-t border-slate-200 dark:border-slate-700">
+                        <div class="bg-green-100 dark:bg-green-900/50 p-2 rounded-lg">
+                            <p class="text-slate-500 dark:text-slate-400">تعداد تولید</p>
+                            <p class="font-mono font-bold text-lg text-green-600 dark:text-green-400">${totalProducedQty.toLocaleString('fa-IR')} عدد</p>
+                        </div>
+                        <div class="bg-amber-100 dark:bg-amber-900/50 p-2 rounded-lg">
+                            <p class="text-slate-500 dark:text-slate-400">ماده اولیه باقی‌مانده</p>
+                            <p class="font-mono font-bold text-lg text-amber-600 dark:text-amber-400">${remainingMaterial.toFixed(3)} ${rm?.unit || ''}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
+                        ${!isCompleted ? `
+                            <button data-action="record-production" class="px-3 py-1.5 text-xs bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 disabled:opacity-50" ${!canEdit ? 'disabled' : ''}>ثبت الباقی تولید</button>
+                            <button data-action="complete-wip-job" class="px-3 py-1.5 text-xs bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 disabled:opacity-50" ${!canEdit ? 'disabled' : ''}>تکمیل فرآیند</button>
+                            <button data-action="wip-report" class="px-3 py-1.5 text-xs bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">گزارش تولید</button>
+                        ` : `
+                            <button data-action="wip-report" class="px-3 py-1.5 text-xs bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">گزارش تولید</button>
+                            <button data-action="delete-wip-job" class="px-3 py-1.5 text-xs bg-red-600 text-white font-semibold rounded-md hover:bg-red-700 disabled:opacity-50" ${!canEdit ? 'disabled' : ''}>حذف</button>
+                        `}
+                    </div>
+                </div>
+                `;
+            };
+            
+            const pendingJobsContent = pendingJobs.length > 0
+                ? pendingJobs.map(renderJobCard).join('')
+                : '<p class="text-slate-500 dark:text-slate-400 md:col-span-2 lg:col-span-3 text-center py-8">هیچ فرآیند تولید در جریانی برای نمایش با فیلترهای فعلی وجود ندارد.</p>';
+
+            const completedJobsContent = completedJobs.length > 0 ? `
+                <div class="card !p-0 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-200 dark:bg-slate-900/50">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 text-right">کارگاه</th>
+                                    <th scope="col" class="px-4 py-3 text-right">ماده اولیه</th>
+                                    <th scope="col" class="px-4 py-3 text-center">مقدار ارسالی</th>
+                                    <th scope="col" class="px-4 py-3 text-center">مقدار بازگشتی</th>
+                                    <th scope="col" class="px-4 py-3 text-center">ضایعات نهایی</th>
+                                    <th scope="col" class="px-4 py-3 text-center">تاریخ تکمیل</th>
+                                    <th scope="col" class="px-4 py-3 text-center">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                ${completedJobs.map(job => {
+                                    const rm = getRawMaterial(job.rawMaterialId);
+                                    const workshop = getWorkshop(job.workshopId);
+                                    const returnQty = job.completionAction?.returnQty || 0;
+                                    const scrapQty = job.completionAction?.scrapQty || 0;
+                                    
+                                    return `
+                                    <tr data-wip-id="${job.id}" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                        <td class="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">${workshop?.name || 'کارگاه حذف شده'}</td>
+                                        <td class="px-4 py-3">${rm?.name || 'ماده اولیه حذف شده'}</td>
+                                        <td class="px-4 py-3 text-center font-mono">${job.consumedQuantity.toLocaleString('fa-IR')} ${rm?.unit || ''}</td>
+                                        <td class="px-4 py-3 text-center font-mono font-semibold text-green-600 dark:text-green-500">${returnQty.toLocaleString('fa-IR', {maximumFractionDigits: 3})} ${rm?.unit || ''}</td>
+                                        <td class="px-4 py-3 text-center font-mono font-semibold text-red-500 dark:text-red-400">${scrapQty.toLocaleString('fa-IR', {maximumFractionDigits: 3})} ${rm?.unit || ''}</td>
+                                        <td class="px-4 py-3 text-center text-xs">${job.completionTimestamp ? new Date(job.completionTimestamp).toLocaleDateString('fa-IR') : '-'}</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <div class="flex items-center justify-center gap-2">
+                                                <button data-action="wip-report" class="px-3 py-1.5 text-xs bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">مشاهده گزارش</button>
+                                                <button data-action="delete-wip-job" class="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-full disabled:opacity-50" ${!canEdit ? 'disabled' : ''} title="حذف">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    `
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ` : `<div class="card text-center py-8"><p class="text-slate-500 dark:text-slate-400">هیچ فرآیند تکمیل شده‌ای برای نمایش با فیلترهای فعلی وجود ندارد.</p></div>`;
+
+
+            DOM.wipContainer.innerHTML = `
+                <div class="space-y-8">
+                    <div>
+                        <h2 class="text-xl font-bold mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">فرآیندهای در جریان</h2>
+                        <div id="pending-jobs-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${pendingJobsContent}
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">دستور کارهای تکمیل شده</h2>
+                        <div id="completed-jobs-container" class="mt-4">
+                           ${completedJobsContent}
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+        
+        // ... (The rest of the JS functions are omitted for brevity, but they are unchanged)
+        // ... renderWorkshopsModal, renderRawMaterialsModal, etc. ...
+        const renderWorkshopsModal = () => { 
+            const sortedWorkshops = getSortedWorkshops();
+            const workshopStocks = {};
+            sortedWorkshops.forEach(ws => {
+                workshopStocks[ws.id] = state.rawMaterials.map(rm => ({
+                    rm,
+                    qty: getWorkshopRawMaterialStock(ws.id, rm.id)
+                })).filter(entry => entry.qty > 0);
+            });
+
+            const workshopsListHTML = sortedWorkshops.length > 0 ? sortedWorkshops.map(ws => {
+                if (state.editingWorkshopId === ws.id) {
+                    return `<li key="${ws.id}" data-id="${ws.id}" class="flex justify-between items-center gap-2 bg-slate-200 dark:bg-slate-600 p-2 rounded-lg"><input type="text" class="workshop-edit-input flex-grow p-2 border border-indigo-500 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" value="${ws.name}" /><div class="flex gap-2"><button data-action="save-workshop" class="p-2 text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-full" title="ذخیره"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg></button><button data-action="cancel-edit-workshop" class="p-2 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full" title="انصراف"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg></button></div></li>`;
+                }
+                return `<li key="${ws.id}" data-id="${ws.id}" class="flex justify-between items-center bg-slate-100 dark:bg-slate-700 p-3 rounded-lg"><span class="font-semibold text-slate-800 dark:text-slate-200">${ws.name}</span><div class="flex gap-2"><button data-action="edit-workshop" ${!canEdit ? 'disabled' : ''} class="p-1.5 text-amber-500 hover:text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-full disabled:opacity-50 disabled:cursor-not-allowed" title="ویرایش نام"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" /></svg></button><button data-action="delete-workshop" ${!canEdit ? 'disabled' : ''} class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-full disabled:opacity-50 disabled:cursor-not-allowed" title="حذف کارگاه"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg></button></div></li>`
+            }).join('') : '<p class="text-slate-500 dark:text-slate-400 text-center py-4">هنوز کارگاهی تعریف نشده است.</p>';
+            
+            const hasAnyWorkshopStock = Object.values(workshopStocks).some(ws => ws.length > 0);
+
+            DOM.workshopsModal.body.innerHTML = `
+                <div class="space-y-6">
+                  <div>
+                    <h3 class="text-lg font-medium text-slate-800 dark:text-slate-100 mb-3">افزودن کارگاه جدید</h3>
+                    <form id="add-workshop-form" class="flex gap-2">
+                      <input type="text" name="name" placeholder="نام کارگاه جدید" required class="flex-grow p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" ${!canEdit ? 'disabled' : ''} />
+                      <button type="submit" class="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" ${!canEdit ? 'disabled' : ''}>افزودن</button>
+                    </form>
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-medium text-slate-800 dark:text-slate-100 mb-3">کارگاه‌های موجود</h3>
+                    <ul id="workshop-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">${workshopsListHTML}</ul>
+                  </div>
+                  <div class="border-t border-slate-200 dark:border-slate-600 pt-4">
+                     <h3 class="text-lg font-medium text-slate-800 dark:text-slate-100 mb-3">موجودی مواد اولیه در کارگاه‌ها</h3>
+                     <div id="workshop-stock-list" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                        ${hasAnyWorkshopStock ? sortedWorkshops.map(ws => {
+                            const materialEntries = workshopStocks[ws.id];
+                            if(!materialEntries || materialEntries.length === 0) return '';
+                            return `<div class="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg">
+                                <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2">${ws.name}</h4>
+                                <ul class="space-y-2">
+                                    ${materialEntries.map(mEntry => `
+                                        <li class="flex justify-between items-center text-sm">
+                                            <span class="text-slate-600 dark:text-slate-300">${mEntry.rm.name}: <span class="font-mono font-semibold">${mEntry.qty.toLocaleString('fa-IR', {maximumFractionDigits: 2})} ${mEntry.rm.unit}</span></span>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>`
+                        }).join('') : '<p class="text-slate-500 dark:text-slate-400 text-center py-4">موجودی ماده اولیه در کارگاه‌ها صفر است.</p>'}
+                     </div>
+                  </div>
+                </div>
+            `;
+            const nameInput = DOM.workshopsModal.body.querySelector('input[name="name"]');
+
+            DOM.workshopsModal.body.querySelector('#add-workshop-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = nameInput.value.trim();
+                if (name) addWorkshop(name);
+                e.target.reset();
+            });
+
+            DOM.workshopsModal.body.addEventListener('click', (e) => {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+                const li = button.closest('li[data-id]');
+                const workshopId = li?.dataset.id;
+                const action = button.dataset.action;
+                if (action === 'delete-workshop') deleteWorkshop(workshopId);
+                else if (action === 'edit-workshop') { state.editingWorkshopId = workshopId; renderWorkshopsModal(); }
+                else if (action === 'save-workshop') updateWorkshop(workshopId, li.querySelector('.workshop-edit-input').value);
+                else if (action === 'cancel-edit-workshop') { state.editingWorkshopId = null; renderWorkshopsModal(); }
+            });
+
+            if (state.editingWorkshopId) {
+                const editInput = DOM.workshopsModal.body.querySelector('.workshop-edit-input');
+                if (editInput) { editInput.focus(); editInput.select(); }
+            } else {
+                 if(nameInput) nameInput.focus();
+            }
+            if (DOM.workshopsModal.el.style.display !== 'flex') openModal(DOM.workshopsModal.el); 
+        };
+        
+        // ... (The rest of the JS functions are omitted for brevity, but they are unchanged)
+        // ... renderRawMaterialsModal, renderRawMaterialActionModal, renderRecordProductionModal, etc. ...
+        const renderRawMaterialsModal = () => { 
+            const sortedRawMaterials = [...state.rawMaterials].sort((a,b) => a.name.localeCompare(b.name, 'fa'));
+
+            DOM.rawMaterialsModal.body.innerHTML = `
+                <div class="space-y-6">
+                  <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3">افزودن ماده اولیه جدید</h3>
+                    <form id="add-raw-material-form" class="grid grid-cols-1 sm:grid-cols-[1fr,auto,auto] gap-2">
+                      <input type="text" name="name" placeholder="نام ماده اولیه (مثلا شمش آلومینیوم)" required class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 disabled:opacity-50" ${!canEdit ? 'disabled' : ''} />
+                      <input type="text" name="unit" placeholder="واحد (مثلا کیلوگرم)" required class="w-full sm:w-32 p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 disabled:opacity-50" ${!canEdit ? 'disabled' : ''} />
+                      <button type="submit" class="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" ${!canEdit ? 'disabled' : ''}>افزودن</button>
+                    </form>
+                  </div>
+                  <div>
+                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-3">مواد اولیه موجود</h3>
+                    <input type="search" id="raw-material-search-input" placeholder="جستجوی ماده اولیه..." class="w-full p-2 mb-3 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500">
+                    <ul id="raw-materials-list" class="space-y-3 max-h-72 overflow-y-auto pr-2"></ul>
+                  </div>
+                </div>
+            `;
+            
+            const searchInput = DOM.rawMaterialsModal.body.querySelector('#raw-material-search-input');
+            const listContainer = DOM.rawMaterialsModal.body.querySelector('#raw-materials-list');
+
+            const renderList = () => {
+                const searchTerm = normalizeSearchString(searchInput.value);
+                const filteredMaterials = sortedRawMaterials.filter(rm => normalizeSearchString(rm.name).includes(searchTerm));
+                
+                listContainer.innerHTML = filteredMaterials.length > 0 ? filteredMaterials.map(rm => {
+                    const stock = getRawMaterialStock(rm.id);
+                    if (state.editingRawMaterialId === rm.id) {
+                        return `
+                        <li data-rm-id="${rm.id}" class="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-lg space-y-3">
+                          <div class="flex justify-between items-center">
+                            <div class="flex-grow flex items-center gap-2">
+                               <input type="text" class="raw-material-edit-input form-input w-full text-base" value="${rm.name}" autofocus onfocus="this.select()" />
+                            </div>
+                          </div>
+                          <div class="flex gap-2 text-sm justify-end">
+                            <button data-action="cancel-raw-material-edit" class="px-4 py-1.5 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">لغو</button>
+                            <button data-action="save-raw-material-edit" class="px-4 py-1.5 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors">ذخیره</button>
+                          </div>
+                        </li>`;
+                    } else {
+                        return `
+                        <li data-rm-id="${rm.id}" class="bg-slate-100 dark:bg-slate-800 p-3 rounded-lg space-y-3">
+                          <div class="flex justify-between items-start">
+                            <div class="flex-grow">
+                                <span class="font-bold text-slate-800 dark:text-slate-100 text-base">${rm.name}</span>
+                                <span class="block text-sm text-slate-500 dark:text-slate-400">موجودی: <span class="font-mono font-bold">${stock.toLocaleString('fa-IR')}</span> ${rm.unit}</span>
+                            </div>
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                 <button data-action="edit-raw-material" class="p-1.5 text-amber-500 hover:text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" ${!canEdit ? 'disabled' : ''} title="ویرایش نام">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" /></svg>
+                                </button>
+                                <button data-action="delete-raw-material" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" ${!canEdit ? 'disabled' : ''} title="حذف ماده اولیه"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg></button>
+                            </div>
+                          </div>
+                          <div class="flex gap-2 text-sm">
+                            <button data-action="purchase-raw-material" class="flex-1 px-3 py-1.5 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" ${!canEdit ? 'disabled' : ''}>ثبت خرید</button>
+                            <button data-action="send-to-workshop" class="flex-1 px-3 py-1.5 bg-sky-600 text-white rounded-md hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" ${!canEdit ? 'disabled' : ''}>ارسال به کارگاه</button>
+                            <button data-action="history-raw-material" class="flex-1 px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">تاریخچه</button>
+                          </div>
+                        </li>`
+                    }
+                }).join('') : '<p class="text-slate-500 dark:text-slate-400 text-center py-4">موردی یافت نشد.</p>';
+
+                if (state.editingRawMaterialId) {
+                    const editingLi = listContainer.querySelector(`li[data-rm-id="${state.editingRawMaterialId}"]`);
+                    if (editingLi) {
+                        setTimeout(() => {
+                            editingLi.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+                        }, 0);
+                    }
+                }
+            };
+
+            searchInput.addEventListener('input', renderList);
+            renderList();
+
+            DOM.rawMaterialsModal.body.querySelector('#add-raw-material-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = e.target.elements.name.value.trim();
+                const unit = e.target.elements.unit.value.trim();
+                if (name && unit) { await addRawMaterial(name, unit); e.target.reset(); }
+            });
+
+            DOM.rawMaterialsModal.body.querySelector('#raw-materials-list').addEventListener('click', async (e) => {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+                const rmId = button.closest('li[data-rm-id]').dataset.rmId;
+                const action = button.dataset.action;
+
+                if (action === 'edit-raw-material') {
+                    state.editingRawMaterialId = rmId;
+                    renderRawMaterialsModal();
+                    return;
+                }
+                if (action === 'cancel-raw-material-edit') {
+                    state.editingRawMaterialId = null;
+                    renderRawMaterialsModal();
+                    return;
+                }
+                if (action === 'save-raw-material-edit') {
+                    const input = button.closest('li').querySelector('.raw-material-edit-input');
+                    const newName = input.value.trim();
+                    const originalName = state.rawMaterials.find(rm => rm.id === rmId)?.name;
+                    if (!newName || newName === originalName) {
+                        state.editingRawMaterialId = null;
+                        renderRawMaterialsModal();
+                        return;
+                    }
+                    button.disabled = true;
+                    button.textContent = '...';
+                    try {
+                        await api.updateRawMaterial(rmId, { name: newName });
+                        const materialIndex = state.rawMaterials.findIndex(rm => rm.id === rmId);
+                        if (materialIndex > -1) {
+                            state.rawMaterials[materialIndex].name = newName;
+                        }
+                        state.editingRawMaterialId = null;
+                        renderRawMaterialsModal(); // Refresh modal
+                        renderWipContent(); // Refresh WIP cards
+                    } catch (error) {
+                        alert(`خطا در بروزرسانی: ${error.message}`);
+                        button.disabled = false;
+                        button.textContent = 'ذخیره';
+                    }
+                    return;
+                }
+                
+                const rm = getRawMaterial(rmId);
+                if (!rm) return;
+                state.selectedRawMaterial = rm;
+                state.editingRawMaterialTx = null;
+                switch(action) {
+                    case 'delete-raw-material': deleteRawMaterial(rmId); break;
+                    case 'purchase-raw-material': state.rawMaterialActionType = 'purchase'; renderRawMaterialActionModal(); break;
+                    case 'send-to-workshop': state.rawMaterialActionType = 'sendToWorkshop'; renderRawMaterialActionModal(); break;
+                    case 'history-raw-material': renderRawHistoryModal(); break;
+                }
+            });
+
+            openModal(DOM.rawMaterialsModal.el);
+        };
+        const renderRawMaterialActionModal = () => {
+            const isEditMode = !!state.editingRawMaterialTx;
+            const tx = isEditMode ? state.editingRawMaterialTx : null;
+            const rm = isEditMode ? getRawMaterial(tx.rawMaterialId) : state.selectedRawMaterial;
+            const actionType = state.rawMaterialActionType;
+            if (!rm) return;
+            
+            const isPurchase = actionType === 'purchase';
+            const stock = getRawMaterialStock(rm.id);
+            const sortedWorkshops = getSortedWorkshops();
+            const today_string = new Date().toLocaleDateString('en-CA');
+
+            DOM.rawMaterialActionModal.title.textContent = isEditMode
+                ? (isPurchase ? `ویرایش خرید: ${rm.name}` : `ویرایش ارسال به کارگاه: ${rm.name}`)
+                : (isPurchase ? `ثبت خرید: ${rm.name}` : `ارسال به کارگاه: ${rm.name}`);
+            
+            DOM.rawMaterialActionModal.body.innerHTML = `
+                <form id="raw-action-form" class="space-y-4">
+                    <fieldset ${!canEdit ? 'disabled' : ''}>
+                    ${!isPurchase ? `
+                    <div class="p-4 text-center bg-slate-100 dark:bg-slate-700/50 rounded-lg mb-4">
+                        <p class="text-sm text-slate-600 dark:text-slate-300">موجودی فعلی ${rm.name}</p>
+                        <p class="font-mono font-bold text-2xl text-cyan-600 dark:text-cyan-400">${stock.toLocaleString('fa-IR')} ${rm.unit}</p>
+                    </div>` : ''}
+                    <div>
+                        <label for="action-date" class="flex justify-between items-baseline text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <span>تاریخ</span>
+                            <span id="action-date-shamsi" class="font-normal text-xs text-slate-500 dark:text-slate-400"></span>
+                        </label>
+                        <input type="date" id="action-date" name="date" required value="${isEditMode ? new Date(tx.timestamp).toLocaleDateString('en-CA') : today_string}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                    </div>
+                    ${!isPurchase ? `
+                    <div>
+                        <label for="action-workshop" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">کارگاه</label>
+                        <select id="action-workshop" name="workshopId" required class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500" ${sortedWorkshops.length === 0 ? 'disabled' : ''}>
+                            ${sortedWorkshops.length > 0 ? sortedWorkshops.map(ws => `<option value="${ws.id}" ${tx?.workshopId === ws.id ? 'selected' : ''}>${ws.name}</option>`).join('') : '<option value="">ابتدا یک کارگاه بسازید</option>'}
+                        </select>
+                    </div>` : ''}
+                    <div>
+                        <label for="action-quantity" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">مقدار (${rm.unit})</label>
+                        <input type="number" id="action-quantity" name="quantity" required value="${tx?.quantity || ''}" min="0" ${!isPurchase && !isEditMode ? `max="${stock}"` : ''} step="any" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                    </div>
+                    <div>
+                        <label for="action-notes" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">یادداشت (اختیاری)</label>
+                        <textarea id="action-notes" name="notes" rows="2" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">${tx?.notes || ''}</textarea>
+                    </div>
+                    </fieldset>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4">
+                        <button type="button" data-action="close-modal" class="px-4 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">لغو</button>
+                        <button type="submit" class="px-4 py-2 text-white rounded-md hover:bg-emerald-700 transition-colors ${isPurchase ? 'bg-emerald-600' : 'bg-sky-600'} disabled:opacity-50 disabled:cursor-not-allowed" ${!canEdit ? 'disabled' : ''}>
+                            ${isEditMode ? 'ذخیره تغییرات' : (isPurchase ? 'ثبت خرید' : 'ارسال به کارگاه')}
+                        </button>
+                    </div>
+                </form>`;
+            
+            const form = DOM.rawMaterialActionModal.body.querySelector('#raw-action-form');
+            const dateInput = form.querySelector('#action-date');
+            const shamsiDisplay = form.querySelector('#action-date-shamsi');
+            const updateShamsi = () => {
+                if(shamsiDisplay) shamsiDisplay.textContent = toShamsiDisplay(dateInput.value);
+            };
+            dateInput.addEventListener('change', updateShamsi);
+            updateShamsi(); // Initial call
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const quantity = parseFloat(e.target.elements.quantity.value);
+                const notes = e.target.elements.notes.value;
+                const dateValue = e.target.elements.date.value;
+                const timestamp = new Date(dateValue + 'T' + new Date().toTimeString().slice(0,8)).toISOString();
+                if (isNaN(quantity) || quantity <= 0) { alert('لطفا یک مقدار معتبر وارد کنید.'); return; }
+                
+                if (isEditMode) {
+                    const workshopId = isPurchase ? undefined : e.target.elements.workshopId.value;
+                    await updateRawMaterialTransaction(tx.id, { quantity, notes, workshopId, timestamp });
+                } else if (isPurchase) {
+                    await recordPurchase(rm.id, quantity, notes, timestamp);
+                } else {
+                    const workshopId = e.target.elements.workshopId.value;
+                    if (!workshopId) { alert('لطفا یک کارگاه را انتخاب کنید.'); return; }
+                    if (quantity > stock) { alert(`مقدار مصرفی (${quantity}) از موجودی انبار (${stock}) بیشتر است.`); return; }
+                    await sendRawMaterialToWorkshop(rm.id, workshopId, quantity, notes, timestamp);
+                }
+                closeModal(DOM.rawMaterialActionModal.el);
+                renderRawMaterialsModal();
+                if (DOM.rawHistoryModal.el.style.display === 'flex') renderRawHistoryModal();
+            });
+            openModal(DOM.rawMaterialActionModal.el);
+        };
+        const renderRecordProductionModal = (job) => {
+            state.selectedWipJob = job;
+            if (!job) return;
+
+            const rm = getRawMaterial(job.rawMaterialId);
+            const workshop = getWorkshop(job.workshopId);
+            if (!rm || !workshop) {
+                alert("اطلاعات کارگاه یا ماده اولیه یافت نشد.");
+                return;
+            }
+
+            DOM.recordProductionModal.title.textContent = `ثبت تولید برای کارگاه: ${workshop.name}`;
+
+            const remainingMaterial = getWorkshopRawMaterialStock(job.workshopId, job.rawMaterialId);
+            const today = new Date().toLocaleDateString('en-CA');
+
+            // Filter parts that can be produced from raw materials
+            const producibleParts = state.parts.filter(p => p.isRawMaterialProduct);
+
+            const bodyHTML = `
+                <form id="record-production-form" class="space-y-6">
+                    <fieldset ${!canEdit ? 'disabled' : ''}>
+                        <!-- Section 1: Raw Material and Date -->
+                        <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg space-y-4">
+                            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">۱. ماده اولیه و تاریخ</h3>
+                            <div>
+                                <label for="production-date" class="flex justify-between items-baseline text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    <span>تاریخ ثبت تولید</span>
+                                    <span id="shamsi-date-display" class="font-normal text-xs">${toShamsiDisplay(today)}</span>
+                                </label>
+                                <input type="date" id="production-date" name="productionDate" value="${today}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"/>
+                            </div>
+                            <div class="flex justify-between items-center mt-4">
+                                <span class="text-sm text-slate-600 dark:text-slate-300">ماده اولیه کل: <span class="font-mono font-bold text-slate-800 dark:text-slate-100">${job.consumedQuantity.toLocaleString('fa-IR')} ${rm.unit} ${rm.name}</span></span>
+                                <span class="font-bold text-lg text-amber-600 dark:text-amber-400">باقی‌مانده برای این کار: <span class="font-mono text-xl">${remainingMaterial.toFixed(2)}</span> ${rm.unit}</span>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Produced Part -->
+                        <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg space-y-4">
+                            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">۲. قطعه تولید شده</h3>
+                            <div>
+                                <label for="produced-part-id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">قطعه تولیدی</label>
+                                <select id="produced-part-id" name="partId" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">
+                                    <option value="">-- انتخاب قطعه --</option>
+                                    ${producibleParts.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+                                </select>
+                                <div id="weight-def-info" class="text-xs text-slate-500 dark:text-slate-400 mt-1 h-4"></div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="produced-quantity" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">تعداد تولید شده</label>
+                                    <input type="number" id="produced-quantity" name="producedQty" min="0" placeholder="0" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100" disabled/>
+                                </div>
+                                <div>
+                                    <label for="consumed-weight" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">وزن مصرفی (${rm.unit})</label>
+                                    <input type="number" id="consumed-weight" name="consumedWeight" min="0" step="any" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100" disabled/>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="destination-workshop-id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">کارگاه مقصد قطعات تولیدی</label>
+                                <select id="destination-workshop-id" name="destinationWorkshopId" required class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">
+                                    ${getSortedWorkshops().map(ws => `<option value="${ws.id}" ${ws.id === workshop.id ? 'selected' : ''}>${ws.name}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Scrap -->
+                        <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg space-y-4">
+                            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">۳. ضایعات (اختیاری)</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="scrap-notes" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">یادداشت ضایعات</label>
+                                    <input type="text" id="scrap-notes" name="scrapNotes" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"/>
+                                </div>
+                                <div>
+                                    <label for="scrap-quantity" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">مقدار ضایعات (${rm.unit})</label>
+                                    <input type="number" id="scrap-quantity" name="scrapQuantity" value="0" min="0" step="any" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="production-error" class="text-red-500 text-sm text-center h-4 mt-2"></div>
+                    </fieldset>
+                    <div class="flex justify-end gap-3 pt-4 mt-4 border-t border-slate-200 dark:border-slate-700">
+                        <button type="button" data-action="close-modal" class="px-6 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">انصراف</button>
+                        <button type="submit" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors disabled:opacity-50" ${!canEdit ? 'disabled' : ''}>ثبت تولید</button>
+                    </div>
+                </form>
+            `;
+
+            DOM.recordProductionModal.body.innerHTML = bodyHTML;
+
+            // Attach event listeners for the new modal content
+            const form = DOM.recordProductionModal.body.querySelector('#record-production-form');
+            const dateInput = form.querySelector('#production-date');
+            const shamsiDisplay = form.querySelector('#shamsi-date-display');
+            dateInput.addEventListener('change', () => {
+                shamsiDisplay.textContent = toShamsiDisplay(dateInput.value);
+            });
+            const partSelect = form.querySelector('#produced-part-id');
+            const producedQtyInput = form.querySelector('#produced-quantity');
+            const consumedWeightInput = form.querySelector('#consumed-weight');
+            const scrapQtyInput = form.querySelector('#scrap-quantity');
+            const errorDiv = form.querySelector('#production-error');
+            const weightDefInfo = form.querySelector('#weight-def-info');
+
+            let selectedPart = null;
+            let unitWeightKg = 0;
+
+            const onPartChange = () => {
+                const partId = partSelect.value;
+                selectedPart = getPart(partId);
+                producedQtyInput.value = '';
+                consumedWeightInput.value = '';
+                if (selectedPart?.weightDefinition) {
+                    producedQtyInput.disabled = false;
+                    consumedWeightInput.disabled = false;
+                    const wd = selectedPart.weightDefinition;
+                    // Assuming raw material unit is kg and weight def unit is kg or g
+                    const baseWeightKg = wd.weightUnit === 'g' ? wd.baseWeight / 1000 : wd.baseWeight;
+                    unitWeightKg = baseWeightKg / wd.baseQuantity;
+                    weightDefInfo.textContent = `(هر ${wd.baseQuantity.toLocaleString('fa-IR')} عدد = ${wd.baseWeight.toLocaleString('fa-IR')} ${wd.weightUnit})`;
+                } else {
+                    producedQtyInput.disabled = true;
+                    consumedWeightInput.disabled = true;
+                    unitWeightKg = 0;
+                    weightDefInfo.textContent = 'برای این قطعه تعریف وزن وجود ندارد.';
+                }
+            };
+            partSelect.addEventListener('change', onPartChange);
+            
+            const updateCalculations = (source) => {
+                if (!selectedPart || !selectedPart.weightDefinition || unitWeightKg === 0) return;
+
+                if (source === 'qty') {
+                    const qty = parseInt(producedQtyInput.value, 10);
+                    if (!isNaN(qty) && qty > 0) {
+                        consumedWeightInput.value = (qty * unitWeightKg).toFixed(3);
+                    } else {
+                        consumedWeightInput.value = '';
+                    }
+                } else if (source === 'weight') {
+                    const weight = parseFloat(consumedWeightInput.value);
+                    if (!isNaN(weight) && weight > 0) {
+                        producedQtyInput.value = Math.round(weight / unitWeightKg);
+                    } else {
+                        producedQtyInput.value = '';
+                    }
+                }
+                
+                // Validation
+                const consumed = parseFloat(consumedWeightInput.value) || 0;
+                const scrap = parseFloat(scrapQtyInput.value) || 0;
+                const totalUsed = consumed + scrap;
+                
+                if (totalUsed > remainingMaterial + 0.001) { // 0.001 tolerance
+                    errorDiv.textContent = `مقدار مصرفی و ضایعات (${totalUsed.toFixed(3)}) از باقیمانده (${remainingMaterial.toFixed(3)}) بیشتر است.`;
+                } else {
+                    errorDiv.textContent = '';
+                }
+            };
+
+            producedQtyInput.addEventListener('input', () => updateCalculations('qty'));
+            consumedWeightInput.addEventListener('input', () => updateCalculations('weight'));
+            scrapQtyInput.addEventListener('input', () => updateCalculations('any'));
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                const partId = formData.get('partId');
+                const producedQty = parseInt(formData.get('producedQty'), 10) || 0;
+                const scrapQuantity = parseFloat(formData.get('scrapQuantity')) || 0;
+                const destinationWorkshopId = formData.get('destinationWorkshopId');
+                const consumedWeight = parseFloat(formData.get('consumedWeight')) || 0;
+                const timestamp = new Date(formData.get('productionDate') + 'T' + new Date().toTimeString().slice(0,8)).toISOString();
+                
+                if (producedQty <= 0 && scrapQuantity <= 0) {
+                    alert('لطفا تعداد تولید یا مقدار ضایعات معتبر را وارد کنید.');
+                    return;
+                }
+
+                if (producedQty > 0 && !partId) {
+                    alert('برای ثبت تولید، لطفا یک قطعه را انتخاب کنید.');
+                    return;
+                }
+
+                if (consumedWeight + scrapQuantity > remainingMaterial + 0.001) {
+                    alert('مجموع وزن مصرفی و ضایعات از ماده اولیه باقیمانده بیشتر است.'); return;
+                }
+
+                e.target.querySelector('button[type="submit"]').disabled = true;
+
+                try {
+                    await recordPartialProduction(
+                        job.id, 
+                        partId, 
+                        producedQty, 
+                        scrapQuantity, 
+                        formData.get('scrapNotes'), 
+                        null, // No new weight def from this modal
+                        destinationWorkshopId,
+                        timestamp
+                    );
+                    alert('تولید با موفقیت ثبت شد.');
+                    closeModal(DOM.recordProductionModal.el);
+                } catch (error) {
+                    console.error(error);
+                     e.target.querySelector('button[type="submit"]').disabled = false;
+                }
+            });
+
+            openModal(DOM.recordProductionModal.el);
+        };
+        const renderRawHistoryModal = () => {
+             const rm = state.selectedRawMaterial;
+             if (!rm) return;
+             
+             DOM.rawHistoryModal.title.textContent = `تاریخچه ماده اولیه: ${rm.name}`;
+             const sortedTxs = state.rawMaterialTransactions
+                .filter(tx => tx.rawMaterialId === rm.id)
+                .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            DOM.rawHistoryModal.body.innerHTML = `
+                <table class="w-full text-sm text-right border-collapse border border-slate-300 dark:border-slate-600">
+                    <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-100 dark:bg-slate-700"><tr><th class="px-4 py-3 border border-slate-300 dark:border-slate-600">تاریخ</th><th class="px-4 py-3 border border-slate-300 dark:border-slate-600">نوع</th><th class="px-4 py-3 border border-slate-300 dark:border-slate-600">مقدار</th><th class="px-4 py-3 border border-slate-300 dark:border-slate-600">یادداشت</th><th class="px-4 py-3 no-print border border-slate-300 dark:border-slate-600">عملیات</th></tr></thead>
+                    <tbody class="bg-white dark:bg-slate-800">
+                    ${sortedTxs.length > 0 ? sortedTxs.map(tx => {
+                        const isPurchase = tx.type === RawMaterialTransactionType.PURCHASE;
+                        const canEditTx = canEdit && !(isPurchase && getRawMaterialStock(rm.id) - tx.quantity < 0);
+                        const canDeleteTx = canEdit && !(isPurchase && getRawMaterialStock(rm.id) - tx.quantity < 0) && !(tx.type === RawMaterialTransactionType.CONSUME && tx.wipJobId && getWipJob(tx.wipJobId)?.productions?.length > 0);
+                        return `<tr data-tx-id="${tx.id}"><td class="px-4 py-2 text-xs border border-slate-300 dark:border-slate-600">${new Date(tx.timestamp).toLocaleDateString('fa-IR')}</td><td class="px-4 py-2 font-semibold border border-slate-300 dark:border-slate-600 ${isPurchase ? 'text-emerald-600 dark:text-emerald-400' : 'text-sky-600 dark:text-sky-400'}">${tx.type}</td><td class="px-4 py-2 font-mono border border-slate-300 dark:border-slate-600">${tx.quantity.toLocaleString('fa-IR')} ${rm.unit}</td><td class="px-4 py-2 text-xs italic text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600">${tx.notes || '-'}</td><td class="px-4 py-2 no-print border border-slate-300 dark:border-slate-600"><div class="flex gap-2"><button data-action="edit-rm-tx" class="p-1.5 text-amber-500 hover:text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-full disabled:opacity-50 disabled:cursor-not-allowed" ${!canEditTx ? 'disabled title="ویرایش این تراکنش باعث موجودی منفی میشود"' : 'title="ویرایش"'}><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" /></svg></button><button data-action="delete-rm-tx" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-full disabled:opacity-50 disabled:cursor-not-allowed" ${!canDeleteTx ? 'disabled title="این تراکنش قابل حذف نیست"' : 'title="حذف"'}><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg></button></div></td></tr>`
+                    }).join('') : '<tr><td colspan="5" class="text-center py-6 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600">هیچ تاریخچه‌ای یافت نشد.</td></tr>'}</tbody>
+                </table>
+            `;
+
+            DOM.rawHistoryModal.footer.innerHTML = `<button id="print-raw-history-btn" class="flex items-center gap-2 px-4 py-2 bg-slate-500 text-white font-semibold rounded-lg hover:bg-slate-600">پرینت</button>`;
+            DOM.rawHistoryModal.footer.querySelector('#print-raw-history-btn').addEventListener('click', () => printModal(DOM.rawHistoryModal.el));
+
+            DOM.rawHistoryModal.body.addEventListener('click', e => {
+                const button = e.target.closest('button[data-action]');
+                if(!button) return;
+                const txId = button.closest('tr[data-tx-id]').dataset.txId;
+                const tx = sortedTxs.find(t => t.id === txId);
+                if (!tx) return;
+                state.editingRawMaterialTx = tx;
+
+                if (button.dataset.action === 'edit-rm-tx') {
+                    state.rawMaterialActionType = tx.type === RawMaterialTransactionType.PURCHASE ? 'purchase' : 'sendToWorkshop';
+                    renderRawMaterialActionModal();
+                } else if (button.dataset.action === 'delete-rm-tx') {
+                    deleteRawMaterialTransaction(txId);
+                }
+            });
+
+             openModal(DOM.rawHistoryModal.el);
+        };
+        const renderWipReportModal = () => {
+            const job = state.selectedWipJob;
+            if(!job) return;
+            const rm = getRawMaterial(job.rawMaterialId);
+            const workshop = getWorkshop(job.workshopId);
+
+            DOM.wipReportModal.title.textContent = `گزارش تولید: ${rm?.name || ''} - ${workshop?.name || ''}`;
+            
+            const allLotsWithRemainders = calculateLotRemainders(job.workshopId, job.rawMaterialId);
+            
+            const jobTransactions = state.rawMaterialTransactions
+                .filter(tx => tx.wipJobId === job.id && tx.type === RawMaterialTransactionType.CONSUME)
+                .sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)); // oldest first
+            
+            const jobLotIds = new Set(jobTransactions.map(tx => tx.id));
+            const jobLotsWithRem = allLotsWithRemainders.filter(lot => jobLotIds.has(lot.id));
+
+            const remainingInWorkshop = getWorkshopRawMaterialStock(job.workshopId, job.rawMaterialId);
+
+            const summaryHTML = `
+                <div class="flex items-center gap-4 mb-4 no-print">
+                    <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-200">
+                        <input type="checkbox" id="wip-report-show-destination" class="h-4 w-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500">
+                        <span>نمایش کارگاه مقصد</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-200">
+                        <input type="checkbox" id="wip-report-show-scrap-notes" class="h-4 w-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500">
+                        <span>نمایش توضیحات ضایعات</span>
+                    </label>
+                </div>
+                <div class="p-4 mb-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg text-sm text-slate-700 dark:text-slate-200 space-y-3">
+                    <p class="font-bold text-base">خلاصه فرآیند</p>
+                    <div>
+                        <p class="font-semibold">مواد ارسالی برای این فرآیند:</p>
+                        <ul class="pr-4 mt-2 space-y-2">
+                            ${jobLotsWithRem.map(lot => `
+                                <li class="flex items-center gap-2">
+                                    <div class="flex-shrink-0">
+                                        <span class="font-mono">${lot.quantity.toLocaleString('fa-IR')} ${rm?.unit || ''}</span>
+                                        <span class="text-slate-500 dark:text-slate-400 text-xs"> (تاریخ: ${new Date(lot.timestamp).toLocaleDateString('fa-IR')})</span>
+                                    </div>
+                                    <div class="flex-grow border-b-2 border-dashed border-slate-400 dark:border-slate-500"></div>
+                                    <div class="flex-shrink-0 text-amber-700 dark:text-amber-400 font-semibold">
+                                        باقیمانده از این ارسال: <span class="font-mono text-base">${lot.remaining.toLocaleString('fa-IR', {maximumFractionDigits: 3})}</span> ${rm?.unit || ''}
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="pt-3 border-t border-slate-300 dark:border-slate-600">
+                        <p class="flex justify-between items-center">
+                            <strong>کل ماده باقیمانده در این کارگاه (همه فرآیندها):</strong>
+                            <span class="font-bold text-xl text-amber-600 dark:text-amber-400 font-mono">${remainingInWorkshop.toLocaleString('fa-IR', {maximumFractionDigits: 3})} ${rm?.unit || ''}</span>
+                        </p>
+                    </div>
+
+                    ${job.status === 'COMPLETED' ? `<p class="text-green-600 dark:text-green-400 font-semibold text-center mt-2">فرآیند تکمیل شده است.</p>` : ''}
+                </div>`;
+
+            const productions = job.productions || [];
+            
+            let totalConsumedWeight = 0;
+            let totalScrap = 0;
+            let runningConsumedWeight = 0;
+
+            const reportRows = productions.map((p, index) => {
+                const part = getPart(p.partId);
+                const destWorkshop = getWorkshop(p.destinationWorkshopId);
+                let consumedWeight = 0;
+                if (part?.weightDefinition) {
+                    consumedWeight = (p.producedQty / part.weightDefinition.baseQuantity) * part.weightDefinition.baseWeight;
+                }
+                
+                totalConsumedWeight += consumedWeight;
+                totalScrap += p.scrapQuantity;
+                
+                runningConsumedWeight += consumedWeight + p.scrapQuantity;
+                const remainingAfterThisRow = job.consumedQuantity - runningConsumedWeight;
+
+                let partNameDisplay;
+                if (p.producedQty > 0) {
+                    partNameDisplay = part?.name || 'قطعه حذف شده';
+                } else if (p.scrapQuantity > 0) {
+                    partNameDisplay = 'ضایعات';
+                } else {
+                    partNameDisplay = 'رکورد نامشخص';
+                }
+
+                return {
+                    part,
+                    production: p,
+                    date: new Date(p.timestamp).toLocaleDateString('fa-IR'),
+                    partName: partNameDisplay,
+                    quantity: p.producedQty,
+                    consumedWeight: consumedWeight,
+                    scrap: p.scrapQuantity,
+                    remaining: remainingAfterThisRow,
+                    destination: destWorkshop?.name || 'کارگاه حذف شده'
+                };
+            });
+            
+            let tableHTML = '';
+            if (productions.length === 0) {
+                 tableHTML = `<p class="text-slate-500 dark:text-slate-400 text-center py-6">هیچ تولیدی برای این فرآیند ثبت نشده است.</p>`;
+            } else {
+                tableHTML = `
+                    <div class="space-y-4">
+                        <table class="w-full text-sm text-right border-collapse border border-slate-300 dark:border-slate-600 destination-hidden scrap-notes-hidden">
+                            <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-100 dark:bg-slate-700 sticky top-0">
+                                <tr>
+                                    <th class="px-2 py-3 border border-slate-300 dark:border-slate-600">قطعه تولیدی</th>
+                                    <th class="px-2 py-3 text-center border border-slate-300 dark:border-slate-600">تعداد</th>
+                                    <th class="px-2 py-3 text-center border border-slate-300 dark:border-slate-600">وزن مصرفی (${rm?.unit || ''})</th>
+                                    <th class="px-2 py-3 text-center border border-slate-300 dark:border-slate-600">ضایعات (${rm?.unit || ''})</th>
+                                    <th class="px-2 py-3 border border-slate-300 dark:border-slate-600 wip-scrap-notes-col">توضیحات ضایعات</th>
+                                    <th class="px-2 py-3 border border-slate-300 dark:border-slate-600 wip-destination-col">مقصد</th>
+                                    <th class="px-2 py-3 border border-slate-300 dark:border-slate-600">تاریخ</th>
+                                    <th class="px-2 py-3 text-center no-print border border-slate-300 dark:border-slate-600">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-slate-800">
+                            ${reportRows.map(row => `
+                                <tr>
+                                    <td class="px-2 py-2 font-semibold border border-slate-300 dark:border-slate-600">${row.partName}</td>
+                                    <td class="px-2 py-2 font-mono text-center border border-slate-300 dark:border-slate-600">${row.quantity.toLocaleString('fa-IR')}</td>
+                                    <td class="px-2 py-2 font-mono text-center border border-slate-300 dark:border-slate-600">${row.consumedWeight.toLocaleString('fa-IR', { maximumFractionDigits: 2 })}</td>
+                                    <td class="px-2 py-2 font-mono text-center border border-slate-300 dark:border-slate-600">${row.scrap.toLocaleString('fa-IR')}</td>
+                                    <td class="px-2 py-2 text-xs italic border border-slate-300 dark:border-slate-600 wip-scrap-notes-col">${row.production.scrapNotes || '-'}</td>
+                                    <td class="px-2 py-2 border border-slate-300 dark:border-slate-600 wip-destination-col">${row.destination}</td>
+                                    <td class="px-2 py-2 text-xs border border-slate-300 dark:border-slate-600">${row.date}</td>
+                                    <td class="px-2 py-2 text-center no-print border border-slate-300 dark:border-slate-600">
+                                        <button data-action="edit-production" data-timestamp="${row.production.timestamp}" ${!canEdit || job.status !== 'PENDING' ? 'disabled' : ''} class="px-2 py-1 text-xs bg-amber-500 text-white rounded hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed" title="${job.status === 'PENDING' ? 'ویرایش' : 'فقط فرآیندهای در جریان قابل ویرایش هستند'}">
+                                            ویرایش
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                            </tbody>
+                            <tfoot class="bg-slate-100 dark:bg-slate-700/50 font-bold">
+                                <tr>
+                                    <td class="px-2 py-2 text-left border border-slate-300 dark:border-slate-600">جمع کل:</td>
+                                    <td class="px-2 py-2 text-center font-mono border border-slate-300 dark:border-slate-600">${reportRows.reduce((sum, r) => sum + r.quantity, 0).toLocaleString('fa-IR')}</td>
+                                    <td class="px-2 py-2 text-center font-mono border border-slate-300 dark:border-slate-600">${totalConsumedWeight.toLocaleString('fa-IR', { maximumFractionDigits: 2 })}</td>
+                                    <td class="px-2 py-2 text-center font-mono border border-slate-300 dark:border-slate-600">${totalScrap.toLocaleString('fa-IR', { maximumFractionDigits: 2 })}</td>
+                                    <td class="px-2 py-2 border border-slate-300 dark:border-slate-600" colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>`;
+            }
+            
+            const finalScrapQty = job.status === 'COMPLETED' && job.completionAction ? (job.completionAction.scrapQty || 0) : 0;
+            const returnQty = job.status === 'COMPLETED' && job.completionAction ? (job.completionAction.returnQty || 0) : 0;
+            const totalMaterialConsumption = totalConsumedWeight + totalScrap + finalScrapQty;
+
+            const footerSummaryHTML = (productions.length > 0 || job.status === 'COMPLETED') ? `
+                <div class="mt-4 grid grid-cols-1 gap-4">
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
+                        <p class="flex justify-between items-center">
+                            <span class="text-slate-700 dark:text-slate-300">مواد مصرفی قطعات:</span>
+                            <span class="font-mono text-slate-800 dark:text-slate-200">${totalConsumedWeight.toLocaleString('fa-IR', { maximumFractionDigits: 3 })} ${rm?.unit || ''}</span>
+                        </p>
+                        <p class="flex justify-between items-center">
+                            <span class="text-slate-700 dark:text-slate-300">ضایعات حین تولید:</span>
+                            <span class="font-mono text-red-600 dark:text-red-400">${totalScrap.toLocaleString('fa-IR', { maximumFractionDigits: 3 })} ${rm?.unit || ''}</span>
+                        </p>
+                        ${job.status === 'COMPLETED' ? `
+                            <p class="flex justify-between items-center">
+                                <span class="text-slate-700 dark:text-slate-300">ضایعات نهایی:</span>
+                                <span class="font-mono text-red-600 dark:text-red-400">${finalScrapQty.toLocaleString('fa-IR', { maximumFractionDigits: 3 })} ${rm?.unit || ''}</span>
+                            </p>
+                        ` : ''}
+                        <div class="pt-2 border-t border-slate-300 dark:border-slate-600">
+                            <p class="flex justify-between items-center">
+                                <span class="font-semibold text-slate-800 dark:text-slate-100">جمع کل مواد مصرفی:</span>
+                                <span class="font-bold text-lg font-mono text-red-700 dark:text-red-300">${totalMaterialConsumption.toLocaleString('fa-IR', { maximumFractionDigits: 3 })} ${rm?.unit || ''}</span>
+                            </p>
+                        </div>
+                    </div>
+                    ${job.status === 'COMPLETED' && returnQty > 0 ? `
+                        <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                             <p class="flex justify-between items-center">
+                                <span class="font-semibold text-green-800 dark:text-green-200">بازگشتی به انبار:</span>
+                                <span class="font-bold text-lg font-mono text-green-700 dark:text-green-300">${returnQty.toLocaleString('fa-IR', { maximumFractionDigits: 3 })} ${rm?.unit || ''}</span>
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : '';
+            
+            DOM.wipReportModal.body.innerHTML = summaryHTML + tableHTML + footerSummaryHTML;
+            DOM.wipReportModal.footer.innerHTML = `<button id="print-wip-report-btn" class="flex items-center gap-2 px-4 py-2 bg-slate-500 text-white font-semibold rounded-lg hover:bg-slate-600">پرینت</button>`;
+            DOM.wipReportModal.footer.querySelector('#print-wip-report-btn').addEventListener('click', () => printModal(DOM.wipReportModal.el));
+            
+            const showDestCheckbox = DOM.wipReportModal.body.querySelector('#wip-report-show-destination');
+            const showScrapNotesCheckbox = DOM.wipReportModal.body.querySelector('#wip-report-show-scrap-notes');
+
+            const updateTableVisibility = () => {
+                const table = DOM.wipReportModal.body.querySelector('table');
+                if (!table) return;
+
+                const showDest = showDestCheckbox.checked;
+                const showNotes = showScrapNotesCheckbox.checked;
+                
+                table.classList.toggle('destination-hidden', !showDest);
+                table.classList.toggle('scrap-notes-hidden', !showNotes);
+                
+                const footerCell = table.querySelector('tfoot td[colspan]');
+                if (footerCell) {
+                    let colspan = 2; // base for "تاریخ" + "عملیات"
+                    if(showDest) colspan++;
+                    if(showNotes) colspan++;
+                    footerCell.colSpan = colspan;
+                }
+            };
+
+            showDestCheckbox?.addEventListener('change', updateTableVisibility);
+            showScrapNotesCheckbox?.addEventListener('change', updateTableVisibility);
+
+            DOM.wipReportModal.body.addEventListener('click', e => {
+                const button = e.target.closest('button[data-action="edit-production"]');
+                if (button) {
+                    const timestamp = button.dataset.timestamp;
+                    const production = job.productions.find(p => p.timestamp === timestamp);
+                    if (production) {
+                        renderEditProductionModal(job, production);
+                    }
+                }
+            });
+
+            openModal(DOM.wipReportModal.el);
+        };
+        const renderEditProductionModal = (job, production) => {
+            const part = getPart(production.partId);
+            const rm = getRawMaterial(job.rawMaterialId);
+            if (!rm) { alert('اطلاعات ماده اولیه یافت نشد.'); return; }
+
+            DOM.editProductionModal.title.textContent = `ویرایش تولید: ${part?.name || '(قطعه حذف شده)'}`;
+            
+            const originalDate = new Date(production.timestamp);
+            const originalDateString = originalDate.toLocaleDateString('en-CA');
+
+            let partSelectionHTML;
+            if (part) {
+                partSelectionHTML = `
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">قطعه تولیدی</label>
+                        <p class="p-2 bg-slate-100 dark:bg-slate-700/50 rounded-md font-semibold">${part.name}</p>
+                        <input type="hidden" name="partId" value="${part.id}">
+                    </div>
+                `;
+            } else {
+                const availableParts = state.parts.filter(p => p.isRawMaterialProduct);
+                partSelectionHTML = `
+                    <div>
+                        <label for="edit-part-select" class="block text-sm font-medium text-red-500 dark:text-red-400 mb-1">قطعه اصلی حذف شده! لطفا یک قطعه جایگزین انتخاب کنید:</label>
+                        <select id="edit-part-select" name="partId" required class="w-full p-2 border border-red-400 dark:border-red-500 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500">
+                            <option value="">-- انتخاب قطعه --</option>
+                            ${availableParts.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            }
+
+            let consumedWeight = 0;
+            if (part?.weightDefinition) {
+                consumedWeight = (production.producedQty / part.weightDefinition.baseQuantity) * part.weightDefinition.baseWeight;
+            }
+
+            DOM.editProductionModal.body.innerHTML = `
+                <form id="edit-production-form" class="space-y-4">
+                    <fieldset ${!canEdit ? 'disabled' : ''}>
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                           ${partSelectionHTML}
+                        </div>
+                        <div class="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                            <p><strong>مقادیر اصلی:</strong></p>
+                            <p class="text-sm">تعداد: ${production.producedQty.toLocaleString('fa-IR')} | وزن مصرفی: ${consumedWeight.toFixed(3)} ${rm.unit} | ضایعات: ${production.scrapQuantity.toLocaleString('fa-IR')} ${rm.unit}</p>
+                        </div>
+                        
+                        <div>
+                            <label for="edit-prod-date" class="flex justify-between items-baseline text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                <span>تاریخ تولید</span>
+                                <span class="shamsi-date-display font-normal text-xs text-slate-500 dark:text-slate-400"></span>
+                            </label>
+                            <input type="date" id="edit-prod-date" name="productionDate" required value="${originalDateString}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="edit-produced-qty" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">تعداد تولیدی جدید</label>
+                                <input type="number" id="edit-produced-qty" name="producedQty" value="${production.producedQty}" required min="0" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                            </div>
+                             <div>
+                                <label for="edit-scrap-qty" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">مقدار ضایعات جدید (${rm.unit})</label>
+                                <input type="number" id="edit-scrap-qty" name="scrapQuantity" value="${production.scrapQuantity}" required min="0" step="any" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="edit-scrap-notes" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">یادداشت جدید</label>
+                            <textarea id="edit-scrap-notes" name="scrapNotes" rows="2" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">${production.scrapNotes || ''}</textarea>
+                        </div>
+                    </fieldset>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4">
+                        <button type="button" data-action="close-modal" class="px-4 py-2 bg-slate-200 dark:bg-slate-600 rounded-md">انصراف</button>
+                        <button type="submit" ${!canEdit ? 'disabled' : ''} class="px-6 py-2 bg-amber-600 text-white font-bold rounded-md disabled:opacity-50">ذخیره</button>
+                    </div>
+                </form>
+            `;
+
+            const form = DOM.editProductionModal.body.querySelector('#edit-production-form');
+            const dateInput = form.querySelector('#edit-prod-date');
+            const shamsiDisplay = form.querySelector('.shamsi-date-display');
+            const updateShamsi = () => { if(shamsiDisplay) shamsiDisplay.textContent = toShamsiDisplay(dateInput.value); };
+            dateInput.addEventListener('change', updateShamsi);
+            updateShamsi();
+
+            DOM.editProductionModal.body.querySelector('#edit-production-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                
+                const newPartId = e.target.elements.partId.value;
+                const newProducedQty = parseInt(e.target.elements.producedQty.value, 10);
+                const newScrapQuantity = parseFloat(e.target.elements.scrapQuantity.value);
+                const newScrapNotes = e.target.elements.scrapNotes.value;
+                const newDateValue = e.target.elements.productionDate.value;
+                
+                const originalTime = new Date(production.timestamp).toTimeString().slice(0,8);
+                const newTimestamp = new Date(newDateValue + 'T' + originalTime).toISOString();
+
+
+                if (!newPartId) {
+                    alert('لطفا یک قطعه را انتخاب کنید.');
+                    submitBtn.disabled = !canEdit;
+                    return;
+                }
+                if (isNaN(newProducedQty) || newProducedQty < 0 || isNaN(newScrapQuantity) || newScrapQuantity < 0) {
+                    alert('مقادیر وارد شده نامعتبر است.');
+                    submitBtn.disabled = !canEdit;
+                    return;
+                }
+
+                try {
+                    await api.adjustProduction(job.id, {
+                        productionTimestamp: production.timestamp,
+                        newProducedQty,
+                        newScrapQuantity,
+                        newScrapNotes,
+                        newPartId,
+                        newTimestamp
+                    });
+                    alert('تغییرات با موفقیت ذخیره شد. اطلاعات بازخوانی می‌شود.');
+                    await init(); // Re-fetch all data to ensure consistency
+                    closeModal(DOM.wipReportModal.el);
+                    closeModal(DOM.editProductionModal.el);
+                } catch (err) {
+                    console.error('Failed to adjust production:', err);
+                    submitBtn.disabled = !canEdit;
+                }
+            });
+
+            openModal(DOM.editProductionModal.el);
+        };
+        const renderCompletionModal = (job) => {
+            const remainingMaterial = getWorkshopRawMaterialStock(job.workshopId, job.rawMaterialId);
+            const rm = getRawMaterial(job.rawMaterialId);
+            const today = new Date().toLocaleDateString('en-CA');
+
+            DOM.completionModal.title.textContent = "تکمیل فرآیند تولید";
+            DOM.completionModal.body.innerHTML = `
+                <form id="completion-form" class="space-y-4">
+                    <fieldset ${!canEdit ? 'disabled' : ''}>
+                    <div class="p-4 bg-amber-100 dark:bg-amber-900/40 rounded-lg text-amber-800 dark:text-amber-200 text-center">
+                        <p class="font-bold text-lg">ماده اولیه باقی مانده: <span class="font-mono text-xl">${remainingMaterial.toFixed(3)} ${rm?.unit || ''}</span></p>
+                    </div>
+                     <div>
+                        <label for="completion-date" class="flex justify-between items-baseline text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <span>تاریخ تکمیل</span>
+                            <span class="shamsi-date-display font-normal text-xs text-slate-500 dark:text-slate-400"></span>
+                        </label>
+                        <input type="date" id="completion-date" name="completionDate" required value="${today}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"/>
+                    </div>
+                    <div class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <p class="font-medium text-slate-800 dark:text-slate-100">عملیات برای باقی‌مانده:</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="return-qty" class="block text-sm font-medium text-green-700 dark:text-green-400 mb-1">بازگشت به انبار (${rm?.unit || ''})</label>
+                                <input type="number" id="return-qty" name="returnQty" value="${remainingMaterial > 0 ? remainingMaterial.toFixed(3) : 0}" min="0" max="${remainingMaterial.toFixed(3)}" step="any" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"/>
+                            </div>
+                            <div>
+                                <label for="scrap-qty" class="block text-sm font-medium text-red-700 dark:text-red-400 mb-1">ضایعات نهایی (${rm?.unit || ''})</label>
+                                <input type="number" id="scrap-qty" name="scrapQty" value="0" min="0" max="${remainingMaterial.toFixed(3)}" step="any" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"/>
+                            </div>
+                        </div>
+                        <div id="completion-error" class="text-sm text-red-500 h-4"></div>
+                    </div>
+
+                    <div>
+                        <label for="completion-notes" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">یادداشت تکمیلی (اختیاری)</label>
+                        <textarea id="completion-notes" name="notes" rows="2" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"></textarea>
+                    </div>
+                    </fieldset>
+                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4">
+                        <button type="button" data-action="close-modal" class="px-4 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">انصراف</button>
+                        <button type="submit" class="px-4 py-2 text-white rounded-md hover:bg-amber-700 transition-colors bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed" ${!canEdit ? 'disabled' : ''}>تکمیل و بستن فرآیند</button>
+                    </div>
+                </form>
+            `;
+
+            const form = DOM.completionModal.body.querySelector('#completion-form');
+            const returnInput = form.querySelector('#return-qty');
+            const scrapInput = form.querySelector('#scrap-qty');
+            const errorDiv = form.querySelector('#completion-error');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            const dateInput = form.querySelector('#completion-date');
+            const shamsiDisplay = form.querySelector('.shamsi-date-display');
+            const updateShamsi = () => {
+                if(shamsiDisplay) shamsiDisplay.textContent = toShamsiDisplay(dateInput.value);
+            };
+            dateInput.addEventListener('change', updateShamsi);
+            updateShamsi();
+
+            function validateCompletionInputs() {
+                const returnQty = parseFloat(returnInput.value) || 0;
+                const scrapQty = parseFloat(scrapInput.value) || 0;
+                
+                if (document.activeElement === returnInput) {
+                    if (returnQty + scrapQty > remainingMaterial) {
+                        scrapInput.value = Math.max(0, remainingMaterial - returnQty).toFixed(3);
+                    }
+                } else if (document.activeElement === scrapInput) {
+                    if (returnQty + scrapQty > remainingMaterial) {
+                        returnInput.value = Math.max(0, remainingMaterial - scrapQty).toFixed(3);
+                    }
+                }
+                
+                const finalReturnQty = parseFloat(returnInput.value) || 0;
+                const finalScrapQty = parseFloat(scrapInput.value) || 0;
+                const finalTotal = finalReturnQty + finalScrapQty;
+
+                if (finalTotal > remainingMaterial + 0.001) { // Tolerance for float
+                    errorDiv.textContent = `مجموع مقادیر (${finalTotal.toFixed(3)}) از باقی‌مانده (${remainingMaterial.toFixed(3)}) بیشتر است.`;
+                    submitBtn.disabled = true;
+                } else {
+                    errorDiv.textContent = '';
+                    submitBtn.disabled = !canEdit;
+                }
+            }
+            
+            returnInput.addEventListener('input', validateCompletionInputs);
+            scrapInput.addEventListener('input', validateCompletionInputs);
+
+
+            DOM.completionModal.body.querySelector('#completion-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                const returnQty = parseFloat(e.target.elements.returnQty.value) || 0;
+                const scrapQty = parseFloat(e.target.elements.scrapQty.value) || 0;
+                const notes = e.target.elements.notes.value.trim();
+                const completionDate = e.target.elements.completionDate.value;
+                const completionTimestamp = new Date(completionDate + 'T' + new Date().toTimeString().slice(0,8)).toISOString();
+
+                if (returnQty + scrapQty > remainingMaterial + 0.001) {
+                    alert('مقادیر وارد شده از مقدار باقیمانده بیشتر است. لطفا اصلاح کنید.');
+                    return;
+                }
+
+                await finalizeWipJob(job.id, returnQty, scrapQty, notes, completionTimestamp);
+                closeModal(DOM.completionModal.el);
+            });
+
+            openModal(DOM.completionModal.el);
+        };
+        const openProductionReportModal = () => {
+            const today = new Date().toLocaleDateString('en-CA');
+            const sortedWorkshops = getSortedWorkshops();
+            const sortedRawMaterials = [...state.rawMaterials].sort((a,b) => a.name.localeCompare(b.name, 'fa'));
+
+            DOM.productionReportModal.body.innerHTML = `
+                <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg space-y-4 no-print">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+                        <!-- Date Pickers -->
+                        <div>
+                            <label for="report-start-date" class="flex justify-between items-baseline text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                                <span>از تاریخ</span>
+                                <span class="shamsi-date-display font-normal"></span>
+                            </label>
+                            <input type="date" id="report-start-date" value="${today}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                        </div>
+                        <div>
+                            <label for="report-end-date" class="flex justify-between items-baseline text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                                <span>تا تاریخ</span>
+                                <span class="shamsi-date-display font-normal"></span>
+                            </label>
+                            <input type="date" id="report-end-date" value="${today}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                        </div>
+                         
+                        <!-- Workshop Multi-Select Dropdown -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">کارگاه‌ها</label>
+                            <div id="workshop-multiselect-container" class="relative">
+                                <button type="button" id="workshop-multiselect-toggle" class="form-input w-full text-right flex justify-between items-center">
+                                    <span class="truncate pr-1">همه کارگاه‌ها</span>
+                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div id="workshop-multiselect-menu" class="hidden absolute z-20 w-full mt-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                    <!-- Checkboxes will be inserted here by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Raw Material Multi-Select Dropdown -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">مواد اولیه</label>
+                            <div id="raw-material-multiselect-container" class="relative">
+                                <button type="button" id="raw-material-multiselect-toggle" class="form-input w-full text-right flex justify-between items-center">
+                                    <span class="truncate pr-1">همه مواد</span>
+                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div id="raw-material-multiselect-menu" class="hidden absolute z-20 w-full mt-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                    <!-- Checkboxes will be inserted here by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-full pt-4 mt-4 border-t border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 items-center">
+                         <!-- Status Filter -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">وضعیت</label>
+                            <div class="flex items-center gap-x-4 gap-y-1 mt-2 text-sm flex-wrap" id="report-status-filter">
+                                <label class="flex items-center gap-1.5"><input type="radio" name="status-filter" value="all" checked class="h-4 w-4"><span>همه</span></label>
+                                <label class="flex items-center gap-1.5"><input type="radio" name="status-filter" value="PENDING" class="h-4 w-4"><span>در جریان</span></label>
+                                <label class="flex items-center gap-1.5"><input type="radio" name="status-filter" value="COMPLETED" class="h-4 w-4"><span>تکمیل</span></label>
+                            </div>
+                        </div>
+                        <!-- Options -->
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300">
+                                <input type="checkbox" id="report-show-destination" class="h-4 w-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500">
+                                <span>نمایش کارگاه مقصد</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300">
+                                <input type="checkbox" id="report-show-scrap-notes" class="h-4 w-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500">
+                                <span>نمایش توضیحات ضایعات</span>
+                            </label>
+                        </div>
+                        <!-- Button -->
+                        <div class="lg:col-start-3 self-end">
+                            <button id="generate-production-report-btn" class="w-full mt-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">مشاهده گزارش</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="production-report-table-container" class="mt-4"></div>
+            `;
+            DOM.productionReportModal.footer.innerHTML = `<button id="print-production-report-btn" class="flex items-center gap-2 px-4 py-2 bg-slate-500 text-white font-semibold rounded-lg hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>پرینت</button>`;
+            
+            // --- Setup Multi-Select Dropdowns ---
+            const setupMultiSelectDropdown = (containerId, items, placeholder) => {
+                const container = DOM.productionReportModal.body.querySelector(`#${containerId}`);
+                const toggle = container.querySelector('button');
+                const menu = container.querySelector('div[id$="-menu"]');
+                const toggleText = toggle.querySelector('span');
+
+                menu.innerHTML = items.map(item => `
+                    <label class="flex items-center gap-2 p-2 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer text-slate-800 dark:text-slate-200">
+                        <input type="checkbox" class="h-4 w-4 rounded border-slate-400 text-blue-600 focus:ring-blue-500" value="${item.id}">
+                        <span class="text-sm">${item.name}</span>
+                    </label>
+                `).join('');
+
+                const updateToggleText = () => {
+                    const checkedCount = menu.querySelectorAll('input:checked').length;
+                    if (checkedCount === 0 || checkedCount === items.length) {
+                        toggleText.textContent = placeholder;
+                    } else if (checkedCount === 1) {
+                        const checkedName = menu.querySelector('input:checked').nextElementSibling.textContent;
+                        toggleText.textContent = checkedName;
+                    } else {
+                        toggleText.textContent = `${checkedCount} مورد انتخاب شده`;
+                    }
+                };
+
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Close other dropdowns
+                    if (containerId === 'workshop-multiselect-container') {
+                         document.getElementById('raw-material-multiselect-menu').classList.add('hidden');
+                    } else {
+                         document.getElementById('workshop-multiselect-menu').classList.add('hidden');
+                    }
+                    menu.classList.toggle('hidden');
+                });
+                
+                menu.addEventListener('change', updateToggleText);
+                updateToggleText();
+            };
+
+            setupMultiSelectDropdown('workshop-multiselect-container', sortedWorkshops, 'همه کارگاه‌ها');
+            setupMultiSelectDropdown('raw-material-multiselect-container', sortedRawMaterials, 'همه مواد');
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!document.getElementById('workshop-multiselect-container')?.contains(e.target)) {
+                    document.getElementById('workshop-multiselect-menu').classList.add('hidden');
+                }
+                if (!document.getElementById('raw-material-multiselect-container')?.contains(e.target)) {
+                    document.getElementById('raw-material-multiselect-menu').classList.add('hidden');
+                }
+            }, true); // Use capture phase to ensure this runs before the toggle's own click
+
+            DOM.productionReportModal.body.querySelector('#generate-production-report-btn').addEventListener('click', generateProductionReport);
+            
+            DOM.productionReportModal.body.querySelectorAll('input[type="date"]').forEach(input => {
+                const shamsiDisplay = input.previousElementSibling.querySelector('.shamsi-date-display');
+                const updateShamsi = () => {
+                    if (shamsiDisplay) shamsiDisplay.textContent = toShamsiDisplay(input.value);
+                };
+                input.addEventListener('change', updateShamsi);
+                updateShamsi();
+            });
+
+            openModal(DOM.productionReportModal.el);
+        };
+        const generateProductionReport = () => {
+            const startDate = DOM.productionReportModal.body.querySelector('#report-start-date').value;
+            const endDate = DOM.productionReportModal.body.querySelector('#report-end-date').value;
+            const selectedWorkshops = Array.from(document.querySelectorAll('#workshop-multiselect-menu input:checked')).map(cb => cb.value);
+            const selectedRawMaterials = Array.from(document.querySelectorAll('#raw-material-multiselect-menu input:checked')).map(cb => cb.value);
+            const statusFilter = DOM.productionReportModal.body.querySelector('input[name="status-filter"]:checked').value;
+            const showDestination = DOM.productionReportModal.body.querySelector('#report-show-destination').checked;
+            const showScrapNotes = DOM.productionReportModal.body.querySelector('#report-show-scrap-notes').checked;
+            
+            const reportTitle = `گزارش جامع تولید (${toShamsiDisplay(startDate)} تا ${toShamsiDisplay(endDate)})`;
+            DOM.productionReportModal.printTitle.textContent = reportTitle;
+            DOM.productionReportModal.title.textContent = reportTitle;
+
+            const printBtn = DOM.productionReportModal.footer.querySelector('#print-production-report-btn');
+            printBtn.disabled = false;
+            printBtn.onclick = () => printModal(DOM.productionReportModal.el);
+
+            const container = DOM.productionReportModal.body.querySelector('#production-report-table-container');
+
+            const reportData = state.workInProgressJobs.map(job => {
+                const consumptions = state.rawMaterialTransactions
+                    .filter(tx => tx.wipJobId === job.id && tx.type === 'مصرف')
+                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+                if (consumptions.length === 0) return null;
+    
+                const workshopMatch = selectedWorkshops.length === 0 || selectedWorkshops.includes(job.workshopId);
+                const rawMaterialMatch = selectedRawMaterials.length === 0 || selectedRawMaterials.includes(job.rawMaterialId);
+                const dateMatch = consumptions.some(tx => {
+                    const txDate = tx.timestamp.substring(0, 10);
+                    return txDate >= startDate && txDate <= endDate;
+                });
+                const statusMatch = statusFilter === 'all' || job.status === statusFilter;
+    
+                if (!workshopMatch || !rawMaterialMatch || !dateMatch || !statusMatch) return null;
+                
+                const workshop = getWorkshop(job.workshopId);
+                const rawMaterial = getRawMaterial(job.rawMaterialId);
+                const productions = job.productions || [];
+                const producedPartsInfo = productions.map(p => ({
+                    part: getPart(p.partId),
+                    qty: p.producedQty,
+                    scrap: p.scrapQuantity,
+                    scrapNotes: p.scrapNotes,
+                    destinationWorkshopId: p.destinationWorkshopId
+                }));
+                const totalScrap = productions.reduce((sum, p) => sum + p.scrapQuantity, 0);
+                const totalConsumedWeight = productions.reduce((sum, p) => {
+                    const part = getPart(p.partId);
+                    if (part?.weightDefinition) return sum + (p.producedQty / part.weightDefinition.baseQuantity) * part.weightDefinition.baseWeight;
+                    return sum;
+                }, 0);
+                const remaining = job.consumedQuantity - totalConsumedWeight - totalScrap;
+
+                return {
+                    job, workshop, rawMaterial, producedPartsInfo,
+                    totalConsumedWeight, totalScrap, remaining,
+                    consumptions: consumptions,
+                    latestConsumptionTimestamp: new Date(consumptions[0].timestamp), // Latest is first
+                    isMultiDispatch: consumptions.length > 1
+                };
+            }).filter(Boolean).sort((a,b) => b.latestConsumptionTimestamp - a.latestConsumptionTimestamp);
+
+            if (reportData.length === 0) {
+                container.innerHTML = `<p class="text-center py-8 text-slate-500 dark:text-slate-400">هیچ گزارشی برای فیلترهای انتخاب شده یافت نشد.</p>`;
+                return;
+            }
+
+            let totalConsumedWeightSum = 0;
+            let totalScrapSum = 0;
+            let totalRemainingSum = 0;
+            let totalDispatchedRawMaterialSum = 0;
+            reportData.forEach(d => {
+                totalConsumedWeightSum += d.totalConsumedWeight;
+                totalScrapSum += d.totalScrap;
+                if (d.job.status === 'PENDING') { // Only sum remaining for pending jobs
+                    totalRemainingSum += d.remaining;
+                }
+                totalDispatchedRawMaterialSum += d.job.consumedQuantity;
+            });
+
+            const headers = ["کارگاه", "ماده اولیه (ارسالی)", "قطعات تولیدی"];
+            if (showDestination) headers.push('مقصد تولید');
+            headers.push("وزن مصرفی", "ضایعات");
+            if (showScrapNotes) headers.push('توضیحات ضایعات');
+            headers.push("باقیمانده", "وضعیت");
+
+            let footerCellsHTML = '';
+            headers.forEach((h, i) => {
+                let content = '';
+                let cellClass = 'px-2 py-3 border border-slate-300 dark:border-slate-600';
+
+                if (i === 0) {
+                    content = 'جمع کل';
+                } else if (h === 'ماده اولیه (ارسالی)') {
+                    content = totalDispatchedRawMaterialSum.toLocaleString('fa-IR', { maximumFractionDigits: 2 });
+                    cellClass += ' text-center font-mono';
+                } else if (h === 'وزن مصرفی') {
+                    content = totalConsumedWeightSum.toLocaleString('fa-IR', { maximumFractionDigits: 2 });
+                    cellClass += ' text-center font-mono';
+                } else if (h === 'ضایعات') {
+                    content = totalScrapSum.toLocaleString('fa-IR', { maximumFractionDigits: 2 });
+                    cellClass += ' text-center font-mono';
+                } else if (h === 'باقیمانده') {
+                    content = totalRemainingSum.toLocaleString('fa-IR', { maximumFractionDigits: 2 });
+                    cellClass += ' text-center font-mono';
+                }
+                
+                footerCellsHTML += `<td class="${cellClass}">${content}</td>`;
+            });
+
+            container.innerHTML = `
+            <div class="overflow-x-auto">
+                <table id="production-report-table" class="w-full text-sm text-right border-collapse border border-slate-300 dark:border-slate-600">
+                    <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-100 dark:bg-slate-800/80 sticky top-0 backdrop-blur-sm z-10">
+                        <tr>${headers.map(h => `<th class="px-2 py-3 border border-slate-300 dark:border-slate-600">${h}</th>`).join('')}</tr>
+                        <tr class="filter-row no-print">${headers.map((h, i) => `<th class="p-1 font-normal align-top border border-slate-300 dark:border-slate-600"><input type="search" placeholder="جستجو..." data-column-index="${i}" class="w-full text-xs p-1.5 border border-slate-300 dark:border-slate-500 rounded bg-white dark:bg-slate-800 focus:ring-1 focus:ring-indigo-500"></th>`).join('')}</tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-slate-800">
+                    ${reportData.map(d => {
+                        const statusClass = d.job.status === 'COMPLETED' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300';
+                        const statusText = d.job.status === 'COMPLETED' ? 'تکمیل' : 'در جریان';
+                        
+                        let remainingText;
+                        if (d.job.status === 'COMPLETED' && typeof d.job.completionAction === 'object' && d.job.completionAction !== null) {
+                            const { returnQty, scrapQty } = d.job.completionAction;
+                            let parts = [];
+                            if (returnQty > 0) parts.push(`<span class="text-xs text-slate-500 dark:text-slate-400">بازگشت: ${returnQty.toFixed(3)}</span>`);
+                            if (scrapQty > 0) parts.push(`<span class="text-xs text-slate-500 dark:text-slate-400">ضایعات نهایی: ${scrapQty.toFixed(3)}</span>`);
+                            remainingText = parts.length > 0 ? parts.join('<br>') : '-';
+                        } else {
+                            remainingText = `<span class="font-mono ${d.remaining < 0 ? 'text-red-500' : ''}">${d.remaining.toFixed(2)} ${d.rawMaterial?.unit || ''}</span>`;
+                        }
+
+                        const cells = [
+                            `<td class="px-2 py-2 font-semibold text-blue-600 dark:text-blue-400 border border-slate-300 dark:border-slate-600">${d.workshop?.name || ''}</td>`,
+                            `<td class="px-2 py-2 border border-slate-300 dark:border-slate-600">
+                                <div>${d.rawMaterial?.name || ''}</div>
+                                <div class="text-xs space-y-1 mt-1 border-t border-slate-200 dark:border-slate-700 pt-1">
+                                    ${d.consumptions.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).map(tx => `
+                                        <div>
+                                            <span class="font-mono">${tx.quantity.toLocaleString('fa-IR')} ${d.rawMaterial?.unit || ''}</span>
+                                            <span class="text-slate-500 dark:text-slate-400">(${new Date(tx.timestamp).toLocaleDateString('fa-IR')})</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </td>`,
+                            `<td class="px-2 py-2 border border-slate-300 dark:border-slate-600">${
+                                d.producedPartsInfo.map(item => {
+                                    if (item.qty > 0) {
+                                        return `<div>${item.qty.toLocaleString('fa-IR')} × ${item.part?.name || 'قطعه حذف شده'}</div>`;
+                                    } else if (item.scrap > 0) {
+                                        return `<div class="text-sm italic text-slate-500 dark:text-slate-400">ضایعات ثبت شده</div>`;
+                                    }
+                                    return '';
+                                }).filter(Boolean).join('') || '-'
+                            }</td>`
+                        ];
+
+                        if (showDestination) {
+                            const destinations = [...new Set(d.producedPartsInfo.map(item => getWorkshop(item.destinationWorkshopId)?.name || 'نامشخص'))].join(', ');
+                            cells.push(`<td class="px-2 py-2 border border-slate-300 dark:border-slate-600 text-xs">${destinations}</td>`);
+                        }
+                        
+                        cells.push(
+                            `<td class="px-2 py-2 font-mono text-center border border-slate-300 dark:border-slate-600">${d.totalConsumedWeight.toFixed(2)}</td>`,
+                            `<td class="px-2 py-2 font-mono text-center border border-slate-300 dark:border-slate-600">${d.totalScrap.toFixed(2)}</td>`
+                        );
+                        
+                        if (showScrapNotes) {
+                            const notes = d.producedPartsInfo.map(p => p.scrapNotes).filter(Boolean).join('; ');
+                            cells.push(`<td class="px-2 py-2 text-xs italic border border-slate-300 dark:border-slate-600">${notes || '-'}</td>`);
+                        }
+                        
+                        cells.push(
+                            `<td class="px-2 py-2 border border-slate-300 dark:border-slate-600">${remainingText}</td>`,
+                            `<td class="px-2 py-2 text-center border border-slate-300 dark:border-slate-600"><span class="px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">${statusText}</span></td>`
+                        );
+                        
+                        return `<tr class="${d.isMultiDispatch ? 'bg-yellow-50 dark:bg-yellow-900/30' : ''}">${cells.join('')}</tr>`;
+                    }).join('')}
+                    </tbody>
+                    <tfoot class="bg-slate-200 dark:bg-slate-900/50 font-bold text-base">
+                        <tr>
+                            ${footerCellsHTML}
+                        </tr>
+                    </tfoot>
+                </table>
+                </div>
+            `;
+
+            const table = DOM.productionReportModal.body.querySelector('#production-report-table');
+            const filterInputs = table.querySelectorAll('.filter-row input');
+            filterInputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    const filters = Array.from(filterInputs).map(i => ({ index: i.dataset.columnIndex, value: normalizeSearchString(i.value) }));
+                    table.querySelectorAll('tbody tr').forEach(row => {
+                        const isVisible = filters.every(f => {
+                            if (!f.value) return true;
+                            const cell = row.children[f.index];
+                            return cell && normalizeSearchString(cell.textContent).includes(f.value);
+                        });
+                        row.style.display = isVisible ? '' : 'none';
+                    });
+                });
+            });
+        };
+        // --- INITIALIZATION ---
+        const setupEventListeners = () => {
+            // Header buttons
+            DOM.openWorkshopsBtn.disabled = !canEdit;
+            DOM.openRawMaterialsBtn.disabled = !canEdit;
+
+            DOM.openWorkshopsBtn.addEventListener('click', () => { state.editingWorkshopId = null; renderWorkshopsModal(); });
+            DOM.openRawMaterialsBtn.addEventListener('click', renderRawMaterialsModal);
+            DOM.openProductionReportBtn.addEventListener('click', openProductionReportModal);
+            
+            // WIP container action delegation
+            DOM.wipContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+
+                const wipId = button.closest('[data-wip-id]')?.dataset.wipId;
+                const job = getWipJob(wipId);
+                state.selectedWipJob = job;
+
+                switch(button.dataset.action) {
+                    case 'record-production': job && renderRecordProductionModal(job); break;
+                    case 'complete-wip-job': job && renderCompletionModal(job); break;
+                    case 'wip-report': job && renderWipReportModal(); break;
+                    case 'delete-wip-job': job && deleteWipJob(job.id); break;
+                }
+            });
+
+            // Filter listeners
+            DOM.wipSearchInput.addEventListener('input', renderWipContent);
+            DOM.wipConsumedQtyFilter.addEventListener('input', renderWipContent);
+            DOM.wipProducedQtyFilter.addEventListener('input', renderWipContent);
+        };
+
+        const init = async () => {
+             DOM.wipContainer.innerHTML = `<div class="text-center p-8 bg-white dark:bg-slate-800 rounded-lg shadow-md"><p class="font-semibold">در حال بارگذاری اطلاعات از سرور...</p></div>`;
+            try {
+                const data = await api.bootstrap();
+                state.parts = data.parts || [];
+                state.workshops = data.workshops || [];
+                state.wages = data.wages || {};
+                state.rawMaterials = data.rawMaterials || [];
+                state.rawMaterialTransactions = data.rawMaterialTransactions || [];
+                state.workInProgressJobs = data.wipJobs || [];
+                setupEventListeners();
+                renderWipContent();
+            } catch (error) {
+                 DOM.wipContainer.innerHTML = `<div class="text-center p-8 bg-white dark:bg-slate-800 rounded-lg shadow-md"><p class="text-red-500 font-semibold">خطا در بارگذاری اطلاعات از سرور.<br/>${error.message}</p></div>`;
+            }
+        };
+
+        init();
+    </script>
+</body>
+</html>

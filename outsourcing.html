@@ -1,0 +1,1808 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>مدیریت انبار قطعات برون سپاری</title>
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="description" content="یک برنامه تحت وب برای مدیریت ورود و خروج قطعات برون سپاری شده در انبار با قابلیت های هوشمند.">
+    <link rel="manifest" href="/manifest.json">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+      
+      :root {
+        --bg-light: #f9fafb; /* gray-50 */
+        --text-light: #111827; /* gray-900 */
+        --card-bg-light: #ffffff;
+        --card-border-light: #e5e7eb; /* gray-200 */
+        --input-bg-light: #ffffff;
+        --input-border-light: #d1d5db; /* gray-300 */
+        --header-bg-light: rgba(255, 255, 255, 0.8);
+        --table-header-bg-light: #f9fafb;
+        --table-row-hover-light: #f3f4f6;
+        --text-muted-light: #6b7280;
+
+        --bg-dark: #030712; /* gray-950 */
+        --text-dark: #d1d5db; /* gray-300 */
+        --card-bg-dark: #111827; /* gray-900 */
+        --card-border-dark: #374151; /* gray-700 */
+        --input-bg-dark: #1f2937; /* gray-800 */
+        --input-border-dark: #4b5563; /* gray-600 */
+        --header-bg-dark: rgba(17, 24, 39, 0.8);
+        --table-header-bg-dark: #1f2937;
+        --table-row-hover-dark: #1f2937;
+        --text-muted-dark: #9ca3af;
+      }
+
+      body {
+        font-family: 'Vazirmatn', sans-serif;
+        background-color: var(--bg-light);
+        color: var(--text-light);
+        transition: background-color 0.3s, color 0.3s;
+      }
+      html.dark body {
+        background-color: var(--bg-dark);
+        color: var(--text-dark);
+      }
+      /* Prevent scroll on number inputs */
+      input[type=number]::-webkit-inner-spin-button,
+      input[type=number]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+      }
+      input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+      }
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            transition: opacity 300ms;
+        }
+        #edit-transaction-modal, #correct-scrap-modal {
+            z-index: 60; /* Ensure edit modal is on top of report modal */
+        }
+        .modal-content {
+            background-color: var(--card-bg-light);
+            border: 1px solid var(--card-border-light);
+            color: var(--text-light);
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 42rem; /* lg */
+            margin: 1rem;
+            padding: 1.5rem;
+            transform: scale(0.95);
+            opacity: 0;
+            animation: fade-in-scale 0.2s forwards;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        html.dark .modal-content {
+           background-color: var(--card-bg-dark);
+           border-color: var(--card-border-dark);
+           color: var(--text-dark);
+        }
+        @keyframes fade-in-scale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .print-header {
+            display: none;
+        }
+
+        .destination-hidden .toggle-destination-col {
+            display: none;
+        }
+
+        @media print {
+            body.is-printing #app-container > *:not(.is-printing) {
+                display: none !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            html, body {
+                background-color: white !important;
+                color: black !important;
+            }
+             html.dark, html.dark body {
+                 background-color: white !important;
+                color: black !important;
+             }
+
+            .modal-content-print {
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+            }
+
+            .modal.is-printing {
+                display: block !important;
+                position: absolute !important;
+                top: 0;
+                left: 0;
+                width: 100% !important;
+                height: auto !important;
+                background: white !important;
+                z-index: 9999 !important;
+            }
+
+            .modal.is-printing .modal-content {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                max-height: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                background-color: white !important;
+                color: black !important;
+                transform: none !important;
+                opacity: 1 !important;
+                animation: none !important;
+            }
+            html.dark .modal.is-printing .modal-content * {
+                 color: black !important;
+            }
+
+
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 1.5rem;
+                border-bottom: 1px solid #ccc;
+                padding-bottom: 1rem;
+                color: black !important;
+            }
+            .print-header .print-title {
+                color: black !important;
+                font-size: 1.25rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+            .print-header p {
+                color: #333 !important;
+                font-size: 0.875rem;
+            }
+
+            @page {
+                size: A4;
+                margin: 1.5cm;
+            }
+        }
+    </style>
+    
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.9.0",
+    "react/": "https://esm.sh/react@18.3.1/",
+    "jspdf": "https://esm.sh/jspdf@^3.0.1",
+    "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.2"
+  }
+}
+</script>
+</head>
+
+<body class="bg-[var(--bg-light)] text-[var(--text-light)]">
+    <div id="app-container" class="min-h-screen font-sans text-slate-800 dark:text-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="mb-6 no-print">
+                 <div class="flex items-center gap-2 flex-wrap justify-center mb-6">
+                    <button id="open-reports-btn" class="flex items-center gap-2 px-3 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg shadow-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125 1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                        <span>گزارشات</span>
+                    </button>
+                    <button id="open-scrap-report-btn" class="flex items-center gap-2 px-3 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg shadow-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52v16.5m-13.5-16.5v16.5m13.5 0c.621 0 1.125-.504 1.125-1.125v-15c0-.621-.504-1.125-1.125-1.125H5.25c-.621 0-1.125.504-1.125 1.125v15c0 .621.504 1.125 1.125 1.125h13.5Z" /></svg>
+                        <span>گزارش ضایعات</span>
+                    </button>
+                    <button id="open-add-part-btn" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        <span>افزودن قطعه</span>
+                    </button>
+                    <button id="global-reset-btn" class="flex items-center gap-2 px-3 py-2 bg-rose-600 text-white font-semibold rounded-lg shadow-sm hover:bg-rose-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-3.181-4.991v4.99" /></svg>
+                        <span>ریست کلی موجودی نهایی</span>
+                    </button>
+                </div>
+                <input type="search" id="part-search-input" placeholder="جستجوی قطعه بر اساس نام..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all" />
+            </div>
+
+            <main id="inventory-container">
+                <!-- Inventory list will be rendered here by JS -->
+            </main>
+        </div>
+
+        <!-- Modals -->
+        <div id="add-part-modal" class="modal">
+            <div class="modal-content">
+                 <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 id="add-part-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="add-part-modal-body" class="overflow-y-auto"></div>
+            </div>
+        </div>
+        
+        <div id="transaction-modal" class="modal">
+             <div class="modal-content">
+                 <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 id="transaction-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="transaction-modal-body" class="overflow-y-auto"></div>
+            </div>
+        </div>
+        
+        <div id="process-modal" class="modal">
+            <div class="modal-content">
+                 <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 id="process-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="process-modal-body" class="overflow-y-auto"></div>
+            </div>
+        </div>
+        
+        <div id="edit-transaction-modal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                   <h2 id="edit-transaction-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                   <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                   </button>
+               </div>
+               <div id="edit-transaction-modal-body" class="overflow-y-auto"></div>
+           </div>
+       </div>
+
+        <div id="history-modal" class="modal">
+            <div class="modal-content max-w-3xl">
+                 <div class="print-header">
+                    <h2 class="print-title"></h2>
+                    <p>تاریخ چاپ: <span class="print-date"></span></p>
+                 </div>
+                 <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 no-print flex-shrink-0">
+                    <h2 id="history-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="history-modal-body" class="overflow-y-auto modal-content-print"></div>
+                 <div id="history-modal-footer" class="flex justify-end items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4 no-print flex-shrink-0"></div>
+            </div>
+        </div>
+        
+        <div id="reports-modal" class="modal">
+             <div class="modal-content max-w-xl">
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">گزارش‌گیری</h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="reports-modal-body" class="overflow-y-auto"></div>
+            </div>
+        </div>
+        
+        <div id="transaction-report-modal" class="modal">
+            <div class="modal-content max-w-7xl">
+                 <div class="print-header">
+                    <h2 class="print-title"></h2>
+                    <p>تاریخ چاپ: <span class="print-date"></span></p>
+                 </div>
+                 <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 no-print flex-shrink-0">
+                    <h2 id="transaction-report-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="transaction-report-modal-body" class="overflow-y-auto modal-content-print"></div>
+                <div id="transaction-report-modal-footer" class="flex justify-end items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4 no-print flex-shrink-0"></div>
+            </div>
+        </div>
+        
+        <div id="reset-stock-modal" class="modal">
+            <div class="modal-content max-w-lg">
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                   <h2 id="reset-stock-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100"></h2>
+                   <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                   </button>
+               </div>
+               <div id="reset-stock-modal-body" class="overflow-y-auto"></div>
+           </div>
+        </div>
+        
+        <div id="scrap-report-modal" class="modal">
+            <div class="modal-content max-w-5xl">
+                 <div class="print-header">
+                    <h2 class="print-title">گزارش ضایعات</h2>
+                    <p>تاریخ چاپ: <span class="print-date"></span></p>
+                 </div>
+                 <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 no-print flex-shrink-0">
+                    <h2 id="scrap-report-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100">گزارش ضایعات</h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="scrap-report-modal-body" class="overflow-y-auto modal-content-print"></div>
+                 <div id="scrap-report-modal-footer" class="flex justify-end items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4 no-print flex-shrink-0"></div>
+            </div>
+        </div>
+        
+        <div id="correct-scrap-modal" class="modal">
+            <div class="modal-content max-w-lg">
+                 <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3 mb-4 flex-shrink-0">
+                    <h2 id="correct-scrap-modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100">اصلاح ضایعات</h2>
+                    <button data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="correct-scrap-modal-body"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        const urlParams = new URLSearchParams(window.location.search);
+        const canEdit = urlParams.get('canEdit') === 'true';
+        const panelMode = urlParams.get('panelMode');
+        const user = urlParams.get('user');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const syncTheme = () => {
+                try {
+                    const parentHtml = window.top.document.documentElement;
+                    if (parentHtml.classList.contains('dark')) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {
+                    console.warn("Cross-origin frame error, falling back to default dark theme.");
+                    if (!document.documentElement.classList.contains('dark') && !document.documentElement.classList.contains('light')) {
+                         document.documentElement.classList.add('dark');
+                    }
+                }
+            };
+
+            document.addEventListener('wheel', (event) => {
+                if (document.activeElement.type === 'number' && document.activeElement === event.target) {
+                    event.preventDefault();
+                    document.activeElement.blur();
+                }
+            }, { passive: false });
+
+            syncTheme();
+
+            try {
+                 const observer = new MutationObserver(syncTheme);
+                 observer.observe(window.top.document.documentElement, { attributes: true, attributeFilter: ['class'] });
+            } catch (e) {
+                console.warn("Could not observe parent window for theme changes.");
+            }
+        });
+
+        // --- API CLIENT ---
+        const api = {
+            async request(endpoint, options = {}) {
+                const { body, ...customConfig } = options;
+                const headers = { 'Content-Type': 'application/json' };
+
+                if (panelMode === 'personal' && user) {
+                    headers['X-User-DB'] = user;
+                }
+
+                const config = {
+                    method: body ? 'POST' : 'GET',
+                    ...customConfig,
+                    headers: { ...headers, ...customConfig.headers },
+                };
+                if (body) config.body = JSON.stringify(body);
+
+                try {
+                    const response = await fetch(endpoint, config);
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ error: 'An unknown error occurred' }));
+                        const err = new Error(errorData.error || `Request failed with status ${response.status}`);
+                        alert(`خطای سرور: ${err.message}`);
+                        return Promise.reject(err);
+                    }
+                    if (response.status === 204) return null; // No Content
+                    return response.json();
+                } catch (error) {
+                    alert(`خطای شبکه: ${error.message}`);
+                    return Promise.reject(error);
+                }
+            },
+            bootstrap: () => api.request('/api/outsourcing/bootstrap'),
+            addPart: (data) => api.request('/api/outsourcing/parts', { body: data }),
+            updatePart: (id, data) => api.request(`/api/outsourcing/parts/${id}`, { method: 'PUT', body: data }),
+            deletePart: (id) => api.request(`/api/outsourcing/parts/${id}`, { method: 'DELETE' }),
+            addTransaction: (data) => api.request('/api/outsourcing/transactions', { body: data }),
+            processTransaction: (data) => api.request('/api/outsourcing/process-transaction', { body: data }),
+            updateTransaction: (id, data) => api.request(`/api/outsourcing/transactions/${id}`, { method: 'PUT', body: data }),
+            resetPartStock: (id, data) => api.request(`/api/outsourcing/parts/${id}/reset-stock`, { method: 'POST', body: data }),
+            globalResetFinishedStock: () => api.request('/api/outsourcing/global-reset-stock', { method: 'POST' }),
+            correctScrapLog: (data) => api.request('/api/outsourcing/scrap-log/correct', { body: data }),
+        };
+
+        // --- CONSTANTS & GLOBAL STATE ---
+        const FINISHED_GOODS_WAREHOUSE_ID = 'finished_goods_warehouse';
+
+        const TransactionType = {
+            ENTRY: 'ورود',
+            EXIT: 'خروج',
+            TRANSFER: 'انتقال',
+        };
+
+        let state = {
+            parts: [],
+            transactions: [],
+            workshops: [],
+            scrapLog: [],
+            // UI State for modals
+            selectedPart: null,
+            editingPart: null,
+            editingTransaction: null,
+            editingScrapLog: null,
+            transactionType: null,
+            lastReportParams: null,
+            transactionReportData: [],
+            transactionReportTitle: '',
+            scrapReportSort: {
+                key: 'timestamp', // 'timestamp' or 'workshopName'
+                direction: 'desc' // 'asc' or 'desc'
+            },
+        };
+
+        const DOM = {
+            inventoryContainer: document.getElementById('inventory-container'),
+            partSearchInput: document.getElementById('part-search-input'),
+            openAddPartBtn: document.getElementById('open-add-part-btn'),
+            openReportsBtn: document.getElementById('open-reports-btn'),
+            openScrapReportBtn: document.getElementById('open-scrap-report-btn'),
+            globalResetBtn: document.getElementById('global-reset-btn'),
+            addPartModal: { el: document.getElementById('add-part-modal'), title: document.getElementById('add-part-modal-title'), body: document.getElementById('add-part-modal-body') },
+            transactionModal: { el: document.getElementById('transaction-modal'), title: document.getElementById('transaction-modal-title'), body: document.getElementById('transaction-modal-body') },
+            processModal: { el: document.getElementById('process-modal'), title: document.getElementById('process-modal-title'), body: document.getElementById('process-modal-body') },
+            editTransactionModal: { el: document.getElementById('edit-transaction-modal'), title: document.getElementById('edit-transaction-modal-title'), body: document.getElementById('edit-transaction-modal-body') },
+            historyModal: { el: document.getElementById('history-modal'), title: document.getElementById('history-modal-title'), body: document.getElementById('history-modal-body'), footer: document.getElementById('history-modal-footer') },
+            reportsModal: { el: document.getElementById('reports-modal'), body: document.getElementById('reports-modal-body') },
+            transactionReportModal: { el: document.getElementById('transaction-report-modal'), title: document.getElementById('transaction-report-modal-title'), body: document.getElementById('transaction-report-modal-body'), footer: document.getElementById('transaction-report-modal-footer') },
+            resetStockModal: { el: document.getElementById('reset-stock-modal'), title: document.getElementById('reset-stock-modal-title'), body: document.getElementById('reset-stock-modal-body') },
+            scrapReportModal: { el: document.getElementById('scrap-report-modal'), title: document.getElementById('scrap-report-modal-title'), body: document.getElementById('scrap-report-modal-body'), footer: document.getElementById('scrap-report-modal-footer') },
+            correctScrapModal: { el: document.getElementById('correct-scrap-modal'), title: document.getElementById('correct-scrap-modal-title'), body: document.getElementById('correct-scrap-modal-body') },
+        };
+
+        // --- UTILITY FUNCTIONS ---
+        const normalizeSearchString = (str) => {
+          // Gracefully handle non-string inputs, including numbers from Excel
+          if (str === null || str === undefined) return '';
+          let s = String(str).trim();
+
+          // Persian/Arabic character normalization
+          s = s.replace(/[ي]/g, 'ی').replace(/[ك]/g, 'ک').replace(/[آأإ]/g, 'ا');
+
+          // Convert Persian/Arabic numerals to Latin numerals
+          const numeralsMap = { '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9', '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9' };
+          s = s.replace(/[۰-۹٠-٩]/g, char => numeralsMap[char]);
+
+          // Collapse multiple whitespace characters into a single space
+          s = s.replace(/\s+/g, ' ');
+
+          // Convert to lowercase for case-insensitive comparison
+          return s.toLowerCase();
+        };
+        const toShamsiDisplay = (dateStr) => {
+            if (!dateStr) return '';
+            try { return new Date(dateStr).toLocaleDateString('fa-IR'); } 
+            catch (e) { return 'تاریخ نامعتبر'; }
+        };
+        
+        const getPart = (partId) => state.parts.find(p => p.id === partId);
+        const getWorkshop = (workshopId) => state.workshops.find(w => w.id === workshopId);
+        const getSortedWorkshops = () => [...state.workshops].sort((a, b) => a.name.localeCompare(b.name, 'fa'));
+        const getWorkshopName = (id) => {
+            if (!id) return 'نامشخص';
+            if (id === FINISHED_GOODS_WAREHOUSE_ID) return 'انبار نهایی';
+            const workshop = getWorkshop(id);
+            return workshop ? workshop.name : 'کارگاه حذف شده';
+        };
+        const isAdjustmentTx = (tx) => {
+            if (!tx) return false;
+            
+            // Catches WIP adjustments from WIP report and individual part WIP resets
+            const adjustmentDestinations = ['void', 'void_adjustment', 'reset_adjustment_void', 'void_process_out'];
+            if (tx.type === TransactionType.TRANSFER && adjustmentDestinations.includes(tx.toWorkshopId)) {
+                return true;
+            }
+
+            // Catches finished goods resets (both individual and global)
+            const resetNotes = ["ریست دستی موجودی", "ریست کلی موجودی نهایی"];
+            if (tx.type === TransactionType.EXIT && resetNotes.includes(tx.notes)) {
+                return true;
+            }
+
+            return false;
+        };
+        
+        // --- STATE MODIFICATION (API-driven) ---
+        const addPart = async (partData) => {
+             if (state.parts.some(p => p.name === partData.name)) {
+                alert('قطعه ای با این نام از قبل وجود دارد.');
+                return;
+            }
+            
+            const stockByWorkshop = {};
+            if (partData.initialStock > 0 && partData.workshopId) {
+                stockByWorkshop[partData.workshopId] = partData.initialStock;
+            }
+            
+            const newPart = {
+                id: crypto.randomUUID(), name: partData.name, description: partData.description,
+                isRawMaterialProduct: partData.isRawMaterialProduct, weightDefinition: partData.weightDefinition,
+                stockByWorkshop, finalWorkshopIds: partData.finalWorkshopIds || [], finishedGoodsStock: 0,
+            };
+
+            try {
+                await api.addPart(newPart);
+                state.parts.push(newPart);
+
+                if (partData.initialStock > 0 && partData.workshopId) {
+                    const newTransaction = {
+                        id: crypto.randomUUID(), partId: newPart.id, type: TransactionType.ENTRY,
+                        quantity: partData.initialStock, timestamp: new Date().toISOString(),
+                        toWorkshopId: partData.workshopId, notes: 'موجودی اولیه',
+                    };
+                    await api.addTransaction({ transaction: newTransaction });
+                    state.transactions.unshift(newTransaction);
+                }
+                renderAll();
+            } catch (error) { console.error('Failed to add part:', error); }
+        };
+        
+        const updatePart = async (partId, partData) => {
+            try {
+                await api.updatePart(partId, partData);
+                state.parts = state.parts.map(p => p.id === partId ? { ...p, ...partData } : p);
+                renderAll();
+            } catch (error) { console.error('Failed to update part:', error); }
+        };
+
+        const deletePart = async (partId) => {
+            if (window.confirm('آیا برای حذف این قطعه و تمام تاریخچه آن مطمئن هستید؟')) {
+                try {
+                    await api.deletePart(partId);
+                    state.parts = state.parts.filter(p => p.id !== partId);
+                    state.transactions = state.transactions.filter(t => t.partId !== partId);
+                    renderAll();
+                } catch (error) { console.error('Failed to delete part:', error); }
+            }
+        };
+
+        const confirmTransaction = async (partId, quantity, type, fromWorkshopId, toWorkshopId, notes, timestamp) => {
+            const newTransaction = {
+              id: crypto.randomUUID(), partId, type, quantity, timestamp, fromWorkshopId, toWorkshopId, notes
+            };
+            try {
+                await api.addTransaction({ transaction: newTransaction });
+                // Optimistically update UI
+                state.transactions.unshift(newTransaction);
+                state.parts = state.parts.map(p => {
+                    if (p.id !== partId) return p;
+                    const updatedPart = { ...p, stockByWorkshop: { ...(p.stockByWorkshop || {}) } };
+                    if (type === TransactionType.EXIT) {
+                        updatedPart.finishedGoodsStock = (updatedPart.finishedGoodsStock || 0) - quantity;
+                    } else if (type === TransactionType.TRANSFER && toWorkshopId === FINISHED_GOODS_WAREHOUSE_ID && fromWorkshopId) {
+                        updatedPart.stockByWorkshop[fromWorkshopId] = (updatedPart.stockByWorkshop[fromWorkshopId] || 0) - quantity;
+                        updatedPart.finishedGoodsStock = (updatedPart.finishedGoodsStock || 0) + quantity;
+                    } else {
+                        if (type === TransactionType.ENTRY && toWorkshopId) {
+                            updatedPart.stockByWorkshop[toWorkshopId] = (updatedPart.stockByWorkshop[toWorkshopId] || 0) + quantity;
+                        } else if (type === TransactionType.TRANSFER && fromWorkshopId && toWorkshopId) {
+                            updatedPart.stockByWorkshop[fromWorkshopId] = (updatedPart.stockByWorkshop[fromWorkshopId] || 0) - quantity;
+                            updatedPart.stockByWorkshop[toWorkshopId] = (updatedPart.stockByWorkshop[toWorkshopId] || 0) + quantity;
+                        }
+                    }
+                    return updatedPart;
+                });
+                renderAll();
+            } catch (error) { 
+                console.error('Transaction failed:', error); 
+                alert('تراکنش با خطا مواجه شد. لطفا صفحه را رفرش کرده و دوباره تلاش کنید.');
+            }
+        };
+        
+        const updateTransaction = async (txId, newData) => {
+             try {
+                await api.updateTransaction(txId, newData);
+                alert('تراکنش با موفقیت ویرایش شد. اطلاعات برای اطمینان از سرور بازخوانی می‌شود.');
+                await init(); // Re-fetch all data to ensure consistency
+                
+                // Re-open report modal if it was open
+                if (state.lastReportParams) {
+                    handlePrepareTransactionReport(state.lastReportParams.workshopId, state.lastReportParams.dateRange);
+                    openModal(DOM.transactionReportModal.el);
+                }
+
+             } catch(error) { 
+                console.error('Update transaction failed:', error); 
+                alert('ویرایش تراکنش با خطا مواجه شد.');
+            }
+        };
+
+        // --- RENDERING ---
+        const renderAll = () => {
+            renderInventoryList();
+        };
+
+        const renderInventoryList = () => {
+            if(!DOM.inventoryContainer || !DOM.partSearchInput) return;
+            const searchTerm = normalizeSearchString(DOM.partSearchInput.value);
+            let filteredParts = state.parts;
+            if (searchTerm) {
+                filteredParts = state.parts.filter(p => 
+                    normalizeSearchString(p.name).includes(searchTerm)
+                );
+            }
+
+            if (filteredParts.length === 0) {
+                DOM.inventoryContainer.innerHTML = `
+                    <div class="text-center py-16 px-6 bg-white dark:bg-slate-800 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200">${state.parts.length === 0 ? 'انبار شما خالی است' : 'هیچ قطعه‌ای با این مشخصات یافت نشد'}</h3>
+                        <p class="mt-2 text-slate-500 dark:text-slate-400">${state.parts.length === 0 ? 'برای شروع، یک قطعه جدید اضافه کنید.' : 'عبارت جستجوی خود را تغییر دهید.'}</p>
+                    </div>`;
+                return;
+            }
+
+            const sortedParts = [...filteredParts].sort((a,b) => a.name.localeCompare(b.name, 'fa'));
+            const tableHTML = `
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right text-slate-500 dark:text-slate-400">
+                            <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-100 dark:bg-slate-700">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3">نام قطعه</th>
+                                    <th scope="col" class="px-4 py-3 text-center">موجودی در گردش</th>
+                                    <th scope="col" class="px-4 py-3">موجودی کارگاه‌ها</th>
+                                    <th scope="col" class="px-4 py-3 text-center">انبار نهایی</th>
+                                    <th scope="col" class="px-4 py-3 text-center">مشخصات وزن</th>
+                                    <th scope="col" class="px-4 py-3 text-center">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sortedParts.map(part => {
+                                    const totalStock = Object.values(part.stockByWorkshop || {}).reduce((sum, current) => sum + current, 0);
+                                    const stockColor = totalStock === 0 ? 'text-rose-500 dark:text-rose-400' : totalStock < 10 ? 'text-amber-500 dark:text-amber-400' : 'text-slate-500 dark:text-slate-300';
+                                    const stockBreakdown = Object.entries(part.stockByWorkshop || {}).filter(([, qty]) => qty > 0).map(([wsId, qty]) => `${getWorkshopName(wsId) || '...'}: ${qty}`).join('، ');
+                                    const weightSpec = part.weightDefinition ? `${part.weightDefinition.baseQuantity} عدد / ${part.weightDefinition.baseWeight} ${part.weightDefinition.weightUnit}`: '-';
+                                    const canExit = (part.finishedGoodsStock || 0) > 0;
+                                    const partTypeDisplay = part.isRawMaterialProduct
+                                        ? '(تولیدی از مواد اولیه)'
+                                        : '(قطعه استاندارد)';
+
+                                    return `
+                                        <tr class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" data-part-id="${part.id}">
+                                            <td class="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">${part.name} <span class="text-xs text-slate-500 dark:text-slate-400 font-normal">${partTypeDisplay}</span></td>
+                                            <td class="px-4 py-3 text-center font-bold text-lg ${stockColor}">${totalStock}</td>
+                                            <td class="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs" title="${stockBreakdown}">${stockBreakdown || '-'}</td>
+                                            <td class="px-4 py-3 text-center font-bold text-lg text-emerald-600 dark:text-emerald-400">${part.finishedGoodsStock || 0}</td>
+                                            <td class="px-4 py-3 text-center text-slate-500 dark:text-slate-400 text-xs font-mono">${weightSpec}</td>
+                                            <td class="px-4 py-3">
+                                                <div class="flex items-center justify-center gap-1 sm:gap-2">
+                                                    <button data-action="entry" class="p-2 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="ثبت ورود" ${!canEdit ? 'disabled' : ''}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" /></svg>
+                                                    </button>
+                                                    <button data-action="exit" class="p-2 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-full transition-colors disabled:text-slate-400 dark:disabled:text-slate-600 disabled:hover:bg-transparent disabled:cursor-not-allowed" title="${canExit ? "ثبت خروج" : "موجودی در انبار نهایی نیست"}" ${!canExit || !canEdit ? 'disabled' : ''}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" /></svg>
+                                                    </button>
+                                                    <button data-action="transfer" class="p-2 text-sky-600 hover:bg-sky-100 dark:hover:bg-sky-900/50 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="انتقال بین کارگاه‌ها" ${!canEdit ? 'disabled' : ''}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h18m-7.5-14L21 6.5m0 0L16.5 11M21 6.5H3" /></svg>
+                                                    </button>
+                                                    <button data-action="process" class="p-2 text-purple-600 hover:bg-purple-100 dark:hover:bg-purple-900/50 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="پردازش و تبدیل" ${!canEdit ? 'disabled' : ''}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.25 2.25 0 0 0 21 18.75V16.5M11.42 15.17l2.472-2.472a4.5 4.5 0 0 0-6.364-6.364L11.42 15.17Zm0 0L7.25 19.5M12 5.25c-1.036 0-1.875.84-1.875 1.875S10.964 9 12 9s1.875-.84 1.875-1.875S13.036 5.25 12 5.25Z" /></svg>
+                                                    </button>
+                                                    <button data-action="history" class="p-2 text-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-full transition-colors" title="مشاهده تاریخچه">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6-2.292m0 0v14.25" /></svg>
+                                                    </button>
+                                                    <button data-action="edit" class="p-2 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="ویرایش قطعه" ${!canEdit ? 'disabled' : ''}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+                                                    </button>
+                                                    <button data-action="reset-stock" class="p-2 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="ریست کردن موجودی" ${!canEdit ? 'disabled' : ''}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-3.181-4.991v4.99" /></svg>
+                                                    </button>
+                                                    <button data-action="delete" class="p-2 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="حذف قطعه" ${!canEdit ? 'disabled' : ''}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            DOM.inventoryContainer.innerHTML = tableHTML;
+        };
+        
+        const openModal = (modalEl) => {
+            if (!modalEl) return;
+            modalEl.style.display = 'flex';
+            const closeModalHandler = () => closeModal(modalEl);
+            const handleEsc = (e) => { if (e.key === 'Escape') closeModalHandler(); };
+            const handleClick = (e) => { if (e.target === modalEl || e.target.closest('[data-action="close-modal"]')) closeModalHandler(); };
+            document.addEventListener('keydown', handleEsc);
+            modalEl.addEventListener('click', handleClick);
+            modalEl._escListener = handleEsc;
+            modalEl._clickListener = handleClick;
+        };
+
+        const closeModal = (modalEl) => {
+            if (!modalEl) return;
+            modalEl.style.display = 'none';
+            if (modalEl._escListener) document.removeEventListener('keydown', modalEl._escListener);
+            if (modalEl._clickListener) modalEl.removeEventListener('click', modalEl._clickListener);
+        };
+        
+        const printModal = (modalEl) => {
+            if (!modalEl) return;
+            const printHeader = modalEl.querySelector('.print-header');
+            if (printHeader) {
+                const titleEl = modalEl.querySelector('.modal-content h2[id], .modal-content h2.text-xl');
+                const printTitleEl = printHeader.querySelector('.print-title');
+                const printDateEl = printHeader.querySelector('.print-date');
+                if (printTitleEl && titleEl) printTitleEl.textContent = titleEl.textContent;
+                if (printDateEl) printDateEl.textContent = new Date().toLocaleString('fa-IR', { dateStyle: 'long', timeStyle: 'short' });
+            }
+            modalEl.classList.add('is-printing');
+            document.body.classList.add('is-printing');
+            window.print();
+            modalEl.classList.remove('is-printing');
+            document.body.classList.remove('is-printing');
+        };
+        
+        const renderAddPartModal = () => {
+             const isEditMode = !!state.editingPart;
+             const part = state.editingPart;
+             DOM.addPartModal.title.textContent = isEditMode ? `ویرایش قطعه: ${part.name}` : 'افزودن قطعه جدید';
+             const sortedWorkshops = getSortedWorkshops();
+
+             const formHTML = `
+                <form id="add-part-form" class="space-y-4">
+                  <fieldset ${!canEdit ? 'disabled' : ''}>
+                  <div>
+                    <label for="part-name" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">نام قطعه</label>
+                    <input type="text" name="name" id="part-name" required value="${part?.name || ''}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                  </div>
+                   <div>
+                    <label for="part-description" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">توضیحات</label>
+                    <textarea name="description" id="part-description" rows="2" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500">${part?.description || ''}</textarea>
+                  </div>
+                  <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">نوع قطعه</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="partType" value="standard" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-slate-300" ${!part || !part.isRawMaterialProduct ? 'checked' : ''} />
+                            <span>قطعه استاندارد</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="partType" value="rawMaterialProduct" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-slate-300" ${part?.isRawMaterialProduct ? 'checked' : ''} />
+                            <span>تولیدی از مواد اولیه</span>
+                        </label>
+                    </div>
+                  </div>
+                  <div>
+                    <label for="final-workshops" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">کارگاه‌های مرحله نهایی <span class="text-xs text-slate-400">(برای انتقال به انبار نهایی)</span></label>
+                    <select id="final-workshops" name="finalWorkshopIds" multiple class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 h-24" ${sortedWorkshops.length === 0 ? 'disabled' : ''}>
+                      ${sortedWorkshops.map(ws => `<option value="${ws.id}" ${(part?.finalWorkshopIds || []).includes(ws.id) ? 'selected' : ''}>${ws.name}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div class="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-5">
+                    <div>
+                      <p class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">تعریف وزن (اختیاری)</p>
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-md border border-slate-200 dark:border-slate-700">
+                          <div>
+                              <label for="base-weight" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">وزن مبنا</label>
+                              <input type="number" id="base-weight" name="baseWeight" value="${part?.weightDefinition?.baseWeight || '1'}" min="0" step="any" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                          </div>
+                          <div>
+                              <label for="weight-unit" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">واحد وزن</label>
+                              <select id="weight-unit" name="weightUnit" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500">
+                                  <option value="kg" ${part?.weightDefinition?.weightUnit === 'kg' ? 'selected' : ''}>کیلوگرم (kg)</option>
+                                  <option value="g" ${part?.weightDefinition?.weightUnit === 'g' ? 'selected' : ''}>گرم (g)</option>
+                              </select>
+                          </div>
+                          <div>
+                              <label for="base-quantity" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">تعداد در وزن مبنا</label>
+                              <input type="text" inputMode="numeric" pattern="\\d*" id="base-quantity" name="baseQuantity" placeholder="تعداد" value="${part?.weightDefinition?.baseQuantity || ''}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                          </div>
+                      </div>
+                    </div>
+                    ${!isEditMode ? `
+                    <div>
+                      <p class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">موجودی اولیه</p>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                              <label for="initial-stock" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">تعداد</label>
+                              <input type="text" inputMode="numeric" pattern="\\d*" id="initial-stock" name="initialStock" value="0" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                          </div>
+                          <div>
+                              <label for="initial-total-weight" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">وزن کل (<span id="weight-unit-display">kg</span>)</label>
+                              <input type="number" id="initial-total-weight" name="initialTotalWeight" min="0" step="any" placeholder="ابتدا وزن را تعریف کنید" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100 dark:disabled:bg-slate-800" disabled/>
+                          </div>
+                      </div>
+                      <div class="mt-4">
+                        <label for="initial-workshop" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ثبت موجودی اولیه در کارگاه</label>
+                        <select id="initial-workshop" name="workshopId" ${sortedWorkshops.length === 0 ? 'disabled' : ''} class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100 dark:disabled:bg-slate-800">
+                            ${sortedWorkshops.length === 0 ? '<option>ابتدا یک کارگاه تعریف کنید</option>' : sortedWorkshops.map(ws => `<option value="${ws.id}">${ws.name}</option>`).join('')}
+                        </select>
+                      </div>
+                    </div>` : ''}
+                  </div>
+                  </fieldset>
+                  <div class="flex justify-end gap-3 pt-4 flex-shrink-0 border-t border-slate-200 dark:border-slate-700 mt-4">
+                    <button type="button" data-action="close-modal" class="px-4 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">لغو</button>
+                    <button type="submit" ${!canEdit ? 'disabled' : ''} class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        ${isEditMode ? 'ذخیره تغییرات' : 'افزودن قطعه'}
+                    </button>
+                  </div>
+                </form>
+             `;
+             DOM.addPartModal.body.innerHTML = formHTML;
+
+             const form = DOM.addPartModal.body.querySelector('#add-part-form');
+             const baseWeightInput = form.querySelector('#base-weight');
+             const baseQuantityInput = form.querySelector('#base-quantity');
+             const weightUnitSelect = form.querySelector('#weight-unit');
+             
+             if (!isEditMode) {
+                const initialStockInput = form.querySelector('#initial-stock');
+                const initialWeightInput = form.querySelector('#initial-total-weight');
+                const weightUnitDisplay = form.querySelector('#weight-unit-display');
+                 const updateWeightCalculations = () => {
+                     const baseWeight = parseFloat(baseWeightInput.value);
+                     const baseQuantity = parseInt(baseQuantityInput.value, 10);
+                     const isWeightDefined = baseWeight > 0 && baseQuantity > 0;
+                     
+                     initialWeightInput.disabled = !isWeightDefined;
+                     if(weightUnitDisplay) weightUnitDisplay.textContent = weightUnitSelect.value;
+                     
+                     if (!isWeightDefined) { initialWeightInput.value = ''; return; }
+                     
+                     const stock = parseInt(initialStockInput.value, 10);
+                     if (!isNaN(stock) && stock >= 0) {
+                         initialWeightInput.value = String(Math.round(((stock / baseQuantity) * baseWeight) * 1000) / 1000);
+                     } else {
+                         initialWeightInput.value = '';
+                     }
+                 };
+                 initialStockInput.addEventListener('input', updateWeightCalculations);
+                 initialWeightInput.addEventListener('input', () => {
+                     const baseWeight = parseFloat(baseWeightInput.value);
+                     const baseQuantity = parseInt(baseQuantityInput.value, 10);
+                     const totalWeight = parseFloat(initialWeightInput.value);
+                     if (baseWeight > 0 && baseQuantity > 0 && !isNaN(totalWeight) && totalWeight >= 0) {
+                         initialStockInput.value = String(Math.round((totalWeight / baseWeight) * baseQuantity));
+                     }
+                 });
+                 baseWeightInput.addEventListener('input', updateWeightCalculations);
+                 baseQuantityInput.addEventListener('input', updateWeightCalculations);
+                 weightUnitSelect.addEventListener('change', updateWeightCalculations);
+             }
+
+             form.addEventListener('submit', async (e) => {
+                 e.preventDefault();
+                 const formData = new FormData(e.target);
+                 const finalWorkshopIds = formData.getAll('finalWorkshopIds');
+                 const baseWeight = parseFloat(formData.get('baseWeight'));
+                 const baseQuantity = parseInt(formData.get('baseQuantity'), 10);
+                 
+                 if (!formData.get('name')) { alert('نام قطعه الزامی است.'); return; }
+                 
+                 const partData = {
+                     name: formData.get('name'), description: formData.get('description'), finalWorkshopIds,
+                     isRawMaterialProduct: formData.get('partType') === 'rawMaterialProduct',
+                     weightDefinition: (baseWeight > 0 && baseQuantity > 0) ? { baseWeight, baseQuantity, weightUnit: formData.get('weightUnit') } : undefined,
+                 };
+                 
+                 e.target.querySelector('button[type="submit"]').disabled = true;
+                 if (isEditMode) {
+                     await updatePart(part.id, partData);
+                 } else {
+                    const initialStock = parseInt(formData.get('initialStock'), 10) || 0;
+                    const workshopId = formData.get('workshopId');
+                    if (initialStock > 0 && !workshopId) { alert('برای ثبت موجودی اولیه، باید یک کارگاه انتخاب کنید.'); return; }
+                    await addPart({ ...partData, initialStock, workshopId });
+                 }
+                 e.target.querySelector('button[type="submit"]').disabled = false;
+                 closeModal(DOM.addPartModal.el);
+             });
+             openModal(DOM.addPartModal.el);
+        };
+        
+        const renderTransactionModal = () => {
+             const { selectedPart: part, transactionType } = state;
+             if (!part || !transactionType) return;
+             DOM.transactionModal.title.textContent = `ثبت ${transactionType}: ${part.name}`;
+             
+             const sortedWorkshops = getSortedWorkshops();
+             const workshopsWithStock = sortedWorkshops.filter(ws => (part.stockByWorkshop[ws.id] || 0) > 0);
+             const availableToWorkshops = (fromWorkshopId) => {
+                 let destinations = sortedWorkshops.filter(ws => ws.id !== fromWorkshopId);
+                 if (part.finalWorkshopIds && part.finalWorkshopIds.includes(fromWorkshopId)) {
+                     destinations.push({ id: FINISHED_GOODS_WAREHOUSE_ID, name: 'انبار نهایی (محصول تمام شده)' });
+                 }
+                 return destinations;
+             };
+            const today_string = new Date().toLocaleDateString('en-CA');
+             let bodyHTML = '';
+             if (transactionType === TransactionType.EXIT) {
+                 bodyHTML = `<div class="p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg text-center"><p class="text-sm text-slate-600 dark:text-slate-300">خروج محصول از</p><p class="text-lg font-bold text-slate-800 dark:text-slate-100">انبار نهایی محصول تمام شده</p><p class="mt-2 font-mono text-sm text-slate-500 dark:text-slate-400">موجودی فعلی: <span class="font-bold text-lg">${(part.finishedGoodsStock || 0).toLocaleString('fa-IR')}</span></p></div>`;
+             } else if (transactionType === TransactionType.TRANSFER) {
+                 bodyHTML = `<div><label for="from-workshop" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">از کارگاه</label><select id="from-workshop" name="fromWorkshopId" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500">${workshopsWithStock.length > 0 ? workshopsWithStock.map(ws => `<option value="${ws.id}">${ws.name} (موجودی: ${part.stockByWorkshop[ws.id]})</option>`).join('') : '<option value="">کارگاهی با موجودی یافت نشد</option>'}</select></div>`;
+             }
+             bodyHTML += `
+                <div>
+                    <label for="transaction-date" class="flex justify-between items-baseline text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <span>تاریخ</span>
+                        <span class="shamsi-date-display font-normal text-xs"></span>
+                    </label>
+                    <input type="date" id="transaction-date" name="date" required value="${today_string}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                </div>
+                ${transactionType !== TransactionType.EXIT ? `<div><label for="to-workshop" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">به کارگاه</label><select id="to-workshop" name="toWorkshopId" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"></select></div>` : ''}<div class="grid grid-cols-1 ${part.weightDefinition ? 'md:grid-cols-2' : ''} gap-4 pt-2"><div><label for="quantity" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">تعداد</label><input type="text" inputMode="numeric" pattern="\\d*" id="quantity" name="quantity" value="1" autoFocus class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/></div>${part.weightDefinition ? `<div><label for="weight" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">وزن (${part.weightDefinition.weightUnit})</label><input type="number" id="weight" name="weight" min="0" step="any" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/></div>` : ''}</div><p id="tx-error" class="text-sm text-red-500 pt-2"></p>`;
+            
+            const buttonColor = transactionType === TransactionType.ENTRY ? 'bg-emerald-600 hover:bg-emerald-700' : transactionType === TransactionType.EXIT ? 'bg-rose-600 hover:bg-rose-700' : 'bg-sky-600 hover:bg-sky-700';
+            DOM.transactionModal.body.innerHTML = `<form id="transaction-form" class="space-y-4"><fieldset ${!canEdit ? 'disabled' : ''}>${bodyHTML}</fieldset><div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4"><button type="button" data-action="close-modal" class="px-4 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">لغو</button><button type="submit" ${!canEdit ? 'disabled' : ''} class="px-4 py-2 text-white rounded-md transition-colors ${buttonColor} disabled:opacity-50 disabled:cursor-not-allowed">ثبت ${transactionType}</button></div></form>`;
+            
+            const form = DOM.transactionModal.body.querySelector('#transaction-form');
+            const fromSelect = form.querySelector('#from-workshop'), toSelect = form.querySelector('#to-workshop'), quantityInput = form.querySelector('#quantity'), weightInput = form.querySelector('#weight'), errorP = form.querySelector('#tx-error');
+            
+            setupDateInputWithShamsi(form, 'transaction-date');
+
+            const populateToWorkshops = () => { if (!toSelect) return; const fromId = fromSelect ? fromSelect.value : null; const destinations = transactionType === TransactionType.ENTRY ? getSortedWorkshops() : availableToWorkshops(fromId); toSelect.innerHTML = destinations.length > 0 ? destinations.map(ws => `<option value="${ws.id}">${ws.name}</option>`).join('') : '<option value="">کارگاهی برای مقصد یافت نشد</option>'; };
+            if (fromSelect) fromSelect.addEventListener('change', populateToWorkshops);
+            populateToWorkshops();
+
+            const unitWeight = part.weightDefinition ? part.weightDefinition.baseWeight / part.weightDefinition.baseQuantity : 0;
+            if (part.weightDefinition) {
+                const updateWeight = () => { const qty = parseInt(quantityInput.value, 10); if (!isNaN(qty) && qty >= 0) weightInput.value = String(Math.round((qty * unitWeight) * 1000) / 1000); else weightInput.value = ''; };
+                const updateQuantity = () => { const w = parseFloat(weightInput.value); if (!isNaN(w) && w >= 0) quantityInput.value = String(Math.round(w / unitWeight)); };
+                quantityInput.addEventListener('input', updateWeight); weightInput.addEventListener('input', updateQuantity); updateWeight();
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const quantity = Number(quantityInput.value), fromWorkshopId = fromSelect?.value, toWorkshopId = toSelect?.value;
+                const dateValue = form.querySelector('#transaction-date').value;
+                const timestamp = new Date(dateValue + 'T' + new Date().toTimeString().slice(0,8)).toISOString();
+                let error = '';
+                if (isNaN(quantity) || quantity <= 0) error = 'مقدار باید یک عدد مثبت باشد.';
+                else if (transactionType === TransactionType.EXIT && quantity > (part.finishedGoodsStock || 0)) error = `مقدار درخواستی (${quantity}) بیشتر از موجودی انبار نهایی (${part.finishedGoodsStock || 0}) است.`;
+                else if (transactionType === TransactionType.TRANSFER) {
+                    if (!fromWorkshopId) error = 'کارگاه مبدا با موجودی یافت نشد.';
+                    else if (!toWorkshopId) error = 'لطفا کارگاه مقصد را انتخاب کنید.';
+                    else if (fromWorkshopId === toWorkshopId) error = 'کارگاه مبدا و مقصد نمی‌توانند یکسان باشند.';
+                    else if (quantity > (part.stockByWorkshop[fromWorkshopId] || 0)) error = `مقدار درخواستی (${quantity}) بیشتر از موجودی کارگاه مبدا (${part.stockByWorkshop[fromWorkshopId] || 0}) است.`;
+                } else if (transactionType === TransactionType.ENTRY && !toWorkshopId) error = 'لطفا کارگاه مقصد را انتخاب کنید.';
+                
+                errorP.textContent = error;
+                if (!error) {
+                    e.target.querySelector('button[type="submit"]').disabled = true;
+                    await confirmTransaction(part.id, quantity, transactionType, fromWorkshopId, toWorkshopId, '', timestamp);
+                    e.target.querySelector('button[type="submit"]').disabled = false;
+                    closeModal(DOM.transactionModal.el);
+                }
+            });
+            openModal(DOM.transactionModal.el);
+        };
+        
+        const renderFilteredHistoryContent = (transactions) => {
+             if (transactions.length === 0) return `<p class="text-center text-slate-500 dark:text-slate-400 py-6">تاریخچه‌ای برای این قطعه با فیلترهای مشخص شده یافت نشد.</p>`;
+             const workshopInputTotals = transactions.reduce((acc, tx) => { if ((tx.type === TransactionType.ENTRY || (tx.type === TransactionType.TRANSFER && tx.toWorkshopId && tx.toWorkshopId !== 'void_adjustment' && tx.toWorkshopId !== 'void')) && tx.toWorkshopId) acc[tx.toWorkshopId] = (acc[tx.toWorkshopId] || 0) + tx.quantity; return acc; }, {});
+             const workshopOutputTotals = transactions.reduce((acc, tx) => { if (tx.type === TransactionType.TRANSFER && tx.fromWorkshopId) acc[tx.fromWorkshopId] = (acc[tx.fromWorkshopId] || 0) + tx.quantity; if (tx.type === TransactionType.EXIT) acc[FINISHED_GOODS_WAREHOUSE_ID] = (acc[FINISHED_GOODS_WAREHOUSE_ID] || 0) + tx.quantity; return acc; }, {});
+             const renderTxDetails = (tx) => { 
+                 switch (tx.type) { 
+                    case TransactionType.ENTRY: return `ورود به ${getWorkshopName(tx.toWorkshopId)}`; 
+                    case TransactionType.EXIT: return `خروج از انبار نهایی`; 
+                    case TransactionType.TRANSFER: 
+                        if (isAdjustmentTx(tx)) {
+                             return `کسر موجودی از ${getWorkshopName(tx.fromWorkshopId)}`;
+                        }
+                        return `انتقال از ${getWorkshopName(tx.fromWorkshopId)} به ${getWorkshopName(tx.toWorkshopId)}`; 
+                    default: return tx.type; 
+                } 
+            };
+             const listItemsHTML = transactions.map(tx => { 
+                const isAdjustment = isAdjustmentTx(tx);
+                const colorClass = tx.type === TransactionType.ENTRY ? 'text-emerald-600 dark:text-emerald-400' : (tx.type === TransactionType.EXIT || isAdjustment) ? 'text-rose-600 dark:text-rose-400' : 'text-sky-600 dark:text-sky-400'; 
+                const sign = tx.type === TransactionType.ENTRY ? '+' : (tx.type === TransactionType.EXIT || isAdjustment) ? '−' : '↔'; 
+                return `<li class="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg flex justify-between items-start"><div class="flex-1"><p class="font-semibold text-slate-800 dark:text-slate-100 text-sm">${new Date(tx.timestamp).toLocaleDateString('fa-IR')}</p><div class="text-sm text-slate-600 dark:text-slate-300 mt-1 flex items-center gap-2">${renderTxDetails(tx)}</div>${tx.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 mt-1 italic">یادداشت: ${tx.notes}</p>` : ''}</div><div class="text-lg font-bold ${colorClass} flex items-center gap-1.5 ml-auto"><span>${sign}</span><span class="font-mono">${tx.quantity.toLocaleString('fa-IR')}</span></div></li>`; 
+            }).join('');
+             return `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"><h4 class="text-md font-bold text-slate-800 dark:text-slate-100 mb-2">خلاصه کل ورودی‌ها (فیلتر شده)</h4><ul class="space-y-1.5 text-sm">${Object.entries(workshopInputTotals).map(([wsId, total]) => `<li class="flex justify-between items-center"><span class="text-slate-600 dark:text-slate-300 font-medium">${getWorkshopName(wsId)}:</span><span class="font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/50 px-2 py-0.5 rounded-full text-base">${total.toLocaleString('fa-IR')}</span></li>`).join('') || '<li class="text-slate-400">ورودی ثبت نشده.</li>'}</ul></div><div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"><h4 class="text-md font-bold text-slate-800 dark:text-slate-100 mb-2">خلاصه کل خروجی‌ها (فیلتر شده)</h4><ul class="space-y-1.5 text-sm">${Object.entries(workshopOutputTotals).map(([wsId, total]) => `<li class="flex justify-between items-center"><span class="text-slate-600 dark:text-slate-300 font-medium">${getWorkshopName(wsId)}:</span><span class="font-mono font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-900/50 px-2 py-0.5 rounded-full text-base">${total.toLocaleString('fa-IR')}</span></li>`).join('') || '<li class="text-slate-400">خروجی ثبت نشده.</li>'}</ul></div></div><ul class="space-y-3">${listItemsHTML}</ul>`;
+        };
+        
+        const renderHistoryModal = () => {
+             const part = state.selectedPart; if (!part) return;
+             DOM.historyModal.title.textContent = `تاریخچه: ${part.name}`;
+             const sortedWorkshops = getSortedWorkshops();
+             DOM.historyModal.body.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 no-print">
+                    <div>
+                        <label for="history-date-filter" class="flex justify-between items-baseline text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <span>فیلتر تاریخ</span>
+                            <span class="shamsi-date-display font-normal text-xs"></span>
+                        </label>
+                        <input type="date" id="history-date-filter" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"/>
+                    </div>
+                    <div>
+                        <label for="history-workshop-filter" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">فیلتر کارگاه</label>
+                        <select id="history-workshop-filter" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"><option value="">همه کارگاه‌ها</option>${sortedWorkshops.map(ws => `<option value="${ws.id}">${ws.name}</option>`).join('')}<option value="${FINISHED_GOODS_WAREHOUSE_ID}">انبار نهایی</option></select>
+                    </div>
+                </div>
+                <div id="history-content"></div>`;
+             setupDateInputWithShamsi(DOM.historyModal.body, 'history-date-filter');
+             const updateHistoryView = () => { const dateFilter = DOM.historyModal.body.querySelector('#history-date-filter').value, workshopFilter = DOM.historyModal.body.querySelector('#history-workshop-filter').value; let filteredTransactions = state.transactions.filter(t => t.partId === part.id && !isAdjustmentTx(t)); if (dateFilter) filteredTransactions = filteredTransactions.filter(tx => tx.timestamp.startsWith(dateFilter)); if (workshopFilter) filteredTransactions = filteredTransactions.filter(tx => tx.fromWorkshopId === workshopFilter || tx.toWorkshopId === workshopFilter); DOM.historyModal.body.querySelector('#history-content').innerHTML = renderFilteredHistoryContent(filteredTransactions); };
+             DOM.historyModal.body.querySelector('#history-date-filter').addEventListener('change', updateHistoryView);
+             DOM.historyModal.body.querySelector('#history-workshop-filter').addEventListener('change', updateHistoryView);
+             updateHistoryView();
+             DOM.historyModal.footer.innerHTML = `<button id="print-history-btn" class="flex items-center gap-2 px-4 py-2 bg-slate-500 text-white font-semibold rounded-lg hover:bg-slate-600 transition-colors">پرینت</button>`;
+             DOM.historyModal.footer.querySelector('#print-history-btn').addEventListener('click', () => printModal(DOM.historyModal.el));
+             openModal(DOM.historyModal.el);
+        };
+        
+        const renderReportsModal = () => { 
+            const today = new Date().toLocaleDateString('en-CA');
+            const sortedWorkshops = getSortedWorkshops();
+            DOM.reportsModal.body.innerHTML = `
+                <div class="space-y-6 text-sm">
+                    <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 mb-4 text-base flex items-center gap-2">تنظیمات گزارش</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="report-start-date" class="flex justify-between items-baseline text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                                    <span>از تاریخ</span>
+                                    <span class="shamsi-date-display font-normal"></span>
+                                </label>
+                                <input type="date" id="report-start-date" value="${today}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                            </div>
+                            <div>
+                                <label for="report-end-date" class="flex justify-between items-baseline text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                                    <span>تا تاریخ</span>
+                                    <span class="shamsi-date-display font-normal"></span>
+                                </label>
+                                <input type="date" id="report-end-date" value="${today}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-200 dark:border-slate-600 pt-4 mt-4">
+                            <h4 class="font-semibold text-slate-800 dark:text-slate-100 mb-3 text-base">گزارش انتقالات بین کارگاهی</h4>
+                            <div class="flex flex-col sm:flex-row gap-2 items-center">
+                                <select id="report-workshop-select" class="w-full sm:flex-grow p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"><option value="">همه کارگاه‌ها</option>${sortedWorkshops.map(ws => `<option value="${ws.id}">${ws.name}</option>`).join('')}</select>
+                                <button data-report-type="transfers" class="w-full sm:w-auto flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition-colors">مشاهده گزارش</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            setupDateInputWithShamsi(DOM.reportsModal.body, 'report-start-date');
+            setupDateInputWithShamsi(DOM.reportsModal.body, 'report-end-date');
+            DOM.reportsModal.body.addEventListener('click', (e) => {
+                const button = e.target.closest('button[data-report-type]'); if(!button) return;
+                const startDate = DOM.reportsModal.body.querySelector('#report-start-date').value, endDate = DOM.reportsModal.body.querySelector('#report-end-date').value, workshopId = DOM.reportsModal.body.querySelector('#report-workshop-select').value;
+                if (startDate > endDate) { alert('تاریخ شروع نمی‌تواند بعد از تاریخ پایان باشد.'); return; }
+                state.lastReportParams = { workshopId, dateRange: { start: startDate, end: endDate }};
+                handlePrepareTransactionReport(workshopId, { start: startDate, end: endDate });
+                openModal(DOM.transactionReportModal.el);
+            });
+            openModal(DOM.reportsModal.el);
+        };
+        
+         const handlePrepareTransactionReport = (workshopId, dateRange) => {
+            let filteredTransactions = state.transactions.filter(tx => { 
+                if(isAdjustmentTx(tx)) return false;
+                const txDate = tx.timestamp.substring(0, 10);
+                if (dateRange.start && txDate < dateRange.start) return false;
+                if (dateRange.end && txDate > dateRange.end) return false;
+                if (workshopId) return tx.fromWorkshopId === workshopId || tx.toWorkshopId === workshopId;
+                return true;
+            });
+            state.transactionReportData = filteredTransactions.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+            const workshopName = workshopId ? getWorkshopName(workshopId) : "همه کارگاه‌ها";
+            state.transactionReportTitle = `گزارش انتقالات برای: ${workshopName} (از ${toShamsiDisplay(dateRange.start)} تا ${toShamsiDisplay(dateRange.end)})`;
+            renderTransactionReportModal();
+        };
+
+        const renderTransactionReportModal = () => {
+            DOM.transactionReportModal.title.textContent = state.transactionReportTitle;
+            const data = state.transactionReportData;
+            if (data.length === 0) DOM.transactionReportModal.body.innerHTML = `<p class="text-center text-slate-500 dark:text-slate-400 py-6">هیچ تراکنشی برای فیلتر انتخاب شده یافت نشد.</p>`;
+            else DOM.transactionReportModal.body.innerHTML = `<table class="w-full text-sm text-right"><thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-100 dark:bg-slate-700"><tr><th class="px-2 py-3">تاریخ</th><th class="px-2 py-3">قطعه</th><th class="px-2 py-3">نوع</th><th class="px-2 py-3 text-center">تعداد</th><th class="px-2 py-3">از</th><th class="px-2 py-3">به</th><th class="px-2 py-3">یادداشت</th><th class="px-2 py-3 no-print"></th></tr></thead><tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">${data.map(tx => {
+                const part = getPart(tx.partId);
+                const isAdjustment = isAdjustmentTx(tx);
+                const typeClass = isAdjustment ? 'text-rose-500' : tx.type === 'ورود' ? 'text-emerald-500' : tx.type === 'خروج' ? 'text-rose-500' : 'text-sky-500'; 
+                return `<tr data-tx-id="${tx.id}"><td class="px-2 py-2 text-xs">${new Date(tx.timestamp).toLocaleDateString('fa-IR')}</td><td class="px-2 py-2 font-semibold">${part?.name || 'قطعه حذف شده'}</td><td class="px-2 py-2 font-semibold ${typeClass}">${isAdjustment ? 'کسر موجودی' : tx.type}</td><td class="px-2 py-2 text-center font-mono">${tx.quantity.toLocaleString('fa-IR')}</td><td class="px-2 py-2 text-xs">${getWorkshopName(tx.fromWorkshopId)}</td><td class="px-2 py-2 text-xs">${isAdjustment ? '-' : getWorkshopName(tx.toWorkshopId)}</td><td class="px-2 py-2 text-xs italic">${tx.notes || '-'}</td><td class="px-2 py-2 no-print"><button data-action="edit-transaction" ${!canEdit ? 'disabled' : ''} class="p-1 text-amber-500 hover:bg-amber-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" /></svg></button></td></tr>`;
+            }).join('')}</tbody></table>`;
+            DOM.transactionReportModal.footer.innerHTML = `<button id="print-tx-report-btn" class="flex items-center gap-2 px-4 py-2 bg-slate-500 text-white font-semibold rounded-lg hover:bg-slate-600">پرینت</button>`;
+            DOM.transactionReportModal.footer.querySelector('#print-tx-report-btn').addEventListener('click', () => printModal(DOM.transactionReportModal.el));
+            DOM.transactionReportModal.body.addEventListener('click', e => { const button = e.target.closest('button[data-action="edit-transaction"]'); if(!button) return; const txId = button.closest('tr[data-tx-id]').dataset.txId; const tx = state.transactions.find(t => t.id === txId); if (tx) { state.editingTransaction = tx; renderEditTransactionModal(); }});
+        };
+
+        const renderEditTransactionModal = () => {
+             const tx = state.editingTransaction; if (!tx) return;
+             const part = getPart(tx.partId);
+             DOM.editTransactionModal.title.textContent = `ویرایش تراکنش: ${part?.name || 'نامشخص'}`;
+             const sortedWorkshops = getSortedWorkshops();
+             let fromWorkshopHTML = '', toWorkshopHTML = '';
+             if (tx.type === TransactionType.TRANSFER) fromWorkshopHTML = `<div><label for="edit-from-workshop" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">از کارگاه</label><select id="edit-from-workshop" name="fromWorkshopId" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"><option value="${FINISHED_GOODS_WAREHOUSE_ID}" ${tx.fromWorkshopId === FINISHED_GOODS_WAREHOUSE_ID ? 'selected' : ''}>انبار نهایی</option>${sortedWorkshops.map(ws => `<option value="${ws.id}" ${tx.fromWorkshopId === ws.id ? 'selected':''}>${ws.name}</option>`).join('')}</select></div>`;
+             if (tx.type === TransactionType.TRANSFER || tx.type === TransactionType.ENTRY) toWorkshopHTML = `<div><label for="edit-to-workshop" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">به کارگاه</label><select id="edit-to-workshop" name="toWorkshopId" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"></select></div>`;
+             DOM.editTransactionModal.body.innerHTML = `<form id="edit-transaction-form" class="space-y-4"><fieldset ${!canEdit ? 'disabled' : ''}><div class="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg text-center"><p class="text-sm text-slate-600 dark:text-slate-300">نوع عملیات</p><p class="text-lg font-bold text-slate-800 dark:text-slate-100">${tx.type}</p></div>${fromWorkshopHTML}${toWorkshopHTML}<div><label for="edit-quantity" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">تعداد</label><input type="number" id="edit-quantity" name="quantity" required value="${tx.quantity}" min="1" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/></div><div><label for="edit-notes" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">یادداشت (اختیاری)</label><textarea id="edit-notes" name="notes" rows="2" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">${tx.notes || ''}</textarea></div></fieldset><div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4"><button type="button" data-action="close-modal" class="px-4 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">لغو</button><button type="submit" ${!canEdit ? 'disabled' : ''} class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">ذخیره تغییرات</button></div></form>`;
+            
+            const fromSelect = DOM.editTransactionModal.body.querySelector('#edit-from-workshop'), toSelect = DOM.editTransactionModal.body.querySelector('#edit-to-workshop');
+            const populateToWorkshops = () => { if (!toSelect) return; let destinations = []; if(tx.type === TransactionType.ENTRY) destinations = sortedWorkshops; else if (tx.type === TransactionType.TRANSFER) { const fromId = fromSelect.value; destinations = sortedWorkshops.filter(ws => ws.id !== fromId); if (part.finalWorkshopIds && part.finalWorkshopIds.includes(fromId)) destinations.push({ id: FINISHED_GOODS_WAREHOUSE_ID, name: 'انبار نهایی (محصول تمام شده)' }); } toSelect.innerHTML = destinations.length > 0 ? destinations.map(ws => `<option value="${ws.id}" ${tx.toWorkshopId === ws.id ? 'selected':''}>${ws.name}</option>`).join('') : '<option value="">کارگاهی برای مقصد یافت نشد</option>'; };
+            if (fromSelect) fromSelect.addEventListener('change', populateToWorkshops);
+            populateToWorkshops();
+
+            DOM.editTransactionModal.body.querySelector('#edit-transaction-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const newData = {
+                    quantity: parseInt(formData.get('quantity'), 10),
+                    fromWorkshopId: tx.type === TransactionType.TRANSFER ? formData.get('fromWorkshopId') : tx.fromWorkshopId,
+                    toWorkshopId: (tx.type === TransactionType.TRANSFER || tx.type === TransactionType.ENTRY) ? formData.get('toWorkshopId') : tx.toWorkshopId,
+                    notes: formData.get('notes'),
+                };
+                if (isNaN(newData.quantity) || newData.quantity <= 0) { alert('مقدار باید یک عدد مثبت باشد.'); return; }
+                e.target.querySelector('button[type="submit"]').disabled = true;
+                await updateTransaction(tx.id, newData);
+                closeModal(DOM.editTransactionModal.el);
+            });
+            openModal(DOM.editTransactionModal.el);
+        };
+        
+        const renderResetStockModal = (part) => {
+            DOM.resetStockModal.title.textContent = `ریست کردن موجودی: ${part.name}`;
+            const totalWipStock = Object.values(part.stockByWorkshop || {}).reduce((sum, current) => sum + current, 0);
+            const finishedStock = part.finishedGoodsStock || 0;
+
+            DOM.resetStockModal.body.innerHTML = `
+                <form id="reset-stock-form" class="space-y-4">
+                    <p class="text-sm text-slate-500 dark:text-slate-400">کدام موجودی‌ها صفر شوند؟</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700">
+                            <input type="checkbox" name="resetWip" class="h-5 w-5 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500" ${totalWipStock === 0 ? 'disabled' : ''}>
+                            <div>
+                                <span class="font-semibold text-slate-800 dark:text-slate-100">موجودی در گردش (کارگاه‌ها)</span>
+                                <span class="block text-sm text-slate-500 dark:text-slate-400 font-mono">موجودی فعلی: ${totalWipStock}</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700">
+                            <input type="checkbox" name="resetFinished" class="h-5 w-5 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500" ${finishedStock === 0 ? 'disabled' : ''}>
+                            <div>
+                                <span class="font-semibold text-slate-800 dark:text-slate-100">موجودی انبار نهایی</span>
+                                <span class="block text-sm text-slate-500 dark:text-slate-400 font-mono">موجودی فعلی: ${finishedStock}</span>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4">
+                        <button type="button" data-action="close-modal" class="px-4 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">لغو</button>
+                        <button type="submit" id="confirm-reset-btn" class="px-4 py-2 bg-rose-600 text-white rounded-md hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            ریست کردن
+                        </button>
+                    </div>
+                </form>
+            `;
+
+            const form = DOM.resetStockModal.body.querySelector('#reset-stock-form');
+            const confirmBtn = form.querySelector('#confirm-reset-btn');
+            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+
+            const toggleConfirmButton = () => {
+                const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                confirmBtn.disabled = !anyChecked;
+            };
+
+            checkboxes.forEach(cb => cb.addEventListener('change', toggleConfirmButton));
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const resetWip = form.elements.resetWip.checked;
+                const resetFinished = form.elements.resetFinished.checked;
+
+                if (!resetWip && !resetFinished) return;
+
+                if (window.confirm('آیا از صفر کردن موجودی(های) انتخاب شده برای این قطعه اطمینان دارید؟ این عمل غیرقابل بازگشت است.')) {
+                    try {
+                        confirmBtn.disabled = true;
+                        confirmBtn.textContent = 'در حال انجام...';
+                        await api.resetPartStock(part.id, { resetWip, resetFinished });
+                        closeModal(DOM.resetStockModal.el);
+                        await init(); // Refresh all data
+                    } catch (error) {
+                        console.error('Failed to reset stock:', error);
+                        alert(`خطا در ریست کردن موجودی: ${error.message}`);
+                    } finally {
+                        confirmBtn.disabled = false;
+                        confirmBtn.textContent = 'ریست کردن';
+                    }
+                }
+            });
+
+            openModal(DOM.resetStockModal.el);
+        };
+        
+        const renderProcessModal = () => {
+            const part = state.selectedPart;
+            if (!part) return;
+            DOM.processModal.title.textContent = `پردازش و تبدیل قطعه: ${part.name}`;
+
+            const sortedWorkshops = getSortedWorkshops();
+            const workshopsWithStock = sortedWorkshops.filter(ws => (part.stockByWorkshop[ws.id] || 0) > 0);
+            const otherParts = state.parts.filter(p => p.id !== part.id).sort((a,b) => a.name.localeCompare(b.name, 'fa'));
+            const today_string = new Date().toLocaleDateString('en-CA');
+
+            DOM.processModal.body.innerHTML = `
+                 <form id="process-form" class="space-y-4">
+                  <fieldset ${!canEdit ? 'disabled' : ''}>
+                    <div>
+                        <label for="process-date" class="flex justify-between items-baseline text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <span>تاریخ پردازش</span>
+                            <span class="shamsi-date-display font-normal text-xs"></span>
+                        </label>
+                        <input type="date" id="process-date" name="date" required value="${today_string}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                    </div>
+                    <div>
+                        <label for="from-workshop" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">از کارگاه (مبدا)</label>
+                        <select id="from-workshop" name="fromWorkshopId" required class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500">
+                            ${workshopsWithStock.length > 0 ? workshopsWithStock.map(ws => `<option value="${ws.id}">${ws.name} (موجودی: ${part.stockByWorkshop[ws.id]})</option>`).join('') : '<option value="">کارگاهی با موجودی یافت نشد</option>'}
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="process-quantity" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">تعداد قطعه مبدا برای پردازش</label>
+                            <input type="number" id="process-quantity" name="quantity" required min="1" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                        </div>
+                        <div>
+                            <label for="returned-quantity" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">تعداد قطعه حاصل (تحویلی)</label>
+                            <input type="number" id="returned-quantity" name="returnedQuantity" required min="0" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                        </div>
+                    </div>
+                    <div class="my-4 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto text-slate-400 dark:text-slate-500"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" /></svg>
+                    </div>
+                    <div>
+                        <label for="resulting-part" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">قطعه حاصل</label>
+                        <select id="resulting-part" name="resultingPartId" required class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500">
+                             ${otherParts.length > 0 ? otherParts.map(p => `<option value="${p.id}">${p.name}</option>`).join('') : '<option value="">قطعه دیگری برای تبدیل یافت نشد</option>'}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="to-workshop" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">به کارگاه (مقصد)</label>
+                        <select id="to-workshop" name="toWorkshopId" required class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500">
+                           ${sortedWorkshops.length > 0 ? sortedWorkshops.map(ws => `<option value="${ws.id}">${ws.name}</option>`).join('') : '<option value="">کارگاهی یافت نشد</option>'}
+                        </select>
+                    </div>
+                    <div class="border-t border-slate-200 dark:border-slate-700 mt-4 pt-4 space-y-3">
+                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div>
+                               <label for="process-actual-weight" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">وزن واقعی قطعه حاصل (کیلوگرم)</label>
+                               <input type="number" id="process-actual-weight" name="actualResultingWeightKg" required min="0" step="any" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                           </div>
+                           <div>
+                               <label for="calculated-quantity" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">تعداد محاسبه شده از وزن</label>
+                               <p id="calculated-quantity" class="p-2 bg-slate-100 dark:bg-slate-800 rounded-md font-mono text-center">-</p>
+                           </div>
+                       </div>
+                        <p id="process-scrap-preview" class="text-sm text-center text-rose-500 dark:text-rose-400 h-4"></p>
+                    </div>
+                  </fieldset>
+                  <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4">
+                    <button type="button" data-action="close-modal" class="px-4 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">لغو</button>
+                    <button type="submit" ${!canEdit ? 'disabled' : ''} class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">ثبت پردازش</button>
+                  </div>
+                </form>
+            `;
+            
+            const form = DOM.processModal.body.querySelector('#process-form');
+            setupDateInputWithShamsi(form, 'process-date');
+            const sourceQuantityInput = form.querySelector('#process-quantity');
+            const returnedQuantityInput = form.querySelector('#returned-quantity');
+            const resultingPartSelect = form.querySelector('#resulting-part');
+            const actualWeightInput = form.querySelector('#process-actual-weight');
+            const calculatedQtyP = form.querySelector('#calculated-quantity');
+            const scrapPreviewP = form.querySelector('#process-scrap-preview');
+            
+            const updateWeightPreview = () => {
+                const sourceQty = parseInt(sourceQuantityInput.value, 10);
+                const returnedQty = parseInt(returnedQuantityInput.value, 10);
+                const sourcePartDef = part.weightDefinition;
+                const resultingPart = getPart(resultingPartSelect.value);
+                const resultingPartDef = resultingPart?.weightDefinition;
+
+                const clearOutputs = () => {
+                    actualWeightInput.value = '';
+                    calculatedQtyP.textContent = '-';
+                    scrapPreviewP.textContent = '';
+                };
+
+                if (!sourcePartDef || !resultingPartDef || isNaN(sourceQty) || sourceQty <= 0) {
+                    clearOutputs();
+                    return;
+                }
+
+                const resultingUnitWeightKg = (resultingPartDef.weightUnit === 'g' ? resultingPartDef.baseWeight / 1000 : resultingPartDef.baseWeight) / resultingPartDef.baseQuantity;
+                const sourceUnitWeightKg = (sourcePartDef.weightUnit === 'g' ? sourcePartDef.baseWeight / 1000 : sourcePartDef.baseWeight) / sourcePartDef.baseQuantity;
+                
+                // Bi-directional calculation for actual weight/qty
+                if(document.activeElement === actualWeightInput){
+                    const actualWeight = parseFloat(actualWeightInput.value);
+                    if (!isNaN(actualWeight) && actualWeight >= 0){
+                        const calculatedQty = Math.round(actualWeight / resultingUnitWeightKg);
+                        calculatedQtyP.textContent = `~ ${calculatedQty.toLocaleString('fa-IR')} عدد`;
+                        if(returnedQuantityInput.value !== String(calculatedQty)) {
+                            returnedQuantityInput.value = calculatedQty;
+                        }
+                    } else {
+                         calculatedQtyP.textContent = '-';
+                    }
+                } else {
+                     if (!isNaN(returnedQty) && returnedQty >= 0) {
+                        const expectedResultingWeightKg = returnedQty * resultingUnitWeightKg;
+                        actualWeightInput.value = expectedResultingWeightKg.toFixed(3);
+                        calculatedQtyP.textContent = `~ ${returnedQty.toLocaleString('fa-IR')} عدد`;
+                    } else {
+                        actualWeightInput.value = '';
+                        calculatedQtyP.textContent = '-';
+                    }
+                }
+                
+                // Update scrap preview based on current values
+                const currentReturnedQty = parseInt(returnedQuantityInput.value, 10) || 0;
+                
+                const sourceTotalWeightKg = sourceQty * sourceUnitWeightKg;
+                const actualResultingWeightKg = parseFloat(actualWeightInput.value);
+                
+                if (!isNaN(actualResultingWeightKg)) {
+                    const totalScrapKg = sourceTotalWeightKg - actualResultingWeightKg;
+                    const expectedTotalResultWeightKg = sourceQty * resultingUnitWeightKg;
+                    const processScrapKg = sourceTotalWeightKg - expectedTotalResultWeightKg;
+                    const componentLossScrapKg = (sourceQty - currentReturnedQty) * resultingUnitWeightKg;
+
+                    if (totalScrapKg > 1e-6) {
+                        scrapPreviewP.textContent = `ضایعات کل: ~${totalScrapKg.toFixed(3)} ک‌گ (فرآیند: ${Math.max(0, processScrapKg).toFixed(3)}، کسری: ${Math.max(0, componentLossScrapKg).toFixed(3)})`;
+                    } else {
+                        scrapPreviewP.textContent = '';
+                    }
+                }
+            };
+            
+            sourceQuantityInput.addEventListener('input', () => {
+                returnedQuantityInput.value = sourceQuantityInput.value;
+                updateWeightPreview();
+            });
+            returnedQuantityInput.addEventListener('input', updateWeightPreview);
+            resultingPartSelect.addEventListener('change', updateWeightPreview);
+            actualWeightInput.addEventListener('input', updateWeightPreview);
+            updateWeightPreview();
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const dateValue = formData.get('date');
+                const timestamp = new Date(dateValue + 'T' + new Date().toTimeString().slice(0,8)).toISOString();
+                const data = {
+                    sourcePartId: part.id,
+                    fromWorkshopId: formData.get('fromWorkshopId'),
+                    quantity: parseInt(formData.get('quantity'), 10), // source quantity
+                    returnedQuantity: parseInt(formData.get('returnedQuantity'), 10),
+                    resultingPartId: formData.get('resultingPartId'),
+                    toWorkshopId: formData.get('toWorkshopId'),
+                    timestamp: timestamp,
+                    actualResultingWeightKg: parseFloat(formData.get('actualResultingWeightKg'))
+                };
+
+                if (isNaN(data.quantity) || data.quantity <= 0) { alert('مقدار قطعه مبدا باید یک عدد مثبت باشد.'); return; }
+                if (isNaN(data.returnedQuantity) || data.returnedQuantity < 0) { alert('تعداد قطعه حاصل نامعتبر است.'); return; }
+                const currentStock = part.stockByWorkshop[data.fromWorkshopId] || 0;
+                if (data.quantity > currentStock) { alert(`مقدار درخواستی (${data.quantity}) بیشتر از موجودی کارگاه مبدا (${currentStock}) است.`); return; }
+                if (!data.fromWorkshopId || !data.resultingPartId || !data.toWorkshopId) { alert('لطفا تمام فیلدها را پر کنید.'); return; }
+                if (isNaN(data.actualResultingWeightKg) || data.actualResultingWeightKg < 0) { alert('لطفا وزن واقعی قطعه حاصل را به درستی وارد کنید.'); return; }
+
+                e.target.querySelector('button[type="submit"]').disabled = true;
+                try {
+                    await api.processTransaction(data);
+                    alert('پردازش با موفقیت ثبت شد. اطلاعات بروزرسانی می‌شود.');
+                    closeModal(DOM.processModal.el);
+                    await init(); // Re-fetch all data to ensure consistency
+                } catch(error) {
+                    e.target.querySelector('button[type="submit"]').disabled = false;
+                }
+            });
+            openModal(DOM.processModal.el);
+        };
+        
+        const renderScrapReportModal = () => {
+            const today = new Date().toLocaleDateString('en-CA');
+            const sortedWorkshops = getSortedWorkshops();
+            DOM.scrapReportModal.body.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 no-print items-end">
+                    <div class="md:col-span-2">
+                        <label for="scrap-workshop-filter" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">فیلتر کارگاه</label>
+                        <select id="scrap-workshop-filter" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">
+                            <option value="">همه کارگاه‌ها</option>
+                            ${sortedWorkshops.map(ws => `<option value="${ws.id}">${ws.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="scrap-start-date-filter" class="flex justify-between items-baseline text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <span>از تاریخ</span>
+                            <span class="shamsi-date-display font-normal text-xs"></span>
+                        </label>
+                        <input type="date" id="scrap-start-date-filter" value="${today}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"/>
+                    </div>
+                    <div>
+                        <label for="scrap-end-date-filter" class="flex justify-between items-baseline text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <span>تا تاریخ</span>
+                            <span class="shamsi-date-display font-normal text-xs"></span>
+                        </label>
+                        <input type="date" id="scrap-end-date-filter" value="${today}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"/>
+                    </div>
+                    <div class="self-end pb-1">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300">
+                            <input type="checkbox" id="toggle-destination-col-cb" class="h-4 w-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500">
+                            <span>مخفی کردن مقصد</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="scrap-report-content" class="overflow-y-auto max-h-[60vh]"></div>
+            `;
+            setupDateInputWithShamsi(DOM.scrapReportModal.body, 'scrap-start-date-filter');
+            setupDateInputWithShamsi(DOM.scrapReportModal.body, 'scrap-end-date-filter');
+            const updateScrapView = () => {
+                const workshopFilter = DOM.scrapReportModal.body.querySelector('#scrap-workshop-filter').value;
+                const startDate = DOM.scrapReportModal.body.querySelector('#scrap-start-date-filter').value;
+                const endDate = DOM.scrapReportModal.body.querySelector('#scrap-end-date-filter').value;
+                const hideDestination = DOM.scrapReportModal.body.querySelector('#toggle-destination-col-cb').checked;
+                
+                const sortCheckbox = DOM.scrapReportModal.body.querySelector('#scrap-sort-by-workshop-cb');
+                const sortByWorkshop = sortCheckbox?.checked;
+
+                if (sortByWorkshop) {
+                    state.scrapReportSort = { key: 'workshopName', direction: 'asc' };
+                } else {
+                    state.scrapReportSort = { key: 'timestamp', direction: 'desc' };
+                }
+
+                let filteredLogs = state.scrapLog.filter(log => log.scrap_kg > 1e-6); // Only show logs with actual scrap
+                if(workshopFilter) filteredLogs = filteredLogs.filter(log => log.workshopId === workshopFilter);
+                if (startDate) filteredLogs = filteredLogs.filter(log => log.timestamp.substring(0, 10) >= startDate);
+                if (endDate) filteredLogs = filteredLogs.filter(log => log.timestamp.substring(0, 10) <= endDate);
+
+                // Sorting
+                filteredLogs.sort((a, b) => {
+                    if (state.scrapReportSort.key === 'workshopName') {
+                        const nameA = getWorkshopName(a.workshopId);
+                        const nameB = getWorkshopName(b.workshopId);
+                        if (nameA < nameB) return state.scrapReportSort.direction === 'asc' ? -1 : 1;
+                        if (nameA > nameB) return state.scrapReportSort.direction === 'asc' ? 1 : -1;
+                        return new Date(b.timestamp) - new Date(a.timestamp); // Secondary sort by date
+                    } else { // default to timestamp
+                        return state.scrapReportSort.direction === 'asc'
+                            ? new Date(a.timestamp) - new Date(b.timestamp)
+                            : new Date(b.timestamp) - new Date(a.timestamp);
+                    }
+                });
+
+
+                const contentEl = DOM.scrapReportModal.body.querySelector('#scrap-report-content');
+                if (filteredLogs.length === 0) {
+                    contentEl.innerHTML = `<p class="text-center text-slate-500 dark:text-slate-400 py-6">هیچ ضایعاتی برای این بازه زمانی یافت نشد.</p>`;
+                    return;
+                }
+                contentEl.innerHTML = `
+                    <table class="w-full text-sm text-right">
+                        <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-100 dark:bg-slate-700 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3">
+                                    <label for="scrap-sort-by-workshop-cb" class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" id="scrap-sort-by-workshop-cb" class="h-4 w-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500" ${sortByWorkshop ? 'checked' : ''}>
+                                        <span>کارگاه مبدا</span>
+                                    </label>
+                                </th>
+                                <th class="px-4 py-3 toggle-destination-col">کارگاه مقصد</th>
+                                <th class="px-4 py-3">تاریخ</th>
+                                <th class="px-4 py-3">شرح</th>
+                                <th class="px-4 py-3 text-center">مقدار ضایعات (کیلوگرم)</th>
+                                <th class="px-4 py-3 text-center no-print">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                        ${filteredLogs.map(log => {
+                            const highlightClass = log.type === 'CONVERSION' && log.sourceQuantity > log.returnedQuantity ? 'bg-rose-50 dark:bg-rose-900/40' : '';
+                            return `
+                            <tr data-log-id="${log.id}" class="${highlightClass}">
+                                <td class="px-4 py-2 font-semibold text-slate-800 dark:text-slate-100">${getWorkshopName(log.workshopId)}</td>
+                                <td class="px-4 py-2 font-semibold text-slate-800 dark:text-slate-100 toggle-destination-col">${getWorkshopName(log.destinationWorkshopId)}</td>
+                                <td class="px-4 py-2 text-slate-600 dark:text-slate-400">${new Date(log.timestamp).toLocaleDateString('fa-IR')}</td>
+                                <td class="px-4 py-2 text-slate-600 dark:text-slate-400 text-xs">${log.process_description}</td>
+                                <td class="px-4 py-2 text-center font-mono font-bold text-rose-600 dark:text-rose-400">${log.scrap_kg.toFixed(3)}</td>
+                                <td class="px-4 py-2 text-center no-print">
+                                    <button data-action="correct-scrap" ${!canEdit || log.type !== 'CONVERSION' || (log.sourceQuantity <= log.returnedQuantity) ? 'disabled' : ''} class="px-2 py-1 text-xs bg-amber-500 text-white rounded hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed">اصلاح</button>
+                                </td>
+                            </tr>
+                        `}).join('')}
+                        </tbody>
+                    </table>
+                `;
+                const table = contentEl.querySelector('table');
+                if (table) {
+                    table.classList.toggle('destination-hidden', hideDestination);
+                    table.querySelector('#scrap-sort-by-workshop-cb')?.addEventListener('change', updateScrapView);
+                }
+            };
+            
+            DOM.scrapReportModal.body.querySelector('#scrap-workshop-filter').addEventListener('change', updateScrapView);
+            DOM.scrapReportModal.body.querySelector('#scrap-start-date-filter').addEventListener('change', updateScrapView);
+            DOM.scrapReportModal.body.querySelector('#scrap-end-date-filter').addEventListener('change', updateScrapView);
+            DOM.scrapReportModal.body.querySelector('#toggle-destination-col-cb').addEventListener('change', updateScrapView);
+            
+            updateScrapView();
+            
+            DOM.scrapReportModal.footer.innerHTML = `<button id="print-scrap-report-btn" class="flex items-center gap-2 px-4 py-2 bg-slate-500 text-white font-semibold rounded-lg hover:bg-slate-600">پرینت</button>`;
+            DOM.scrapReportModal.footer.querySelector('#print-scrap-report-btn').addEventListener('click', () => {
+                 const modalEl = DOM.scrapReportModal.el;
+                const printHeader = modalEl.querySelector('.print-header');
+                const printTitleEl = printHeader.querySelector('.print-title');
+                
+                const workshopFilterSelect = DOM.scrapReportModal.body.querySelector('#scrap-workshop-filter');
+                const selectedWorkshopName = workshopFilterSelect.value ? workshopFilterSelect.options[workshopFilterSelect.selectedIndex].text : "همه کارگاه‌ها";
+                printTitleEl.textContent = `گزارش ضایعات برای: ${selectedWorkshopName}`;
+
+                printModal(modalEl);
+            });
+            
+            DOM.scrapReportModal.body.addEventListener('click', e => {
+                const button = e.target.closest('button[data-action="correct-scrap"]');
+                if (!button) return;
+                const logId = button.closest('tr').dataset.logId;
+                const log = state.scrapLog.find(l => l.id === logId);
+                if (log) {
+                    state.editingScrapLog = log;
+                    renderScrapCorrectionModal();
+                }
+            });
+            openModal(DOM.scrapReportModal.el);
+        };
+        
+        const renderScrapCorrectionModal = () => {
+            const log = state.editingScrapLog;
+            if (!log) return;
+            const resultingPart = getPart(log.resultingPartId);
+            if (!resultingPart?.weightDefinition) {
+                alert('امکان اصلاح وجود ندارد. قطعه مقصد این فرآیند تعریف وزن ندارد.');
+                return;
+            }
+
+            const missingPieces = log.sourceQuantity - log.returnedQuantity;
+
+            DOM.correctScrapModal.title.textContent = `اصلاح ضایعات (${missingPieces} قطعه کسری)`;
+            DOM.correctScrapModal.body.innerHTML = `
+                <form id="correct-scrap-form" class="space-y-4">
+                    <fieldset ${!canEdit ? 'disabled' : ''}>
+                        <div class="p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg">
+                            <p class="text-sm">ضایعات فعلی از تبدیل ${log.sourceQuantity} عدد <strong>${getPart(log.sourcePartId)?.name}</strong> به <strong>${resultingPart.name}</strong>:</p>
+                            <p class="text-center font-mono text-xl font-bold text-rose-500 dark:text-rose-400">${log.scrap_kg.toFixed(3)} کیلوگرم</p>
+                        </div>
+                        <div>
+                            <label for="recovered-qty" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">تعداد قطعه <span class="font-bold text-emerald-600">${resultingPart.name}</span> بازیابی شده (حداکثر: ${missingPieces}):</label>
+                            <input type="number" id="recovered-qty" name="recoveredQuantity" required min="1" max="${missingPieces}" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"/>
+                        </div>
+                        <p id="recovered-weight-preview" class="text-sm text-center h-4"></p>
+                        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-600 space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="change-destination-checkbox" class="h-4 w-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">تغییر کارگاه مقصد برای قطعات بازیابی شده</span>
+                            </label>
+                            <select id="new-destination-workshop" name="newDestinationWorkshopId" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 hidden">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                    </fieldset>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 mt-4">
+                        <button type="button" data-action="close-modal" class="px-4 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">انصراف</button>
+                        <button type="submit" ${!canEdit ? 'disabled' : ''} class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">ثبت بازیابی</button>
+                    </div>
+                </form>
+            `;
+
+            const form = DOM.correctScrapModal.body.querySelector('#correct-scrap-form');
+            const qtyInput = form.querySelector('#recovered-qty');
+            const weightPreview = form.querySelector('#recovered-weight-preview');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const checkbox = form.querySelector('#change-destination-checkbox');
+            const workshopSelect = form.querySelector('#new-destination-workshop');
+            const sortedWorkshops = getSortedWorkshops();
+
+            workshopSelect.innerHTML = sortedWorkshops.map(ws => `<option value="${ws.id}" ${ws.id === log.destinationWorkshopId ? 'selected' : ''}>${ws.name}</option>`).join('');
+            workshopSelect.innerHTML += `<option value="${FINISHED_GOODS_WAREHOUSE_ID}">انبار نهایی (محصول تمام شده)</option>`;
+
+            checkbox.addEventListener('change', () => {
+                workshopSelect.classList.toggle('hidden', !checkbox.checked);
+            });
+            
+            const wd = resultingPart.weightDefinition;
+            const unitWeightKg = (wd.weightUnit === 'g' ? wd.baseWeight / 1000 : wd.baseWeight) / wd.baseQuantity;
+
+            qtyInput.addEventListener('input', () => {
+                const qty = parseInt(qtyInput.value, 10);
+                if (isNaN(qty) || qty <= 0 || qty > missingPieces) {
+                    weightPreview.textContent = qty > missingPieces ? `تعداد بازیابی شده نمی‌تواند از تعداد کسری (${missingPieces}) بیشتر باشد.` : '';
+                    if (qty > missingPieces) weightPreview.classList.add('text-red-500'); else weightPreview.classList.remove('text-red-500');
+                    submitBtn.disabled = true;
+                    return;
+                }
+                const weight = qty * unitWeightKg;
+                weightPreview.textContent = `معادل ${weight.toFixed(3)} کیلوگرم`;
+                if (weight > log.scrap_kg + 1e-6) {
+                    weightPreview.classList.add('text-red-500');
+                    weightPreview.textContent += ' (بیشتر از ضایعات موجود!)';
+                    submitBtn.disabled = true;
+                } else {
+                    weightPreview.classList.remove('text-red-500');
+                    submitBtn.disabled = !canEdit;
+                }
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const recoveredQuantity = parseInt(qtyInput.value, 10);
+                if (isNaN(recoveredQuantity) || recoveredQuantity <= 0 || recoveredQuantity > missingPieces) return;
+                
+                const changeDestination = checkbox.checked;
+                const newDestinationWorkshopId = changeDestination ? workshopSelect.value : null;
+
+                submitBtn.disabled = true;
+                try {
+                    await api.correctScrapLog({ scrapLogId: log.id, recoveredQuantity, newDestinationWorkshopId });
+                    alert('اصلاحیه ضایعات با موفقیت ثبت شد.');
+                    closeModal(DOM.correctScrapModal.el);
+                    await init();
+                } catch(error) {
+                    console.error(error);
+                    submitBtn.disabled = !canEdit;
+                }
+            });
+
+            openModal(DOM.correctScrapModal.el);
+        };
+
+        // --- INITIALIZATION ---
+        const setupEventListeners = () => {
+            DOM.openAddPartBtn.disabled = !canEdit;
+            DOM.openAddPartBtn.addEventListener('click', () => { state.editingPart = null; renderAddPartModal(); });
+            DOM.openReportsBtn.addEventListener('click', renderReportsModal);
+            DOM.openScrapReportBtn.addEventListener('click', renderScrapReportModal);
+            
+            DOM.globalResetBtn.disabled = !canEdit;
+            DOM.globalResetBtn.addEventListener('click', async () => {
+                const partsToReset = state.parts.filter(p => {
+                    const totalWip = Object.values(p.stockByWorkshop || {}).reduce((sum, qty) => sum + qty, 0);
+                    return totalWip === 0 && (p.finishedGoodsStock || 0) > 0;
+                });
+
+                if (partsToReset.length === 0) {
+                    alert('هیچ قطعه‌ای برای ریست کردن یافت نشد (شرایط: موجودی در گردش صفر و موجودی نهایی مثبت).');
+                    return;
+                }
+
+                const confirmation = window.confirm(`تعداد ${partsToReset.length} قطعه که موجودی در گردش آنها صفر است یافت شد. آیا از صفر کردن موجودی انبار نهایی آنها اطمینان دارید؟`);
+                if (confirmation) {
+                    try {
+                        DOM.globalResetBtn.disabled = true;
+                        DOM.globalResetBtn.querySelector('span').textContent = 'در حال انجام...';
+                        await api.globalResetFinishedStock();
+                        alert('عملیات با موفقیت انجام شد. اطلاعات بروزرسانی می‌شود.');
+                        await init();
+                    } catch (error) {
+                        console.error('Global reset failed:', error);
+                        alert(`خطا در عملیات ریست کلی: ${error.message}`);
+                    } finally {
+                        DOM.globalResetBtn.disabled = !canEdit;
+                        DOM.globalResetBtn.querySelector('span').textContent = 'ریست کلی موجودی نهایی';
+                    }
+                }
+            });
+            
+            DOM.partSearchInput.addEventListener('input', renderInventoryList);
+            DOM.inventoryContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+                const partId = button.closest('tr[data-part-id]').dataset.partId;
+                const part = getPart(partId);
+                if (!part) return;
+                state.selectedPart = part;
+                state.editingTransaction = null;
+                switch (button.dataset.action) {
+                    case 'entry': state.transactionType = TransactionType.ENTRY; renderTransactionModal(); break;
+                    case 'exit': state.transactionType = TransactionType.EXIT; renderTransactionModal(); break;
+                    case 'transfer': state.transactionType = TransactionType.TRANSFER; renderTransactionModal(); break;
+                    case 'process': renderProcessModal(); break;
+                    case 'history': renderHistoryModal(); break;
+                    case 'edit': state.editingPart = part; renderAddPartModal(); break;
+                    case 'reset-stock': renderResetStockModal(part); break;
+                    case 'delete': deletePart(partId); break;
+                }
+            });
+        };
+        const setupDateInputWithShamsi = (container, inputId) => {
+            const dateInput = container.querySelector(`#${inputId}`);
+            const shamsiDisplay = dateInput?.previousElementSibling?.querySelector('.shamsi-date-display');
+            if (!dateInput || !shamsiDisplay) return;
+
+            const updateShamsi = () => {
+                if (shamsiDisplay) shamsiDisplay.textContent = toShamsiDisplay(dateInput.value);
+            };
+
+            dateInput.addEventListener('change', updateShamsi);
+            dateInput.addEventListener('input', updateShamsi); // for some browsers
+            updateShamsi(); // Initial call
+        };
+
+        const init = async () => {
+            try {
+                const data = await api.bootstrap();
+                state.parts = data.parts || [];
+                state.transactions = data.transactions || [];
+                state.workshops = data.workshops || [];
+                state.scrapLog = data.scrapLog || [];
+                setupEventListeners();
+                renderAll();
+            } catch (error) {
+                document.getElementById('inventory-container').innerHTML = `<div class="text-center p-8 bg-white dark:bg-slate-800 rounded-lg shadow-md"><p class="text-red-500 font-semibold">خطا در بارگذاری اطلاعات از سرور.<br/>${error.message}</p></div>`;
+            }
+        };
+        init();
+    </script>
+</body>
+</html>

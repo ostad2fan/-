@@ -1,0 +1,10 @@
+
+{
+  "name": "سیستم مدیریت انبار پیشرفته",
+  "short_name": "انبار",
+  "description": "یک برنامه ساده برای مدیریت موجودی انبار قطعات.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#3b82f6"
+}

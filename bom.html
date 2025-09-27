@@ -1,0 +1,1024 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>مدیریت مواد مصرفی محصولات (BOM)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+      
+      :root {
+        --bg-light: #f9fafb;
+        --text-light: #111827;
+        --card-bg-light: #ffffff;
+        --card-border-light: #e5e7eb;
+        --input-bg-light: #ffffff;
+        --input-border-light: #d1d5db;
+        --text-muted-light: #6b7280;
+
+        --bg-dark: #030712;
+        --text-dark: #d1d5db;
+        --card-bg-dark: #111827;
+        --card-border-dark: #374151;
+        --input-bg-dark: #1f2937;
+        --input-border-dark: #4b5563;
+        --text-muted-dark: #9ca3af;
+      }
+
+      body {
+        font-family: 'Vazirmatn', sans-serif;
+        background-color: var(--bg-light);
+        color: var(--text-light);
+        transition: background-color 0.3s, color 0.3s;
+      }
+      html.dark body {
+        background-color: var(--bg-dark);
+        color: var(--text-dark);
+      }
+      .card {
+          background-color: var(--card-bg-light);
+          border: 1px solid var(--card-border-light);
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+      }
+       html.dark .card {
+          background-color: var(--card-bg-dark);
+          border-color: var(--card-border-dark);
+      }
+      .form-input, .form-select {
+        background-color: var(--input-bg-light);
+        border: 1px solid var(--input-border-light);
+        color: var(--text-light);
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+       html.dark .form-input, html.dark .form-select {
+        background-color: var(--input-bg-dark);
+        border-color: var(--input-border-dark);
+        color: var(--text-dark);
+      }
+      .form-input:focus, .form-select:focus {
+          outline: 2px solid transparent;
+          outline-offset: 2px;
+          border-color: #3b82f6;
+          --tw-ring-color: #3b82f6;
+          box-shadow: 0 0 0 2px var(--tw-ring-color);
+      }
+      .tab-btn.active {
+        color: #3b82f6;
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+      }
+      html.dark .tab-btn.active {
+         color: #60a5fa;
+         border-color: #60a5fa;
+         background-color: #1e293b;
+      }
+      input[type=number]::-webkit-inner-spin-button,
+      input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type=number] { -moz-appearance: textfield; }
+      
+      .print-header { display: none; }
+      @media print {
+        body { background: white !important; color: black !important; padding: 0; margin: 0;}
+        html.dark body, html.dark * { background: white !important; color: black !important; }
+        .no-print { display: none !important; }
+        .print-only { display: block !important; }
+        #app-container { padding: 0 !important; }
+        .card { box-shadow: none !important; border: 1px solid #ccc !important; padding: 1rem; }
+        .print-header { display: block !important; text-align: center; margin-bottom: 1.5rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem; }
+        .print-header .print-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+        
+        body.is-printing #app-container > *:not(#tab-content-simulate) { display: none !important; }
+        body.is-printing #tab-content-simulate > .grid > .lg\:col-span-1 { display: none !important; }
+        
+        @page { size: A4; margin: 1.5cm; }
+      }
+    </style>
+</head>
+<body class="bg-[var(--bg-light)] text-[var(--text-light)]">
+
+    <div id="app-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="print-header print-only">
+            <h2 class="print-title"></h2>
+            <p>تاریخ چاپ: <span class="print-date"></span></p>
+        </div>
+
+        <div id="tabs" class="mb-6 border-b border-gray-200 dark:border-gray-700 no-print">
+            <nav class="-mb-px flex space-x-4 space-x-reverse" aria-label="Tabs">
+                <button data-tab="define" class="tab-btn active whitespace-nowrap py-3 px-5 font-semibold text-sm rounded-t-lg border-b-2">
+                    ۱. تعریف محصولات (BOM)
+                </button>
+                <button data-tab="simulate" class="tab-btn whitespace-nowrap py-3 px-5 font-semibold text-sm rounded-t-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    ۲. محاسبه مواد اولیه مورد نیاز
+                </button>
+                <button data-tab="costing" class="tab-btn whitespace-nowrap py-3 px-5 font-semibold text-sm rounded-t-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    ۳. محاسبه قیمت تمام شده
+                </button>
+            </nav>
+        </div>
+
+        <div id="tab-content-define" class="tab-panel">
+            <!-- Content for defining BOMs -->
+        </div>
+
+        <div id="tab-content-simulate" class="tab-panel hidden">
+            <!-- Content for simulating production -->
+        </div>
+
+        <div id="tab-content-costing" class="tab-panel hidden">
+            <!-- Content for finished cost calculation -->
+        </div>
+    </div>
+    
+    <script type="module">
+        // --- Setup & State ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const canEdit = urlParams.get('canEdit') === 'true';
+        const panelMode = urlParams.get('panelMode');
+        const user = urlParams.get('user');
+
+        const state = {
+            boms: [],
+            simulations: [],
+            inventoryParts: [],
+            wages: {},
+            workshops: [],
+            activeBomId: null,
+            activeSimulation: null,
+            partSearchTerm: '',
+            bomSearchTerm: '',
+        };
+
+        const DOM = {
+            defineTab: document.getElementById('tab-content-define'),
+            simulateTab: document.getElementById('tab-content-simulate'),
+            costingTab: document.getElementById('tab-content-costing'),
+            tabs: document.querySelectorAll('.tab-btn'),
+        };
+
+        // Logical locks to prevent race conditions from rapid clicks
+        let isSavingBom = false;
+        let isAddingComponent = false;
+
+        // --- Theme Sync ---
+        const syncTheme = () => {
+            try {
+                const parentHtml = window.top.document.documentElement;
+                document.documentElement.classList.toggle('dark', parentHtml.classList.contains('dark'));
+            } catch (e) {
+                if (!document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.add('dark');
+                }
+            }
+        };
+        syncTheme();
+        try { new MutationObserver(syncTheme).observe(window.top.document.documentElement, { attributes: true, attributeFilter: ['class'] }); } 
+        catch (e) { console.warn("Could not observe parent for theme changes."); }
+
+        // --- API Client ---
+        const api = {
+            async request(endpoint, options = {}) {
+                const { body, ...customConfig } = options;
+                const headers = { 'Content-Type': 'application/json' };
+                if (panelMode === 'personal' && user) {
+                    headers['X-User-DB'] = user;
+                }
+                const config = {
+                    method: body ? 'POST' : 'GET', ...customConfig, headers,
+                };
+                if (body) config.body = JSON.stringify(body);
+                try {
+                    const response = await fetch(endpoint, config);
+                    if (response.status === 204) return null;
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ error: 'An unknown error occurred' }));
+                        throw new Error(errorData.error || `Request failed with status ${response.status}`);
+                    }
+                    return response.json();
+                } catch (error) {
+                    alert(`خطای سرور: ${error.message}`);
+                    return Promise.reject(error);
+                }
+            },
+            getData: () => api.request('/api/bom/data'),
+            saveBom: (bom) => api.request('/api/bom', { body: bom }),
+            deleteBom: (id) => api.request(`/api/bom/${id}`, { method: 'DELETE' }),
+            saveSimulation: (sim) => api.request('/api/bom/simulations', { body: sim }),
+            deleteSimulation: (name) => api.request(`/api/bom/simulations/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+            updatePartCosts: (partId, costs) => api.request(`/api/bom/parts/${partId}/cost`, { method: 'PUT', body: costs }),
+        };
+
+        // --- UTILITY FUNCTIONS ---
+        const normalizeSearchString = (str) => {
+          if (str === null || str === undefined) return '';
+          let s = String(str);
+
+          // Persian/Arabic character normalization
+          s = s.replace(/[ي]/g, 'ی').replace(/[ك]/g, 'ک').replace(/[آأإ]/g, 'ا');
+
+          // Convert Persian/Arabic numerals to Latin numerals
+          const numeralsMap = { '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9', '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9' };
+          s = s.replace(/[۰-۹٠-٩]/g, char => numeralsMap[char]);
+
+          // AGGRESSIVE: Remove ALL whitespace and invisible characters (like ZWNJ)
+          s = s.replace(/[\s\u200c\u200d]+/g, '');
+
+          // Convert to lowercase for case-insensitive comparison
+          return s.toLowerCase();
+        };
+
+        // --- RENDER FUNCTIONS ---
+        const renderDefineTab = () => {
+            const activeBom = state.boms.find(b => b.id === state.activeBomId);
+
+            const searchTerm = normalizeSearchString(state.bomSearchTerm);
+            const filteredBoms = searchTerm
+                ? state.boms.filter(bom =>
+                    normalizeSearchString(bom.name).includes(searchTerm) ||
+                    (bom.components || []).some(comp =>
+                        normalizeSearchString(comp.part_name).includes(searchTerm)
+                    )
+                  )
+                : state.boms;
+            
+            let bomListContent = '';
+            if (filteredBoms.length > 0) {
+                bomListContent = filteredBoms.map(bom => `
+                    <li data-id="${bom.id}" class="bom-item flex justify-between items-center p-3 rounded-lg cursor-pointer transition ${bom.id === state.activeBomId ? 'bg-blue-100 dark:bg-blue-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}">
+                        <span class="font-semibold">${bom.name}</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">${(bom.components || []).length} قطعه</span>
+                    </li>
+                `).join('');
+            } else if (state.boms.length === 0) {
+                bomListContent = `<li class="text-center text-sm text-gray-500 dark:text-gray-400 p-4">محصولی تعریف نشده است.</li>`;
+            } else {
+                bomListContent = `<li class="text-center text-sm text-gray-500 dark:text-gray-400 p-4">هیچ محصولی با این مشخصات یافت نشد.</li>`;
+            }
+
+            DOM.defineTab.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="card">
+                            <h3 class="font-bold text-lg mb-4">لیست محصولات</h3>
+                            <form id="new-bom-form" class="flex gap-2 mb-4">
+                                <input type="text" name="name" placeholder="نام محصول جدید" required class="form-input flex-grow" />
+                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-sm">ایجاد</button>
+                            </form>
+                            <div class="mb-4">
+                                <input id="bom-search-input" type="search" value="${state.bomSearchTerm}" placeholder="جستجو با نام محصول یا قطعه..." class="form-input w-full" />
+                            </div>
+                            <ul id="bom-list" class="space-y-2 max-h-80 overflow-y-auto">
+                                ${bomListContent}
+                            </ul>
+                             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <button id="import-bom-btn" class="w-full py-2 px-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 text-sm">وارد کردن محصول از فایل XLSX</button>
+                                <input type="file" id="bom-file-input" class="hidden" accept=".xlsx, .xls" />
+                            </div>
+                        </div>
+                    </div>
+                    <div id="bom-details-container" class="lg:col-span-2">
+                        ${activeBom ? renderActiveBomDetails(activeBom) : `<div class="card text-center text-gray-500 dark:text-gray-400">${searchTerm ? 'محصولی انتخاب نشده است.' : 'یک محصول را برای مشاهده یا ویرایش انتخاب کنید.'}</div>`}
+                    </div>
+                </div>
+            `;
+            attachDefineTabListeners();
+        };
+
+        const renderActiveBomDetails = (bom) => {
+            const totalCost = (bom.components || []).reduce((sum, comp) => sum + (comp.quantity * comp.cost), 0);
+
+            return `
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                        <h2 class="text-xl font-bold">مشخصات محصول: <input id="active-bom-name" class="font-bold bg-transparent border-b-2 border-dashed border-gray-300 dark:border-gray-600 focus:border-blue-500 outline-none" value="${bom.name}"/></h2>
+                        <div class="flex items-center gap-2">
+                            <button data-id="${bom.id}" class="export-bom-btn px-3 py-2 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition text-sm">خروجی XLSX</button>
+                            <button data-id="${bom.id}" class="delete-bom-btn px-3 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition text-sm">حذف محصول</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="font-semibold">قطعات مورد نیاز</h3>
+                        <div class="grid grid-cols-[1fr,100px,120px,120px,auto] gap-3 items-center text-sm font-semibold text-gray-500 dark:text-gray-400 px-2">
+                            <span>نام قطعه</span>
+                            <span class="text-center">تعداد</span>
+                            <span class="text-center">ارزش (تومان)</span>
+                            <span class="text-center">ارزش کل</span>
+                            <span></span>
+                        </div>
+                        <div id="component-list" class="space-y-3">
+                            ${(bom.components || []).map(comp => `
+                                <div data-id="${comp.id}" class="component-item grid grid-cols-[1fr,100px,120px,120px,auto] gap-3 items-center p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                    <span class="font-medium">${comp.part_name}</span>
+                                    <input type="number" value="${comp.quantity}" min="0" data-field="quantity" class="form-input text-center" placeholder="تعداد" />
+                                    <input type="number" value="${comp.cost}" min="0" data-field="cost" class="form-input text-center" placeholder="ارزش (تومان)" />
+                                    <div class="component-total-cost text-center font-mono my-auto text-gray-800 dark:text-gray-200">${(comp.quantity * comp.cost).toLocaleString('fa-IR')}</div>
+                                    <button data-id="${comp.id}" class="remove-component-btn p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-full">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="relative">
+                             <input id="part-search-input" type="search" value="${state.partSearchTerm}" placeholder="جستجو و افزودن قطعه از انبار اصلی..." class="form-input w-full" />
+                             <div id="part-search-results"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                         <div class="text-lg">
+                            <span class="font-semibold">ارزش نهایی محصول:</span>
+                            <span class="font-bold text-green-600 dark:text-green-400">${totalCost.toLocaleString('fa-IR')} تومان</span>
+                        </div>
+                        <button id="save-bom-btn" class="px-6 py-2.5 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">ذخیره تغییرات</button>
+                    </div>
+                </div>
+            `;
+        };
+
+        const renderSimulateTab = () => {
+            const sim = state.activeSimulation;
+            
+            DOM.simulateTab.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                    <div class="lg:col-span-1 space-y-6 no-print">
+                        <div class="card">
+                            <h3 class="font-bold text-lg mb-4">تنظیمات محاسبه</h3>
+                            <form id="simulation-form" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">محصول (BOM)</label>
+                                    <select id="sim-bom-select" class="form-select w-full">
+                                        <option value="">یک محصول انتخاب کنید</option>
+                                        ${state.boms.map(b => `<option value="${b.id}" ${sim?.bomId === b.id ? 'selected' : ''}>${b.name}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">تعداد تولید</label>
+                                    <input id="sim-quantity-input" type="number" value="${sim?.quantity || 1}" min="1" class="form-input w-full" />
+                                </div>
+                                <button id="calculate-sim-btn" type="button" class="w-full py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">محاسبه</button>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3 class="font-bold text-lg mb-4">محاسبات ذخیره شده</h3>
+                            <div class="space-y-3">
+                                <select id="saved-sims-select" class="form-select w-full">
+                                    <option value="">یک محاسبه ذخیره شده را بارگذاری کنید</option>
+                                    ${state.simulations.map(s => `<option value="${s.name}">${s.name}</option>`).join('')}
+                                </select>
+                                <div class="flex gap-2">
+                                    <button id="load-sim-btn" class="flex-grow py-2 px-3 bg-gray-600 text-white rounded-lg text-sm">بارگذاری</button>
+                                    <button id="delete-sim-btn" class="flex-shrink-0 py-2 px-3 bg-red-600 text-white rounded-lg text-sm">حذف</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="simulation-results-wrapper" class="lg:col-span-2">
+                        ${sim ? renderSimulationResults(sim) : `<div class="card text-center text-gray-500 dark:text-gray-400 no-print">یک محصول را انتخاب و تعداد تولید را مشخص کرده و دکمه محاسبه را بزنید.</div>`}
+                    </div>
+                </div>
+            `;
+            attachSimulateTabListeners();
+        };
+
+        const renderSimulationResults = (simData) => {
+            const bom = state.boms.find(b => b.id === simData.bomId);
+            if (!bom) return `<div class="card text-red-500">خطا: محصول مرتبط با این محاسبه یافت نشد.</div>`;
+
+            let totalValue = 0;
+            const resultRows = (bom.components || []).map(comp => {
+                const required = comp.quantity * simData.quantity;
+                const inventoryPart = state.inventoryParts.find(p => p.id === comp.part_id);
+                const stock = inventoryPart ? inventoryPart.quantity : 0;
+                const shortage = Math.max(0, required - stock);
+                const componentTotalCost = required * comp.cost;
+                totalValue += componentTotalCost;
+                return { ...comp, required, stock, shortage, componentTotalCost };
+            });
+
+            return `
+                <div id="printable-results" class="card">
+                    <div class="flex justify-between items-start mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                        <div>
+                            <h2 class="text-xl font-bold">نتایج محاسبه برای تولید ${simData.quantity.toLocaleString('fa-IR')} عدد ${bom.name}</h2>
+                            <p class="text-lg font-semibold mt-2">ارزش کل مواد اولیه: <span class="font-bold text-green-600 dark:text-green-400">${totalValue.toLocaleString('fa-IR')} تومان</span></p>
+                        </div>
+                        <div class="flex gap-2 no-print">
+                            <input id="save-sim-name" type="text" value="${simData.name || ''}" placeholder="نام برای ذخیره" class="form-input text-sm" />
+                            <button id="save-sim-btn" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm">ذخیره</button>
+                            <button id="print-sim-btn" class="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm">چاپ</button>
+                        </div>
+                    </div>
+                    <table class="w-full text-sm">
+                        <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700/50">
+                            <tr>
+                                <th class="px-4 py-3 text-right">قطعه</th>
+                                <th class="px-4 py-3 text-center">تعداد مورد نیاز</th>
+                                <th class="px-4 py-3 text-center">موجودی انبار</th>
+                                <th class="px-4 py-3 text-center">کسری</th>
+                                <th class="px-4 py-3 text-center">ارزش کل قطعه (تومان)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            ${resultRows.map(row => `
+                                <tr class="${row.shortage > 0 ? 'bg-red-50 dark:bg-red-900/30' : ''}">
+                                    <td class="px-4 py-3 font-semibold">${row.part_name}</td>
+                                    <td class="px-4 py-3 text-center font-mono">${row.required.toLocaleString('fa-IR')}</td>
+                                    <td class="px-4 py-3 text-center font-mono">${row.stock.toLocaleString('fa-IR')}</td>
+                                    <td class="px-4 py-3 text-center font-mono font-bold text-red-600 dark:text-red-400">${row.shortage.toLocaleString('fa-IR')}</td>
+                                    <td class="px-4 py-3 text-center font-mono">${row.componentTotalCost.toLocaleString('fa-IR')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        };
+        
+        const renderCostingTab = () => {
+            const partsWithWages = state.inventoryParts.filter(p => state.wages[p.id] && Object.keys(state.wages[p.id]).length > 0);
+
+            const content = `
+                <div class="card">
+                    <h2 class="text-xl font-bold mb-4">محاسبه قیمت تمام شده قطعات</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                        برای مشاهده جزئیات و ویرایش قیمت، روی هر قطعه کلیک کنید.
+                    </p>
+                    <div class="space-y-2">
+                        <!-- Header -->
+                        <div class="grid grid-cols-2 gap-4 items-center px-4 py-2 text-sm font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                            <span>نام قطعه</span>
+                            <span class="text-left">قیمت نهایی (تومان)</span>
+                        </div>
+                        <!-- Body -->
+                        <div id="costing-parts-container">
+                            ${partsWithWages.length > 0 ? partsWithWages.map(part => {
+                                const wagesForPart = state.wages[part.id] || {};
+                                const totalWage = Object.values(wagesForPart).reduce((sum, wage) => sum + (wage || 0), 0);
+                                const materialCost = part.material_cost || 0;
+                                const totalCost = totalWage + materialCost;
+
+                                const workshopDetailsHTML = Object.entries(wagesForPart).map(([workshopId, wage]) => {
+                                    const workshop = state.workshops.find(w => w.id === workshopId);
+                                    return `<div class="flex justify-between items-center text-sm">
+                                                <span class="text-gray-600 dark:text-gray-400">${workshop?.name || 'کارگاه حذف شده'}:</span>
+                                                <span class="font-mono">${(wage || 0).toLocaleString('fa-IR')}</span>
+                                            </div>`;
+                                }).join('');
+
+                                return `
+                                <div class="costing-item border-b border-gray-200 dark:border-gray-800" data-part-id="${part.id}">
+                                    <div class="costing-main-row grid grid-cols-2 gap-4 items-center px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg">
+                                        <span class="font-semibold text-lg">${part.name}</span>
+                                        <span class="total-cost-display text-left font-mono font-bold text-xl text-green-600 dark:text-green-400">${totalCost.toLocaleString('fa-IR')}</span>
+                                    </div>
+                                    <div class="costing-details-row hidden p-4 bg-gray-100 dark:bg-gray-900/50 rounded-b-lg">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div class="space-y-3">
+                                                <h4 class="font-semibold">جزئیات دستمزدها (تومان)</h4>
+                                                <div class="space-y-2 p-3 bg-white dark:bg-gray-800 rounded-md">
+                                                    ${workshopDetailsHTML}
+                                                    <div class="flex justify-between items-center text-sm font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                        <span>مجموع دستمزدها:</span>
+                                                        <span class="total-wage font-mono">${totalWage.toLocaleString('fa-IR')}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="space-y-3">
+                                                <h4 class="font-semibold">ورود اطلاعات</h4>
+                                                <div>
+                                                    <label for="material-cost-${part.id}" class="block text-sm font-medium mb-1">قیمت مواد اولیه (تومان)</label>
+                                                    <input id="material-cost-${part.id}" type="number" value="${materialCost}" class="material-cost-input form-input w-full text-center" />
+                                                </div>
+                                                <button class="save-cost-btn w-full mt-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700">ذخیره و بروزرسانی</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('') : `<div class="text-center text-gray-500 py-6">هیچ قطعه‌ای با دستمزد تعریف شده یافت نشد. ابتدا از بخش "هزینه های کارگاه ها" دستمزدها را تعریف کنید.</div>`}
+                        </div>
+                    </div>
+                </div>
+            `;
+            DOM.costingTab.innerHTML = content;
+            attachCostingTabListeners();
+        };
+        
+        const updateBomTotals = (bom) => {
+            const detailsContainer = DOM.defineTab.querySelector('#bom-details-container');
+            if (!detailsContainer) return;
+
+            let grandTotal = 0;
+            (bom.components || []).forEach(comp => {
+                const row = detailsContainer.querySelector(`.component-item[data-id="${comp.id}"]`);
+                if (row) {
+                    const rowTotal = (comp.quantity || 0) * (comp.cost || 0);
+                    grandTotal += rowTotal;
+                    const totalEl = row.querySelector('.component-total-cost');
+                    if (totalEl) {
+                        totalEl.textContent = rowTotal.toLocaleString('fa-IR');
+                    }
+                }
+            });
+
+            const grandTotalEl = detailsContainer.querySelector('.text-lg .font-bold.text-green-600');
+            if (grandTotalEl) {
+                grandTotalEl.textContent = `${grandTotal.toLocaleString('fa-IR')} تومان`;
+            }
+        };
+
+        // --- Event Handlers ---
+        function attachDefineTabListeners() {
+            DOM.defineTab.querySelector('#new-bom-form')?.addEventListener('submit', handleCreateBom);
+            DOM.defineTab.querySelector('#bom-list')?.addEventListener('click', e => {
+                const item = e.target.closest('.bom-item');
+                if (item) handleSelectBom(item.dataset.id);
+            });
+            DOM.defineTab.querySelector('#import-bom-btn')?.addEventListener('click', () => {
+                document.getElementById('bom-file-input').click();
+            });
+            DOM.defineTab.querySelector('#bom-file-input')?.addEventListener('change', handleBomImport);
+            
+            const bomSearchInput = DOM.defineTab.querySelector('#bom-search-input');
+            if (bomSearchInput) {
+                bomSearchInput.addEventListener('input', e => {
+                    state.bomSearchTerm = e.target.value;
+                    state.activeBomId = null; // Deselect when searching
+                    renderDefineTab();
+                    document.getElementById('bom-search-input')?.focus();
+                });
+            }
+
+            const detailsContainer = DOM.defineTab.querySelector('#bom-details-container');
+            if (detailsContainer) {
+                detailsContainer.addEventListener('click', e => {
+                    const deleteBtn = e.target.closest('.delete-bom-btn');
+                    if (deleteBtn) handleDeleteBom(deleteBtn.dataset.id);
+
+                    const exportBtn = e.target.closest('.export-bom-btn');
+                    if (exportBtn) handleBomExport(exportBtn.dataset.id);
+
+                    const removeCompBtn = e.target.closest('.remove-component-btn');
+                    if (removeCompBtn) handleUpdateComponentList('remove', removeCompBtn.dataset.id);
+
+                    const saveBtn = e.target.closest('#save-bom-btn');
+                    if (saveBtn) handleSaveBom();
+                    
+                    const searchResult = e.target.closest('.search-result-item');
+                    if(searchResult) handleAddComponent(searchResult.dataset.id);
+                });
+                detailsContainer.addEventListener('input', e => {
+                    if (e.target.matches('.component-item input')) {
+                        const compId = e.target.closest('.component-item').dataset.id;
+                        const field = e.target.dataset.field;
+                        const value = parseFloat(e.target.value) || 0;
+                        handleUpdateComponentList('update', compId, { [field]: value });
+                    }
+                    if (e.target.matches('#part-search-input')) {
+                        handlePartSearch(e.target.value);
+                    }
+                });
+                 detailsContainer.querySelector('#part-search-input')?.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        const resultsContainer = document.getElementById('part-search-results');
+                        if (resultsContainer) resultsContainer.innerHTML = '';
+                    }, 150);
+                });
+            }
+        }
+        
+        function attachSimulateTabListeners() {
+            DOM.simulateTab.querySelector('#calculate-sim-btn')?.addEventListener('click', handleCalculateSimulation);
+            DOM.simulateTab.querySelector('#load-sim-btn')?.addEventListener('click', handleLoadSimulation);
+            DOM.simulateTab.querySelector('#delete-sim-btn')?.addEventListener('click', handleDeleteSimulation);
+
+            const resultsContainer = DOM.simulateTab.querySelector('#simulation-results-wrapper');
+            resultsContainer.addEventListener('click', e => {
+                const saveBtn = e.target.closest('#save-sim-btn');
+                if (saveBtn) handleSaveSimulation();
+                
+                const printBtn = e.target.closest('#print-sim-btn');
+                if (printBtn) handlePrint();
+            });
+        }
+        
+        function attachCostingTabListeners() {
+            DOM.costingTab.addEventListener('click', async e => {
+                const saveBtn = e.target.closest('.save-cost-btn');
+                if (saveBtn) {
+                    const itemEl = saveBtn.closest('.costing-item');
+                    const partId = itemEl.dataset.partId;
+                    const materialCostInput = itemEl.querySelector('.material-cost-input');
+                    const materialCost = parseFloat(materialCostInput.value) || 0;
+                    const totalWageEl = itemEl.querySelector('.total-wage');
+                    const totalWage = parseFloat(totalWageEl.textContent.replace(/,/g, '')) || 0;
+                    const totalCalculatedCost = materialCost + totalWage;
+
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = '...';
+
+                    try {
+                        await api.updatePartCosts(partId, { materialCost, totalCalculatedCost });
+                        alert('قیمت با موفقیت بروزرسانی شد. تمام BOMها آپدیت شدند.');
+                        await init();
+                        document.querySelector('.tab-btn[data-tab="costing"]').click();
+                    } catch (err) {
+                        console.error(err);
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = 'ذخیره و بروزرسانی';
+                    }
+                    return; 
+                }
+
+                const mainRow = e.target.closest('.costing-main-row');
+                if (mainRow) {
+                    const itemEl = mainRow.closest('.costing-item');
+                    const detailsRow = itemEl.querySelector('.costing-details-row');
+                    const isHidden = detailsRow.classList.contains('hidden');
+                    
+                    document.querySelectorAll('.costing-details-row').forEach(row => {
+                        if (row !== detailsRow) row.classList.add('hidden');
+                    });
+                    
+                    detailsRow.classList.toggle('hidden');
+                    return;
+                }
+            });
+
+            DOM.costingTab.addEventListener('input', e => {
+                const input = e.target.closest('.material-cost-input');
+                if (input) {
+                    const itemEl = input.closest('.costing-item');
+                    const materialCost = parseFloat(input.value) || 0;
+                    const totalWageText = itemEl.querySelector('.total-wage').textContent.replace(/,/g, '');
+                    const totalWage = parseFloat(totalWageText) || 0;
+                    const mainRowTotalCostDisplay = itemEl.querySelector('.costing-main-row .total-cost-display');
+                    if (mainRowTotalCostDisplay) {
+                         mainRowTotalCostDisplay.textContent = (materialCost + totalWage).toLocaleString('fa-IR');
+                    }
+                }
+            });
+        }
+
+        const handleTabClick = (e) => {
+            const targetTab = e.target.closest('.tab-btn');
+            if (!targetTab) return;
+            
+            DOM.tabs.forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+
+            targetTab.classList.add('active');
+            const targetPanel = document.getElementById(`tab-content-${targetTab.dataset.tab}`);
+            if (targetPanel) {
+                targetPanel.classList.remove('hidden');
+                if(targetTab.dataset.tab === 'costing') {
+                    renderCostingTab();
+                } else if(targetTab.dataset.tab === 'define') {
+                    renderDefineTab();
+                } else if(targetTab.dataset.tab === 'simulate') {
+                    renderSimulateTab();
+                }
+            }
+        };
+        
+        // --- DEFINE TAB LOGIC ---
+        const handleCreateBom = async (e) => {
+            e.preventDefault();
+            const name = e.target.elements.name.value.trim();
+            if (!name) return;
+            const newBom = { id: crypto.randomUUID(), name, components: [] };
+            try {
+                await api.saveBom(newBom);
+                state.boms.push(newBom);
+                state.activeBomId = newBom.id;
+                renderDefineTab();
+                renderSimulateTab();
+            } catch (err) { alert(err.message); }
+        };
+
+        const handleSelectBom = (bomId) => {
+            state.activeBomId = bomId;
+            state.partSearchTerm = '';
+            renderDefineTab();
+        };
+        
+        const handleDeleteBom = async (bomId) => {
+            const bom = state.boms.find(b => b.id === bomId);
+            if(bom && confirm(`آیا از حذف محصول "${bom.name}" اطمینان دارید؟`)) {
+                await api.deleteBom(bomId);
+                state.boms = state.boms.filter(b => b.id !== bomId);
+                state.activeBomId = null;
+                renderDefineTab();
+                renderSimulateTab();
+            }
+        };
+
+        const handleUpdateComponentList = (action, id, data) => {
+            const bomIndex = state.boms.findIndex(b => b.id === state.activeBomId);
+            if (bomIndex < 0) return;
+
+            const originalBom = state.boms[bomIndex];
+            
+            if (action === 'update') {
+                const newComponents = (originalBom.components || []).map(c => 
+                    c.id === id ? { ...c, ...data } : c
+                );
+                const updatedBom = { ...originalBom, components: newComponents };
+                state.boms[bomIndex] = updatedBom;
+                updateBomTotals(updatedBom);
+            } 
+            else {
+                let newComponents = [...(originalBom.components || [])];
+                if (action === 'add') {
+                    newComponents.push(data);
+                } else if (action === 'remove') {
+                    newComponents = newComponents.filter(c => c.id !== id);
+                }
+                const updatedBom = { ...originalBom, components: newComponents };
+                state.boms[bomIndex] = updatedBom;
+                renderDefineTab();
+            }
+        };
+        
+        const handlePartSearch = (term) => {
+            state.partSearchTerm = term;
+            const resultsContainer = document.getElementById('part-search-results');
+            if (!resultsContainer) return;
+
+            const searchResults = state.partSearchTerm 
+                ? state.inventoryParts.filter(p => normalizeSearchString(p.name).includes(normalizeSearchString(state.partSearchTerm)))
+                : [];
+            
+            resultsContainer.innerHTML = state.partSearchTerm ? `
+                <div class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    ${searchResults.length > 0 ? searchResults.map(p => `
+                        <div data-id="${p.id}" class="search-result-item px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">${p.name}</div>
+                    `).join('') : `<div class="px-3 py-2 text-sm text-gray-500">موردی یافت نشد.</div>`}
+                </div>
+            ` : '';
+        };
+
+        const handleAddComponent = (partId) => {
+            if (isAddingComponent) return;
+            isAddingComponent = true;
+            try {
+                const activeBom = state.boms.find(b => b.id === state.activeBomId);
+                if (!activeBom) {
+                    alert("خطا: محصول فعالی انتخاب نشده است.");
+                    return;
+                }
+                
+                if ((activeBom.components || []).some(c => c.part_id === partId)) {
+                    alert('این قطعه از قبل در لیست وجود دارد.');
+                    return;
+                }
+
+                const part = state.inventoryParts.find(p => p.id === partId);
+                if (!part) {
+                    alert("خطا: قطعه در انبار یافت نشد.");
+                    return;
+                }
+
+                const newComponent = {
+                    id: crypto.randomUUID(),
+                    part_id: part.id,
+                    part_name: part.name,
+                    quantity: 1,
+                    cost: 0,
+                };
+                
+                handleUpdateComponentList('add', null, newComponent);
+                state.partSearchTerm = '';
+                document.getElementById('part-search-input').value = '';
+                const resultsContainer = document.getElementById('part-search-results');
+                if (resultsContainer) resultsContainer.innerHTML = '';
+            } finally {
+                isAddingComponent = false;
+            }
+        };
+        
+        const handleSaveBom = async () => {
+            if (isSavingBom) return;
+
+            const bomIndex = state.boms.findIndex(b => b.id === state.activeBomId);
+            if (bomIndex < 0) return;
+            
+            const newName = document.getElementById('active-bom-name').value.trim();
+            if (!newName) {
+                alert('نام محصول نمی‌تواند خالی باشد.');
+                return;
+            }
+            const bomToSave = { ...state.boms[bomIndex], name: newName };
+
+            const saveBtn = document.getElementById('save-bom-btn');
+            isSavingBom = true;
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'در حال ذخیره...';
+            }
+
+            try {
+                await api.saveBom(bomToSave);
+                state.boms[bomIndex] = bomToSave;
+                alert(`محصول "${bomToSave.name}" با موفقیت ذخیره شد.`);
+                renderDefineTab();
+                renderSimulateTab();
+            } catch (err) {
+                alert(err.message);
+                const currentSaveBtn = document.getElementById('save-bom-btn');
+                if (currentSaveBtn) {
+                    currentSaveBtn.disabled = false;
+                    currentSaveBtn.textContent = 'ذخیره تغییرات';
+                }
+            } finally {
+                isSavingBom = false;
+            }
+        };
+        
+        const handleBomImport = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const data = await file.arrayBuffer();
+                const workbook = XLSX.read(data);
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                if (json.length === 0) throw new Error("فایل اکسل خالی است.");
+
+                const bomName = json[0]['نام محصول']?.toString().trim();
+                if (!bomName) throw new Error("ستون 'نام محصول' در فایل اکسل یافت نشد یا خالی است.");
+
+                const components = [];
+                for (const row of json) {
+                    const partName = row['نام قطعه'];
+                    const quantity = parseFloat(row['تعداد']);
+                    const cost = parseFloat(row['قیمت']);
+
+                    if (!partName || isNaN(quantity) || isNaN(cost)) continue;
+
+                    const inventoryPart = state.inventoryParts.find(p => normalizeSearchString(p.name) === normalizeSearchString(partName));
+                    if (inventoryPart) {
+                        components.push({
+                            id: crypto.randomUUID(),
+                            part_id: inventoryPart.id,
+                            part_name: inventoryPart.name,
+                            quantity,
+                            cost
+                        });
+                    }
+                }
+                
+                if (components.length === 0) throw new Error("هیچ قطعه منطبقی با انبار اصلی در فایل یافت نشد.");
+
+                const existingBom = state.boms.find(b => b.name === bomName);
+                const bomToSave = existingBom ? { ...existingBom, components } : { id: crypto.randomUUID(), name: bomName, components };
+
+                await api.saveBom(bomToSave);
+                alert(`محصول "${bomName}" با موفقیت وارد/بروزرسانی شد.`);
+                await init();
+
+            } catch (err) {
+                alert(`خطا در وارد کردن فایل: ${err.message}`);
+            } finally {
+                e.target.value = '';
+            }
+        };
+
+        const handleBomExport = (bomId) => {
+            const bom = state.boms.find(b => b.id === bomId);
+            if (!bom) {
+                alert('محصول برای خروجی یافت نشد.');
+                return;
+            }
+
+            const dataForSheet = [
+                ['نام محصول'],
+                [bom.name],
+                [],
+                ['نام قطعه', 'تعداد', 'قیمت']
+            ];
+
+            (bom.components || []).forEach(comp => {
+                dataForSheet.push([
+                    comp.part_name,
+                    comp.quantity,
+                    comp.cost
+                ]);
+            });
+
+            const worksheet = XLSX.utils.aoa_to_sheet(dataForSheet);
+            worksheet['!props'] = { rtl: true };
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "BOM");
+            
+            const fileName = `BOM_${bom.name.replace(/\s/g, '_')}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+        };
+
+        // --- SIMULATE TAB LOGIC ---
+        const handleCalculateSimulation = () => {
+            const bomId = document.getElementById('sim-bom-select').value;
+            const quantity = parseInt(document.getElementById('sim-quantity-input').value, 10);
+            if (!bomId || isNaN(quantity) || quantity < 1) {
+                alert('لطفا یک محصول و تعداد تولید معتبر را انتخاب کنید.');
+                return;
+            }
+            state.activeSimulation = { bomId, quantity, name: '' };
+            renderSimulateTab();
+        };
+        
+        const handleSaveSimulation = async () => {
+            const name = document.getElementById('save-sim-name').value.trim();
+            if (!name) { alert('برای ذخیره، یک نام وارد کنید.'); return; }
+            if (!state.activeSimulation) return;
+
+            const simToSave = { ...state.activeSimulation, name };
+            try {
+                await api.saveSimulation(simToSave);
+                alert(`محاسبه "${name}" ذخیره شد.`);
+                state.simulations = state.simulations.filter(s => s.name !== name);
+                state.simulations.push(simToSave);
+                renderSimulateTab();
+            } catch (err) { alert(err.message); }
+        };
+
+        const handleLoadSimulation = () => {
+            const name = document.getElementById('saved-sims-select').value;
+            if (!name) return;
+            const sim = state.simulations.find(s => s.name === name);
+            if (sim) {
+                state.activeSimulation = { ...sim };
+                renderSimulateTab();
+            }
+        };
+
+        const handleDeleteSimulation = async () => {
+            const select = document.getElementById('saved-sims-select');
+            const name = select.value;
+            if (!name) { alert('لطفا یک محاسبه را برای حذف انتخاب کنید.'); return; }
+            if (confirm(`آیا از حذف محاسبه "${name}" اطمینان دارید؟`)) {
+                await api.deleteSimulation(name);
+                state.simulations = state.simulations.filter(s => s.name !== name);
+                state.activeSimulation = null;
+                renderSimulateTab();
+            }
+        };
+        
+        const handlePrint = () => {
+            const sim = state.activeSimulation;
+            const bom = sim ? state.boms.find(b => b.id === sim.bomId) : null;
+            if (!sim || !bom) return;
+
+            const printHeader = document.querySelector('.print-header');
+            const printTitle = printHeader.querySelector('.print-title');
+            const printDate = printHeader.querySelector('.print-date');
+            
+            const resultsContainer = document.getElementById('printable-results');
+            printTitle.textContent = resultsContainer.querySelector('h2').textContent;
+            printDate.textContent = new Date().toLocaleString('fa-IR');
+            
+            document.body.classList.add('is-printing');
+            window.print();
+            document.body.classList.remove('is-printing');
+        };
+
+        // --- INIT ---
+        const init = async () => {
+            DOM.defineTab.innerHTML = `<div class="card text-center text-gray-500">در حال بارگذاری اطلاعات...</div>`;
+            try {
+                const data = await api.getData();
+                state.boms = data.boms || [];
+                state.simulations = data.simulations || [];
+                state.inventoryParts = data.inventoryParts || [];
+                state.wages = data.wages || {};
+                state.workshops = data.workshops || [];
+                
+                document.getElementById('tabs').addEventListener('click', handleTabClick);
+                
+                renderDefineTab();
+                // We don't render other tabs initially, they are rendered on click.
+                // renderSimulateTab();
+
+            } catch (error) {
+                DOM.defineTab.innerHTML = `<div class="card text-center text-red-500">${error.message}</div>`;
+            }
+        };
+
+        init();
+    </script>
+</body>
+</html>

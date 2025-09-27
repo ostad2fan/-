@@ -1,0 +1,503 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>گزارش موجودی کارگاه های در گردش</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+      
+      :root {
+        --bg-light: #f9fafb; /* gray-50 */
+        --text-light: #111827; /* gray-900 */
+        --card-bg-light: #ffffff;
+        --card-border-light: #e5e7eb; /* gray-200 */
+        --input-bg-light: #ffffff;
+        --input-border-light: #d1d5db; /* gray-300 */
+        --header-bg-light: rgba(255, 255, 255, 0.8);
+        --table-header-bg-light: #f9fafb; /* gray-50 */
+        --table-row-hover-light: #f3f4f6; /* gray-100 */
+        --text-muted-light: #6b7280;
+
+        --bg-dark: #030712; /* gray-950 */
+        --text-dark: #d1d5db; /* gray-300 */
+        --card-bg-dark: #111827; /* gray-900 */
+        --card-border-dark: #374151; /* gray-700 */
+        --input-bg-dark: #1f2937; /* gray-800 */
+        --input-border-dark: #4b5563; /* gray-600 */
+        --header-bg-dark: rgba(17, 24, 39, 0.8);
+        --table-header-bg-dark: #1f2937; /* gray-800 */
+        --table-row-hover-dark: #1f2937; /* gray-800 */
+        --text-muted-dark: #9ca3af;
+      }
+
+      body {
+        font-family: 'Vazirmatn', sans-serif;
+        background-color: var(--bg-light);
+        color: var(--text-light);
+        transition: background-color 0.3s, color 0.3s;
+        overflow: hidden;
+      }
+      html.dark body {
+        background-color: var(--bg-dark);
+        color: var(--text-dark);
+      }
+      
+      .card {
+          background-color: var(--card-bg-light);
+          color: var(--text-light);
+          border: 1px solid var(--card-border-light);
+          border-radius: 0.75rem;
+          transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+      html.dark .card {
+          background-color: var(--card-bg-dark);
+          color: var(--text-dark);
+          border-color: var(--card-border-dark);
+      }
+      
+      .form-input {
+          background-color: var(--input-bg-light);
+          border: 1px solid var(--input-border-light);
+          color: var(--text-light);
+      }
+      html.dark .form-input {
+          background-color: var(--input-bg-dark);
+          border-color: var(--input-border-dark);
+          color: #f3f4f6;
+      }
+       .form-input:focus {
+          outline: 2px solid transparent;
+          outline-offset: 2px;
+          border-color: #3b82f6;
+          --tw-ring-color: #3b82f6;
+          box-shadow: 0 0 0 2px var(--tw-ring-color);
+      }
+
+      .urgent-item {
+        background-color: rgba(239, 68, 68, 0.05) !important;
+        border-bottom-color: #ef4444 !important; /* red-500 */
+      }
+      html.dark .urgent-item {
+         background-color: rgba(239, 68, 68, 0.1) !important;
+      }
+
+      .modal {
+        display: none;
+        backdrop-filter: blur(4px);
+      }
+      .modal.flex {
+        display: flex;
+      }
+      
+      /* Prevent spinners from number inputs */
+      input[type=number]::-webkit-inner-spin-button,
+      input[type=number]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+      }
+      input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+      }
+      
+      .print-header {
+        display: none;
+      }
+
+      @media print {
+        body {
+            background-color: white !important;
+            color: black !important;
+            overflow: visible !important;
+        }
+        html.dark body, html.dark * {
+            background-color: white !important;
+            color: black !important;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .card {
+            border: 1px solid #ccc !important;
+            box-shadow: none !important;
+        }
+        .urgent-item {
+            border: 2px solid black !important;
+            background-color: #eee !important;
+        }
+        table, th, td {
+            border: 1px solid #ccc !important;
+        }
+        thead {
+             background-color: #f2f2f2 !important;
+        }
+        .print-header {
+            display: block !important;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 1rem;
+        }
+        .print-header .print-title {
+            color: black !important;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .print-header p {
+            color: #333 !important;
+            font-size: 0.875rem;
+        }
+      }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="print-header">
+            <h2 class="print-title">گزارش موجودی کارگاه‌های در گردش</h2>
+            <p>تاریخ چاپ: <span class="print-date"></span></p>
+        </div>
+        <header class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-700 no-print">
+            <h1 class="text-2xl font-bold">گزارش موجودی کارگاه‌های در گردش</h1>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="show-notes-checkbox" class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                    <label for="show-notes-checkbox" class="font-medium text-sm cursor-pointer">نمایش توضیحات</label>
+                </div>
+                <button id="print-button" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
+                    چاپ گزارش
+                </button>
+            </div>
+        </header>
+
+        <main id="report-container">
+            <!-- Report table will be injected here -->
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 modal items-center justify-center z-50 no-print">
+        <div class="card p-6 w-full max-w-md">
+            <h3 id="edit-modal-title" class="text-lg font-bold mb-4">ویرایش موجودی</h3>
+            <form id="edit-form">
+                <fieldset>
+                    <div class="space-y-4 mb-4">
+                        <div class="text-center p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">موجودی فعلی:</span>
+                            <span id="current-quantity-display" class="text-2xl font-bold ml-2"></span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="increase-quantity" class="block text-sm font-medium text-green-700 dark:text-green-400 mb-1">افزایش</label>
+                                <input type="number" id="increase-quantity" name="increase-quantity" class="form-input mt-1 block w-full px-3 py-2 rounded-md shadow-sm sm:text-sm" placeholder="مقدار افزایش" min="0">
+                            </div>
+                            <div>
+                                <label for="decrease-quantity" class="block text-sm font-medium text-red-700 dark:text-red-400 mb-1">کاهش</label>
+                                <input type="number" id="decrease-quantity" name="decrease-quantity" class="form-input mt-1 block w-full px-3 py-2 rounded-md shadow-sm sm:text-sm" placeholder="مقدار کاهش" min="0">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="edit-notes" class="block text-sm font-medium mb-1">یادداشت (اختیاری)</label>
+                            <textarea id="edit-notes" name="edit-notes" rows="2" class="form-input mt-1 block w-full px-3 py-2 rounded-md shadow-sm sm:text-sm"></textarea>
+                        </div>
+                    </div>
+                </fieldset>
+                <div class="flex justify-end gap-3">
+                    <button type="button" id="cancel-edit" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition">انصراف</button>
+                    <button type="submit" id="save-edit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">ذخیره</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            let canEdit = urlParams.get('canEdit') === 'true';
+            const panelMode = urlParams.get('panelMode');
+            const user = urlParams.get('user');
+
+            const api = {
+                async request(endpoint, options = {}) {
+                    const { body, ...customConfig } = options;
+                    const headers = { 'Content-Type': 'application/json' };
+
+                    if (panelMode === 'personal' && user) {
+                        headers['X-User-DB'] = user;
+                    }
+
+                    const config = {
+                        method: body ? 'POST' : 'GET',
+                        ...customConfig,
+                        headers: { ...headers, ...customConfig.headers },
+                    };
+                    if (body) config.body = JSON.stringify(body);
+
+                    try {
+                        const response = await fetch(endpoint, config);
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({ error: 'An unknown error occurred' }));
+                            throw new Error(errorData.error || `Request failed with status ${response.status}`);
+                        }
+                        if (response.status === 204) return null; // No Content
+                        return response.json();
+                    } catch (error) {
+                        alert(`خطای سرور: ${error.message}`);
+                        return Promise.reject(error);
+                    }
+                },
+                getWipReportData: () => api.request('/api/reports/wip'),
+                adjustStock: (data) => api.request('/api/reports/wip/adjust-stock', { body: data }),
+            };
+
+            let originalSortedItems = [];
+
+            // --- Theme Syncing ---
+            const syncTheme = () => {
+                try {
+                    const parentHtml = window.top.document.documentElement;
+                    if (parentHtml.classList.contains('dark')) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {
+                    console.warn("Could not sync theme with parent window. Falling back to dark theme.");
+                    if (!document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.add('dark');
+                    }
+                }
+            };
+
+            syncTheme();
+            try {
+                new MutationObserver(syncTheme).observe(window.top.document.documentElement, { attributes: true, attributeFilter: ['class'] });
+            } catch (e) {
+                console.warn("Could not observe parent window for theme changes.");
+            }
+
+            // --- Rendering ---
+            const renderTable = (itemsToRender) => {
+                const container = document.getElementById('report-container');
+                if (itemsToRender.length === 0) {
+                    container.innerHTML = `<div class="card text-center p-10"><span class="text-text-muted-light dark:text-text-muted-dark">هیچ موجودی در گردش برای نمایش وجود ندارد.</span></div>`;
+                    return;
+                }
+                const tableHTML = `
+                <div class="card shadow-md rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead class="text-xs uppercase" style="background-color: var(--table-header-bg-light); color: var(--text-light);">
+                                <tr class="dark:text-gray-300">
+                                    <th scope="col" class="px-4 py-3 font-semibold">
+                                        <div class="flex items-center gap-2">
+                                            <span>کارگاه</span>
+                                            <label class="flex items-center gap-1.5 cursor-pointer text-xs font-normal no-print">
+                                                <input type="checkbox" id="sort-by-workshop-checkbox" class="h-4 w-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500">
+                                                <span>مرتب‌سازی</span>
+                                            </label>
+                                        </div>
+                                    </th>
+                                    <th scope="col" class="px-4 py-3 font-semibold">نام قطعه</th>
+                                    <th scope="col" class="px-4 py-3 text-center font-semibold">تعداد</th>
+                                    <th scope="col" class="px-4 py-3 text-center font-semibold">وزن</th>
+                                    <th scope="col" class="px-4 py-3 text-center font-semibold">قدمت (روز)</th>
+                                    <th scope="col" class="px-4 py-3 font-semibold">تاریخ‌های ورود</th>
+                                    <th scope="col" class="px-4 py-3 text-center no-print font-semibold">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y" style="border-color: var(--card-border-dark)">
+                                ${itemsToRender.map(item => {
+                                    const ageInDays = Math.floor((new Date() - item.oldestEntryDate) / (1000 * 60 * 60 * 24));
+                                    const entryDatesHTML = item.entryLots.map(lot => {
+                                        const weightText = lot.weight > 0 ? ` (${lot.weight.toLocaleString('fa-IR', { maximumFractionDigits: 2 })} ${lot.weightUnit})` : '';
+                                        const noteHTML = lot.notes ? `<em class="entry-note hidden text-amber-600 dark:text-amber-500 ml-1">(${lot.notes})</em>` : '';
+                                        return `<div class="text-xs whitespace-nowrap">${lot.quantity.toLocaleString('fa-IR')} عدد${weightText} - ${lot.date.toLocaleDateString('fa-IR')}${noteHTML}</div>`;
+                                    }).join('');
+
+                                    return `
+                                        <tr class="hover:bg-gray-100 dark:hover:bg-gray-800/50 ${item.isUrgent ? 'urgent-item' : ''}">
+                                            <td class="px-4 py-3 font-bold text-blue-600 dark:text-blue-400">${item.workshopName}</td>
+                                            <td class="px-4 py-3 font-semibold">${item.partName}</td>
+                                            <td class="px-4 py-3 text-center font-bold text-lg">${item.quantity.toLocaleString('fa-IR')}</td>
+                                            <td class="px-4 py-3 text-center font-mono">${item.totalWeight > 0 ? `${item.totalWeight.toFixed(2)} <span class="text-xs">${item.weightUnit}</span>` : '-'}</td>
+                                            <td class="px-4 py-3 text-center font-semibold ${item.isUrgent ? 'text-red-500 text-lg' : ''}">${ageInDays}</td>
+                                            <td class="px-4 py-3">${entryDatesHTML}</td>
+                                            <td class="px-4 py-3 text-center no-print">
+                                                <button data-action="edit" data-part-id="${item.partId}" data-workshop-id="${item.workshopId}" data-current-qty="${item.quantity}" class="px-3 py-1 text-sm bg-amber-500 text-white rounded hover:bg-amber-600 transition disabled:opacity-50 disabled:cursor-not-allowed" ${!canEdit ? 'disabled' : ''}>ویرایش</button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                `;
+                container.innerHTML = tableHTML;
+
+                const sortCheckbox = document.getElementById('sort-by-workshop-checkbox');
+                sortCheckbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        const sortedByWorkshop = [...originalSortedItems].sort((a, b) => {
+                            const nameCompare = a.workshopName.localeCompare(b.workshopName, 'fa');
+                            if (nameCompare !== 0) return nameCompare;
+                            return a.oldestEntryDate - b.oldestEntryDate;
+                        });
+                        renderTable(sortedByWorkshop);
+                        document.getElementById('sort-by-workshop-checkbox').checked = true;
+                    } else {
+                        renderTable(originalSortedItems);
+                    }
+                });
+            };
+
+            // --- Event Listeners & UI Toggles ---
+            document.getElementById('show-notes-checkbox').addEventListener('change', e => {
+                document.getElementById('report-container').querySelectorAll('.entry-note').forEach(noteEl => {
+                    noteEl.classList.toggle('hidden', !e.target.checked);
+                    noteEl.classList.toggle('inline', e.target.checked);
+                });
+            });
+            
+            document.getElementById('print-button').addEventListener('click', () => { window.print(); });
+            
+            window.addEventListener('beforeprint', () => {
+                const printDateEl = document.querySelector('.print-header .print-date');
+                if (printDateEl) {
+                    printDateEl.textContent = new Date().toLocaleString('fa-IR', { dateStyle: 'long', timeStyle: 'short' });
+                }
+            });
+
+            // --- Edit Modal Logic ---
+            const modal = document.getElementById('edit-modal');
+            const modalTitle = document.getElementById('edit-modal-title');
+            const editForm = document.getElementById('edit-form');
+            const notesInput = document.getElementById('edit-notes');
+            const cancelBtn = document.getElementById('cancel-edit');
+            let currentEditData = null;
+
+            function openEditModal(partId, workshopId, currentQty, partName, workshopName) {
+                currentEditData = { partId, workshopId, currentQty };
+                modalTitle.textContent = `ویرایش موجودی: ${partName} در ${workshopName}`;
+                
+                editForm.querySelector('fieldset').disabled = !canEdit;
+                document.getElementById('save-edit-btn').disabled = !canEdit;
+                document.getElementById('current-quantity-display').textContent = currentQty.toLocaleString('fa-IR');
+                
+                const increaseInput = document.getElementById('increase-quantity');
+                const decreaseInput = document.getElementById('decrease-quantity');
+                increaseInput.value = ''; decreaseInput.value = ''; notesInput.value = '';
+                increaseInput.disabled = false; decreaseInput.disabled = false;
+                increaseInput.oninput = () => { decreaseInput.disabled = !!increaseInput.value; };
+                decreaseInput.oninput = () => { increaseInput.disabled = !!decreaseInput.value; };
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                increaseInput.focus();
+            }
+
+            function closeEditModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                currentEditData = null;
+            }
+
+            document.getElementById('report-container').addEventListener('click', e => {
+                const button = e.target.closest('button[data-action="edit"]');
+                if (!button) return;
+                const { partId, workshopId, currentQty } = button.dataset;
+                const item = originalSortedItems.find(ri => ri.partId === partId && ri.workshopId === workshopId);
+                if(item) { openEditModal(partId, workshopId, parseInt(currentQty, 10), item.partName, item.workshopName); }
+            });
+
+            cancelBtn.addEventListener('click', closeEditModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeEditModal(); });
+
+            editForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentEditData || !canEdit) return;
+
+                const increaseValue = parseInt(document.getElementById('increase-quantity').value, 10) || 0;
+                const decreaseValue = parseInt(document.getElementById('decrease-quantity').value, 10) || 0;
+                const userNotes = notesInput.value.trim();
+                const adjustment = increaseValue - decreaseValue;
+                
+                if (adjustment === 0 && !userNotes) { closeEditModal(); return; }
+
+                const { partId, workshopId, currentQty } = currentEditData;
+                if (currentQty + adjustment < 0) {
+                    alert(`امکان کاهش به این مقدار وجود ندارد. موجودی فعلی ${currentQty.toLocaleString('fa-IR')} عدد است.`);
+                    return;
+                }
+                
+                const saveBtn = document.getElementById('save-edit-btn');
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'در حال ذخیره...';
+
+                try {
+                    await api.adjustStock({ partId, workshopId, adjustment, userNotes });
+                    alert('موجودی با موفقیت اصلاح شد. اطلاعات بروزرسانی می‌شود.');
+                    closeEditModal();
+                    await init(); // Re-fetch data
+                } catch (error) {
+                    console.error('Failed to adjust stock:', error);
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'ذخیره';
+                }
+            });
+            
+            // --- Iframe Resizing Logic ---
+            const sendHeightToParent = () => {
+                const height = document.documentElement.scrollHeight + 10;
+                window.parent.postMessage({ type: 'resize-iframe', height: height, page: 'wip_report' }, '*');
+            };
+            
+            const processAndRenderReport = (reportData) => {
+                 // API data has ISO strings, personal data has Date objects. Normalize to Date objects.
+                 reportData.forEach(item => {
+                    item.oldestEntryDate = new Date(item.oldestEntryDate);
+                    item.entryLots = item.entryLots.map(lot => ({...lot, date: new Date(lot.date)}));
+                });
+
+                originalSortedItems = [...reportData].sort((a, b) => {
+                    if (a.isUrgent && !b.isUrgent) return -1;
+                    if (!a.isUrgent && b.isUrgent) return 1;
+                    return a.oldestEntryDate - b.oldestEntryDate;
+                });
+                
+                renderTable(originalSortedItems);
+                
+                const observer = new ResizeObserver(sendHeightToParent);
+                observer.observe(document.body);
+                setTimeout(sendHeightToParent, 100); // Also send after a short delay
+            };
+            
+            // --- Initialization ---
+            const init = async () => {
+                const container = document.getElementById('report-container');
+                container.innerHTML = `<div class="card text-center p-10"><span class="text-text-muted-light dark:text-text-muted-dark">در حال بارگذاری اطلاعات گزارش...</span></div>`;
+
+                if (panelMode === 'personal') {
+                    canEdit = true;
+                }
+
+                try {
+                    let reportItems = await api.getWipReportData();
+                    processAndRenderReport(reportItems);
+                } catch (error) {
+                    container.innerHTML = `<div class="card text-center p-10 text-red-500 dark:text-red-400">${error.message}</div>`;
+                } finally {
+                    sendHeightToParent();
+                }
+            };
+
+            init();
+        });
+    </script>
+</body>
+</html>
